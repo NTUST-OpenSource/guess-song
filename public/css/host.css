@@ -1,0 +1,67 @@
+/* /host 主持人頁：沿用 dashboard.css，這裡只放解答大字 */
+.host-card {
+  gap: 16px;
+}
+
+.host-card .card-title {
+  font-size: 1.4rem;
+}
+
+.answer-key {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 14px;
+  align-items: baseline;
+}
+
+.answer-key dt {
+  font-size: 0.9rem;
+  color: #cccccc;
+  text-shadow: 1px 1px 0 var(--mc-border);
+}
+
+.answer-key dd {
+  margin: 0;
+  padding: 10px 12px;
+  background-color: #000000;
+  border: 3px solid var(--mc-stone);
+  color: var(--mc-gold);
+  font-size: 1.8rem;
+  line-height: 1.4;
+  word-break: break-word;
+  text-shadow: 2px 2px 0 #554e00;
+}
+
+/* 其他可接受的寫法，小字接在主要答案下面 */
+.answer-key .alt {
+  display: block;
+  margin-top: 4px;
+  color: #cccccc;
+  font-size: 0.8rem;
+  text-shadow: none;
+}
+
+.host-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mc-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (min-width: 768px) {
+  .control-container:has(.host-card) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 450px) {
+  .answer-key dd {
+    font-size: 1.3rem;
+  }
+}

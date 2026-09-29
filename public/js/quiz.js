@@ -67,9 +67,11 @@ function render(state) {
     const select = $("quiz_song");
     const labels = songs.map((s, i) => `第 ${i + 1} 首｜${s.title[0]}`);
     if ([...select.options].map((o) => o.text).join("\n") !== labels.join("\n")) {
-        const keep = selectedSong() ?? round?.songId ?? 0;
+        const keep = selectedSong() ?? songId ?? 0;
         select.replaceChildren(...labels.map((label, i) => new Option(label, String(i))));
         if (songs.length) select.value = String(Math.min(keep, songs.length - 1));
+        // 伺服器還沒有選到的歌（剛上傳歌單），把預設的第一首同步給 /host
+        if (songs.length && songId === null) void adminApi("select", { songId: selectedSong() }, true);
     }
 
     // 有填 youtube 就直接連過去，沒填就用「歌名 歌手」搜尋
@@ -138,7 +140,11 @@ $("group_passwords").replaceChildren(
     }).flat(),
 );
 
-$("quiz_song").addEventListener("change", () => void refreshQuiz());
+// 選歌同步到伺服器，/host 的主持人就會看到這首的解答
+$("quiz_song").addEventListener("change", async () => {
+    await adminApi("select", { songId: selectedSong() });
+    void refreshQuiz();
+});
 
 $("open_btn").addEventListener("click", async () => {
     if (await adminApi("open", { songId: selectedSong() })) void refreshQuiz();

@@ -192,7 +192,7 @@ export class Scores extends DurableObject {
     }
 
     // ===== 手機作答 =====
-    // storage keys: songs（歌單+解答）、groupPw、round {songId, open}、
+    // storage keys: songs（歌單+解答）、groupPw、round {songId, open}、selected（後台選到的題號，/host 顯示它的解答）、
     // ans:<songId> {"<組>:<玩家 id>": 答案}、awarded {songId: {組: 已加的分}}、
     // highlights {songId: 跑馬燈內容}
 
@@ -243,10 +243,17 @@ export class Scores extends DurableObject {
         return true;
     }
 
+    async select(songId) {
+        if (!(await this.load("songs", []))[songId]) return false;
+        await this.ctx.storage.put("selected", songId);
+        return true;
+    }
+
     async openRound(songId) {
         if ((await this.load("round", null))?.open) return "請先收卷";
         if (!(await this.load("songs", []))[songId]) return "沒有這首歌";
         await this.ctx.storage.put("round", { songId, open: true });
+        await this.ctx.storage.put("selected", songId);
         return null;
     }
 
@@ -299,7 +306,7 @@ export class Scores extends DurableObject {
     async adminState(songId) {
         const songs = await this.load("songs", []);
         const round = await this.load("round", null);
-        const id = Number.isInteger(songId) ? songId : round?.songId;
+        const id = Number.isInteger(songId) ? songId : await this.load("selected", round?.songId);
         const song = songs[id];
         return {
             songs,
@@ -388,6 +395,11 @@ async function handleAdmin(env, action, body) {
         const songs = parseSongs(body.songs);
         if (!songs) return fail("歌單格式錯誤");
         return (await stub.setSongs(songs)) ? ok() : fail("作答中不能改歌單，請先收卷");
+    }
+
+    if (action === "select") {
+        if (!Number.isInteger(body.songId)) return fail("沒有這首歌");
+        return (await stub.select(body.songId)) ? ok() : fail("沒有這首歌");
     }
 
     if (action === "open") {

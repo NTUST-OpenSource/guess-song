@@ -160,8 +160,19 @@ assert.equal((await admin("songs", { songs })).status, 200);
 // 還沒發題不能作答
 assert.equal((await answer(ming, { year: 2003 })).status, 400);
 
+// 後台選歌：/host 不帶 songId 就看選到的那首（還沒發題也看得到解答）
+assert.equal((await post("/api/admin/select", { songId: 1 })).status, 401);
+assert.equal((await admin("select", { songId: 99 })).status, 400);
+assert.equal((await admin("select", { songId: 1 })).status, 200);
+{
+    const host = await (await admin("state")).json();
+    assert.equal(host.songId, 1);
+    assert.equal(host.songs[1].title[0], songs[1].title);
+}
+
 assert.equal((await admin("open", { songId: 0 })).status, 200);
 assert.equal((await admin("open", { songId: 1 })).status, 400); // 要先收卷
+assert.equal((await (await admin("state")).json()).songId, 0); // 發題會把選歌帶到這首
 assert.equal((await admin("songs", { songs: [] })).status, 400); // 作答中不能改歌單
 
 // 玩家看得到題號，看不到解答；作答中沒有跑馬燈
@@ -273,6 +284,7 @@ assert.deepEqual(await scores(), { 1: 0, 2: 0, 3: 0, 4: 0 });
 {
     const st = await (await admin("state")).json();
     assert.deepEqual([st.songs, st.round, st.groupPw, st.answers], [[], null, {}, []]);
+    assert.equal(st.songId, null); // 選歌也清掉
 }
 assert.equal((await join("小明", "Red")).status, 401); // 組別代碼也清掉了
 assert.equal((await playState(ming)).round, null); // 舊玩家看到的是尚未發題

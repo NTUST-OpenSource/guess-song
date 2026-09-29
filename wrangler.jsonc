@@ -3,7 +3,7 @@
     "account_id": "7659c0dae4e899b3bee76cdb5363057c",
     "main": "src/index.js",
     "compatibility_date": "2025-11-01",
-    "routes": [{ "pattern": "song.ntust.camp", "custom_domain": true }],
+    "routes": [{ "pattern": "song.ntust.org", "custom_domain": true }],
     "assets": {
         "directory": "./public",
         // /api/* 一律交給 Worker，其餘走靜態檔（/login -> public/login.html）

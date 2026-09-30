@@ -153,6 +153,29 @@ const toList = (v) => (Array.isArray(v) ? v : [v]).filter((s) => typeof s === "s
 // youtube 可省略，有填只收 http(s) 網址（後台會拿來當超連結）
 const isLink = (v) => v === undefined || (typeof v === "string" && /^https?:\/\//i.test(v.trim()));
 
+// 從 youtube 網址取出影片 id，收卷後給玩家看縮圖；不是 YouTube 的網址就沒有縮圖
+const YOUTUBE_HOSTS = ["youtube.com", "youtu.be", "youtube-nocookie.com"];
+
+function youtubeId(link) {
+    try {
+        const url = new URL(link);
+        const host = url.hostname.replace(/^(www|m|music)\./, "");
+        if (!YOUTUBE_HOSTS.includes(host)) return null;
+        const id =
+            host === "youtu.be"
+                ? url.pathname.slice(1)
+                : (url.searchParams.get("v") ?? url.pathname.match(/^\/(?:embed|shorts|live)\/([^/]+)/)?.[1]);
+        return /^[\w-]{11}$/.test(id ?? "") ? id : null;
+    } catch {
+        return null;
+    }
+}
+
+// 收卷時記下是哪首歌。之後歌單在那個位置換成別首（插歌、換歌），沒播過的歌不能出現在玩家的歷史裡；
+// 同一支影片、或歌名沒變，就當作同一首只是修正解答
+const songMark = (song) => ({ title: norm(song.title[0]), youtube: youtubeId(song.youtube) });
+const sameSong = (a, b) => Boolean(a.youtube && a.youtube === b.youtube) || a.title === b.title;
+
 function parseSongs(v) {
     if (!Array.isArray(v)) return null;
     if (!v.every((s) => isLink(s?.youtube))) return null;
@@ -182,7 +205,7 @@ export class Scores extends DurableObject {
         const scores = await this.read();
         await this.ctx.storage.put("scores", {
             ...scores,
-            [group]: Math.min(MAX_SCORE, (scores[group] ?? 0) + delta),
+            [group]: Math.max(0, Math.min(MAX_SCORE, (scores[group] ?? 0) + delta)),
         });
     }
 
@@ -194,7 +217,8 @@ export class Scores extends DurableObject {
     // ===== 手機作答 =====
     // storage keys: songs（歌單+解答）、groupPw、round {songId, open}、selected（後台選到的題號，/host 顯示它的解答）、
     // ans:<songId> {"<組>:<玩家 id>": 答案}、awarded {songId: {組: 已加的分}}、
-    // highlights {songId: 跑馬燈內容}
+    // highlights {songId: 跑馬燈內容}、closed {songId: {at 最後一次收卷的時間, title, youtube 收卷時是哪首歌}}、
+    // histRev（玩家歷史的版本，變了手機才重抓）
 
     async load(key, fallback) {
         return (await this.ctx.storage.get(key)) ?? fallback;
@@ -212,16 +236,55 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put("groupPw", passwords);
     }
 
-    // 只回題號和自己的答案，絕對不能帶到解答
+    // 只回題號和自己的答案，絕對不能帶到解答；順便帶四組總分，手機不用再另外輪詢計分板
     async playerState(group, id) {
         const round = await this.load("round", null);
-        if (!round) return { round: null, answer: null };
-        const a = (await this.load(`ans:${round.songId}`, {}))[`${group}:${id}`];
+        const a = round && (await this.load(`ans:${round.songId}`, {}))[`${group}:${id}`];
         return {
-            round: { no: round.songId + 1, open: round.open },
+            round: round && { no: round.songId + 1, open: round.open },
             answer: a ? { year: a.year, artist: a.artist, title: a.title } : null,
-            highlights: round.open ? null : ((await this.load("highlights", {}))[round.songId] ?? null),
+            highlights: round && !round.open ? ((await this.load("highlights", {}))[round.songId] ?? null) : null,
+            scores: await this.read(),
+            histRev: await this.load("histRev", 0),
         };
+    }
+
+    // 已收卷的題目，最近收卷的在上：解答（第一種寫法）、縮圖、自己的答案與每項得分、各組這題得分。
+    // 作答中的那題（包含收過卷又重開的）、收卷後被換成別首的位置，絕對不能出現
+    async playerHistory(group, id) {
+        const songs = await this.load("songs", []);
+        const round = await this.load("round", null);
+        const awarded = await this.load("awarded", {});
+        const closed = await this.load("closed", {});
+        const ids = Object.keys(awarded)
+            .map(Number)
+            .filter((s) => songs[s] && !(round?.open && round.songId === s))
+            // 部署前收卷的舊資料沒有記號，照常顯示
+            .filter((s) => !closed[s] || sameSong(songMark(songs[s]), closed[s]))
+            // 舊資料沒有收卷時間，就照題號排
+            .sort((x, y) => (closed[y]?.at ?? 0) - (closed[x]?.at ?? 0) || y - x);
+        const key = `${group}:${id}`;
+        const history = [];
+        for (const songId of ids) {
+            const song = songs[songId];
+            const a = (await this.load(`ans:${songId}`, {}))[key];
+            const mine = a && grade(song, { [key]: a })[0];
+            const video = youtubeId(song.youtube);
+            history.push({
+                no: songId + 1,
+                year: song.year,
+                artist: song.artist[0],
+                title: song.title[0],
+                thumb: video ? `https://i.ytimg.com/vi/${video}/hqdefault.jpg` : null,
+                groups: awarded[songId],
+                mine: mine ? { year: mine.year, artist: mine.artist, title: mine.title, points: mine.points } : null,
+            });
+        }
+        return history;
+    }
+
+    async touchHistory() {
+        await this.ctx.storage.put("histRev", Date.now());
     }
 
     async submit(group, id, name, answer) {
@@ -240,6 +303,7 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put("songs", songs);
         // 修正解答後重新批改已收卷的題目
         for (const id of Object.keys(await this.load("awarded", {}))) await this.settle(Number(id));
+        await this.touchHistory(); // 歌被刪掉時 settle 不會跑，這裡再保證手機會重抓歷史
         return true;
     }
 
@@ -254,6 +318,7 @@ export class Scores extends DurableObject {
         if (!(await this.load("songs", []))[songId]) return "沒有這首歌";
         await this.ctx.storage.put("round", { songId, open: true });
         await this.ctx.storage.put("selected", songId);
+        await this.touchHistory(); // 重開收過卷的歌，要讓手機把它從歷史拿掉
         return null;
     }
 
@@ -261,6 +326,12 @@ export class Scores extends DurableObject {
         const round = await this.load("round", null);
         if (!round?.open) return false;
         await this.ctx.storage.put("round", { ...round, open: false });
+        const song = (await this.load("songs", []))[round.songId];
+        const closed = await this.load("closed", {});
+        await this.ctx.storage.put("closed", {
+            ...closed,
+            [round.songId]: { at: Date.now(), ...(song ? songMark(song) : {}) },
+        });
         await this.settle(round.songId);
         return true;
     }
@@ -295,12 +366,14 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put("awarded", { ...awarded, [songId]: points });
         const highlights = await this.load("highlights", {});
         await this.ctx.storage.put("highlights", { ...highlights, [songId]: groupBest(graded) });
+        await this.touchHistory();
     }
 
     // 清空所有資料；分數直接寫成全 0，避免下次 read() 又從舊 KV 把分數搬回來
     async resetAll() {
         await this.ctx.storage.deleteAll();
         await this.ctx.storage.put("scores", emptyScores());
+        await this.touchHistory(); // 不能回到 0：手機記的可能剛好就是 0，會一直顯示舊歷史
     }
 
     async adminState(songId) {
@@ -337,7 +410,9 @@ async function handleAddScore(env, body) {
     if (!(await requireAuth(env, body))) return fail("please login", 401);
     if (!isGroup(body.group)) return fail("unaccept group value");
 
-    const delta = [body.year, body.name, body.sing, body.dance].filter((v) => v === true).length;
+    // 後台上下箭頭送 delta（可負）；舊版的勾選欄位每個 true 加 1
+    const delta = body.delta ?? [body.year, body.name, body.sing, body.dance].filter((v) => v === true).length;
+    if (!Number.isInteger(delta) || Math.abs(delta) > MAX_SCORE) return fail("unaccept delta value");
     await scoresStub(env).add(body.group, delta);
     return ok();
 }
@@ -367,7 +442,8 @@ async function handlePlay(env, action, body) {
     if (!player?.id) return fail("please join", 401);
     const stub = scoresStub(env);
 
-    if (action === "state") return ok(await stub.playerState(player.g, player.id));
+    if (action === "state") return ok({ group: player.g, ...(await stub.playerState(player.g, player.id)) });
+    if (action === "history") return ok({ history: await stub.playerHistory(player.g, player.id) });
 
     if (action === "answer") {
         const year = body.year ?? null;

@@ -47,10 +47,10 @@ npx wrangler deploy
 
 | 路徑 | 說明 |
 |---|---|
-| `/` | 玩家用手機作答（名字＋組別代碼，代碼決定組別），收卷後有跑馬燈，可切換看計分板 |
+| `/` | 玩家用手機作答（名字＋組別代碼，代碼決定組別）。最上方固定顯示四組總分；收卷後有跑馬燈，下面列出收過卷的題目：縮圖、解答、自己的答案與每項得分、各組這題得分 |
 | `/scoreboard` | 投影用的大計分板，每秒更新 |
 | `/login` | 後台登入；從 `/host` 被導過來的，登入後會回到 `/host` |
-| `/dashboard` | 加分 / 改分、選歌 / 發題 / 收卷、作答狀況與改判、組別代碼、歌單、重置所有資料 |
+| `/dashboard` | 四組分數用上下箭頭加減（按了就存），或直接輸入按 Enter 存；選歌 / 發題 / 收卷、作答狀況與改判、組別代碼、歌單、重置所有資料 |
 | `/host` | 主持人用：上方四組分數，下方大字顯示後台選到那首歌的解答，可以發題 / 收卷（帳密同後台） |
 
 ## 比賽流程
@@ -66,10 +66,11 @@ npx wrangler deploy
 |---|---|---|---|
 | `/api/GetScore` | GET | — | 回 `{"1":0,...,"4":0}` |
 | `/api/login` | POST | form: `username`, `password` | 回 `{status, msg, token}`，token 12 小時到期 |
-| `/api/AddScore` | POST | json: `token`, `group`, `year`, `name`, `sing`, `dance` | 每個 `true` 加 1 分 |
+| `/api/AddScore` | POST | json: `token`, `group`, `delta` | 加減 `delta` 分（可負，結果夾在 0–999）；沒帶 `delta` 時沿用舊的 `year`, `name`, `sing`, `dance`，每個 `true` 加 1 分 |
 | `/api/SetScore` | POST | json: `token`, `group`, `score` | 直接指定分數 |
 | `/api/join` | POST | json: `name`, `code` | 用組別代碼加入（不分大小寫），回 `group` 和玩家 token |
-| `/api/play/state` | POST | json: `token` | 目前題號、是否作答中、自己的答案（不含解答）、收卷後的跑馬燈內容 |
+| `/api/play/state` | POST | json: `token` | 目前題號、是否作答中、自己的答案（不含解答）、收卷後的跑馬燈內容、四組總分、自己的組別、歷史版本號 `histRev` |
+| `/api/play/history` | POST | json: `token` | 收過卷的題目，最近收卷的在上：解答、縮圖、自己的答案與每項得分、各組這題得分。作答中的那題不會出現；手機看到 `histRev` 變了才重抓 |
 | `/api/play/answer` | POST | json: `token`, `year`, `artist`, `title` | 作答中可重複送出，以最後一次為準 |
 | `/api/admin/{state,songs,select,open,close,judge,passwords,reset}` | POST | json: `token`, ... | 後台作答管理，參數見 `src/index.js` 的 `handleAdmin` |
 
@@ -80,8 +81,9 @@ npx wrangler deploy
 ## 歌單
 
 歌單含解答，**不能進 git**：照 `songs.example.json` 的格式寫成 `songs.json`（`songs*.json` 已 gitignore），
-在後台「歌單與解答」選檔上傳。解答只存在伺服器的 Durable Object，玩家端 API 拿不到。
+在後台「歌單與解答」選檔上傳。解答只存在伺服器的 Durable Object，玩家端 API 只有在那一題收卷後才拿得到那一題的解答。
 每首可以加 `youtube` 網址（選填，只收 http/https），後台發題時會出現播放連結；沒填就連到 YouTube 用「歌名 歌手」搜尋。
+收卷後玩家手機會顯示這首的 YouTube 縮圖（沒填或不是 YouTube 網址就不顯示）；作答中不會送出任何影片資訊。
 歌是用順序編號的，比賽開始後不要調換順序。
 
 計分：收卷時自動批改。年份精準 +3、差 3 年以內 +1；歌手、歌名答對各 +1（忽略大小寫、全半形、空白和標點）。

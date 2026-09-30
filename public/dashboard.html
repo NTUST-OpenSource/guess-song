@@ -17,86 +17,45 @@
         <a class="header-title" href="/">誰是猜歌王</a>
     </header>
 
-    <!-- 分數顯示區域 (4 隊網格) -->
+    <!-- 四隊分數：箭頭按了就存；分數可以直接打，按 Enter 存、Esc 取消 -->
     <main class="score-container">
         <div class="team-card" id="t1">
             <span class="team-label">第一隊</span>
-            <textarea class="score-box" maxlength="2" rows="1" placeholder="0" readonly></textarea>
+            <div class="score-editor">
+                <button class="score-step up btn-green" data-group="1" data-delta="1" aria-label="第一隊加一分"></button>
+                <input class="score-box" type="number" min="0" max="999" enterkeyhint="done" data-group="1" aria-label="第一隊分數">
+                <button class="score-step down btn-red" data-group="1" data-delta="-1" aria-label="第一隊減一分"></button>
+            </div>
         </div>
         <div class="team-card" id="t2">
             <span class="team-label">第二隊</span>
-            <textarea class="score-box" maxlength="2" rows="1" placeholder="0" readonly></textarea>
+            <div class="score-editor">
+                <button class="score-step up btn-green" data-group="2" data-delta="1" aria-label="第二隊加一分"></button>
+                <input class="score-box" type="number" min="0" max="999" enterkeyhint="done" data-group="2" aria-label="第二隊分數">
+                <button class="score-step down btn-red" data-group="2" data-delta="-1" aria-label="第二隊減一分"></button>
+            </div>
         </div>
         <div class="team-card" id="t3">
             <span class="team-label">第三隊</span>
-            <textarea class="score-box" maxlength="2" rows="1" placeholder="0" readonly></textarea>
+            <div class="score-editor">
+                <button class="score-step up btn-green" data-group="3" data-delta="1" aria-label="第三隊加一分"></button>
+                <input class="score-box" type="number" min="0" max="999" enterkeyhint="done" data-group="3" aria-label="第三隊分數">
+                <button class="score-step down btn-red" data-group="3" data-delta="-1" aria-label="第三隊減一分"></button>
+            </div>
         </div>
         <div class="team-card" id="t4">
             <span class="team-label">第四隊</span>
-            <textarea class="score-box" maxlength="2" rows="1" placeholder="0" readonly></textarea>
+            <div class="score-editor">
+                <button class="score-step up btn-green" data-group="4" data-delta="1" aria-label="第四隊加一分"></button>
+                <input class="score-box" type="number" min="0" max="999" enterkeyhint="done" data-group="4" aria-label="第四隊分數">
+                <button class="score-step down btn-red" data-group="4" data-delta="-1" aria-label="第四隊減一分"></button>
+            </div>
         </div>
     </main>
 
     <!-- 控制面板容器 -->
     <section class="control-container">
-        
-        <!-- 格子 1：快速加分 -->
-        <div class="control-card">
-            <h2 class="card-title">🎮 快速加分</h2>
-            
-            <div class="input-row">
-                <label for="group">組別 (1-4)</label>
-                <input id="group" type="number" min="1" max="4" placeholder="組別">
-            </div>
-
-            <div class="checkbox-group">
-                <label class="checkbox-label">
-                    <input id="year" type="checkbox">
-                    <span class="custom-checkbox"></span>
-                    年份 (+1)
-                </label>
-
-                <label class="checkbox-label">
-                    <input id="name" type="checkbox">
-                    <span class="custom-checkbox"></span>
-                    歌名 (+1)
-                </label>
-
-                <label class="checkbox-label">
-                    <input id="sing" type="checkbox">
-                    <span class="custom-checkbox"></span>
-                    唱 (+1)
-                </label>
-
-                <label class="checkbox-label">
-                    <input id="dance" type="checkbox">
-                    <span class="custom-checkbox"></span>
-                    跳 (+1)
-                </label>
-            </div>
-
-            <button id="add_score_btn" class="mc-button btn-green">送出加分</button>
-        </div>
-
-        <!-- 格子 2：直接設定分數 -->
-        <div class="control-card">
-            <h2 class="card-title">✏️ 直接設定分數</h2>
-            <p class="card-subtitle">打錯分數時使用</p>
-
-            <div class="input-row">
-                <label for="group_set">組別 (1-4)</label>
-                <input id="group_set" type="number" min="1" max="4" placeholder="組別">
-            </div>
-
-            <div class="input-row">
-                <label for="score">目標分數</label>
-                <input id="score" type="number" min="0" max="99" placeholder="分數">
-            </div>
-
-            <button id="set_score_btn" class="mc-button btn-gold">重設分數</button>
-        </div>
-
-        <!-- 格子 3：發題 / 收卷 -->
+        <!-- 發題 / 收卷 -->
         <div class="control-card">
             <h2 class="card-title">🎵 發題 / 收卷</h2>
             <p id="quiz_status" class="card-subtitle">尚未發題</p>
@@ -112,7 +71,7 @@
             <button id="close_btn" class="mc-button btn-gold">收卷並計分</button>
         </div>
 
-        <!-- 格子 4：組別代碼 -->
+        <!-- 組別代碼 -->
         <div class="control-card">
             <h2 class="card-title">🔑 組別代碼</h2>
             <p class="card-subtitle">玩家輸入代碼就會進到那一組；不分大小寫、各組不能重複，留空 = 該組不能加入</p>
@@ -120,7 +79,7 @@
             <button id="save_pw_btn" class="mc-button btn-gold">儲存代碼</button>
         </div>
 
-        <!-- 格子 5：作答狀況 -->
+        <!-- 作答狀況 -->
         <div class="control-card wide-card">
             <h2 class="card-title">📋 作答狀況</h2>
             <p id="answer_key" class="card-subtitle"></p>
@@ -136,7 +95,7 @@
             </div>
         </div>
 
-        <!-- 格子 6：歌單 -->
+        <!-- 歌單 -->
         <div class="control-card wide-card">
             <h2 class="card-title">📀 歌單與解答</h2>
             <p class="card-subtitle">
@@ -148,7 +107,7 @@
             <button id="save_songs_btn" class="mc-button btn-gold">儲存歌單</button>
         </div>
 
-        <!-- 格子 7：重置 -->
+        <!-- 重置 -->
         <div class="control-card wide-card">
             <h2 class="card-title">⚠️ 重置所有資料</h2>
             <p class="card-subtitle">清空四組分數、歌單與解答、組別代碼、所有作答紀錄。無法復原，比賽前或比賽後再用。</p>

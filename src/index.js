@@ -182,7 +182,7 @@ export class Scores extends DurableObject {
         const scores = await this.read();
         await this.ctx.storage.put("scores", {
             ...scores,
-            [group]: Math.min(MAX_SCORE, (scores[group] ?? 0) + delta),
+            [group]: Math.max(0, Math.min(MAX_SCORE, (scores[group] ?? 0) + delta)),
         });
     }
 
@@ -337,7 +337,9 @@ async function handleAddScore(env, body) {
     if (!(await requireAuth(env, body))) return fail("please login", 401);
     if (!isGroup(body.group)) return fail("unaccept group value");
 
-    const delta = [body.year, body.name, body.sing, body.dance].filter((v) => v === true).length;
+    // 後台上下箭頭送 delta（可負）；舊版的勾選欄位每個 true 加 1
+    const delta = body.delta ?? [body.year, body.name, body.sing, body.dance].filter((v) => v === true).length;
+    if (!Number.isInteger(delta) || Math.abs(delta) > MAX_SCORE) return fail("unaccept delta value");
     await scoresStub(env).add(body.group, delta);
     return ok();
 }

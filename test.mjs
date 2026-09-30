@@ -89,6 +89,23 @@ for (const score of [-1, 1000, "10", null]) {
 // SetScore 也要驗 token（原本 Flask 版沒驗）
 assert.equal((await post("/api/SetScore", { group: 3, score: 99 })).status, 401);
 
+// 後台上下箭頭：delta 可正可負，分數夾在 0–999
+await post("/api/SetScore", { token, group: 4, score: 1 });
+assert.equal((await post("/api/AddScore", { token, group: 4, delta: -1 })).status, 200);
+assert.equal((await scores())["4"], 0);
+await post("/api/AddScore", { token, group: 4, delta: -1 }); // 不會扣到負的
+assert.equal((await scores())["4"], 0);
+await post("/api/AddScore", { token, group: 4, delta: 1 });
+assert.equal((await scores())["4"], 1);
+await post("/api/SetScore", { token, group: 4, score: 999 });
+await post("/api/AddScore", { token, group: 4, delta: 1 }); // 不會超過上限
+assert.equal((await scores())["4"], 999);
+for (const delta of [1.5, "1", 1000, -1000]) {
+    assert.equal((await post("/api/AddScore", { token, group: 4, delta })).status, 400, `delta=${delta}`);
+}
+assert.equal((await post("/api/AddScore", { group: 4, delta: 1 })).status, 401);
+await post("/api/SetScore", { token, group: 4, score: 0 });
+
 // 壞掉的 JSON
 assert.equal((await call("/api/AddScore", { method: "POST", body: "{" })).status, 400);
 

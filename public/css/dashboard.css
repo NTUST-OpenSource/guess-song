@@ -102,8 +102,61 @@ html, body {
   cursor: default;
 }
 
+/* 後台的分數卡：▲ / 分數 / ▼。箭頭按了就存；分數可以直接打，按 Enter 存 */
+.score-editor {
+  width: 85%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.score-editor .score-box {
+  width: 100%;
+  padding: 0;
+  line-height: normal;
+  user-select: text;
+  cursor: text;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.score-editor .score-box::-webkit-inner-spin-button,
+.score-editor .score-box::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.score-editor .score-box:focus {
+  border-color: var(--mc-gold);
+}
+
+.score-step {
+  height: 38px;
+  border: 3px solid var(--mc-border);
+  cursor: pointer;
+}
+
+/* 箭頭用 CSS 畫，不用 emoji */
+.score-step::before {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 12px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.score-step.down::before {
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.score-step:active {
+  transform: translateY(2px);
+}
+
 /* ==========================================
-   控制區域：加分與設定格子
+   控制區域：發題、代碼、作答狀況、歌單
    ========================================== */
 .control-container {
   max-width: 900px;
@@ -149,47 +202,6 @@ html, body {
 .input-row label {
   font-size: 0.9rem;
   text-shadow: 1px 1px 0 var(--mc-border);
-}
-
-.input-row input {
-  height: 42px;
-  background-color: #000000;
-  border: 3px solid var(--mc-stone);
-  color: #ffffff;
-  padding: 0 10px;
-  font-size: 1.1rem;
-  outline: none;
-}
-
-.input-row input:focus {
-  border-color: var(--mc-gold);
-}
-
-/* Checkbox 客製化大按鈕風格（適合手機點擊） */
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 6px 0;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: rgba(0, 0, 0, 0.3);
-  padding: 10px 12px;
-  border: 2px solid var(--mc-stone);
-  cursor: pointer;
-  font-size: 0.95rem;
-  user-select: none;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--mc-green);
-  cursor: pointer;
 }
 
 /* ==========================================
@@ -366,9 +378,6 @@ html, body {
 @media (max-width: 380px) {
   .header-title {
     font-size: 1.2rem;
-  }
-  .checkbox-group {
-    flex-direction: column;
   }
 }
 

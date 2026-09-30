@@ -57,7 +57,7 @@
     <section class="control-container">
         <!-- 發題 / 收卷 -->
         <div class="control-card">
-            <h2 class="card-title">🎵 發題 / 收卷</h2>
+            <h2 class="card-title">發題 / 收卷</h2>
             <p id="quiz_status" class="card-subtitle">尚未發題</p>
 
             <div class="input-row">
@@ -73,7 +73,7 @@
 
         <!-- 組別代碼 -->
         <div class="control-card">
-            <h2 class="card-title">🔑 組別代碼</h2>
+            <h2 class="card-title">組別代碼</h2>
             <p class="card-subtitle">玩家輸入代碼就會進到那一組；不分大小寫、各組不能重複，留空 = 該組不能加入</p>
             <div id="group_passwords" class="password-grid"></div>
             <button id="save_pw_btn" class="mc-button btn-gold">儲存代碼</button>
@@ -81,10 +81,10 @@
 
         <!-- 作答狀況 -->
         <div class="control-card wide-card">
-            <h2 class="card-title">📋 作答狀況</h2>
+            <h2 class="card-title">作答狀況</h2>
             <p id="answer_key" class="card-subtitle"></p>
             <p id="answer_summary" class="card-subtitle"></p>
-            <p class="card-subtitle">點分數可以人工改判（年份 +3 → +1 → ✗ 輪流切換），切回原本的分數就是還原；收卷後改判會自動加減分</p>
+            <p class="card-subtitle">點分數可以人工改判（年份 +3 → +1 → +0 輪流切換），切回原本的分數就是還原；收卷後改判會自動加減分</p>
             <div class="table-wrap">
                 <table class="answer-table">
                     <thead>
@@ -97,7 +97,7 @@
 
         <!-- 歌單 -->
         <div class="control-card wide-card">
-            <h2 class="card-title">📀 歌單與解答</h2>
+            <h2 class="card-title">歌單與解答</h2>
             <p class="card-subtitle">
                 JSON 陣列，格式見 songs.example.json；歌手、歌名可以填多種寫法。
                 解答只存在伺服器，比賽開始後請不要調換順序。
@@ -109,7 +109,7 @@
 
         <!-- 重置 -->
         <div class="control-card wide-card">
-            <h2 class="card-title">⚠️ 重置所有資料</h2>
+            <h2 class="card-title">重置所有資料</h2>
             <p class="card-subtitle">清空四組分數、歌單與解答、組別代碼、所有作答紀錄。無法復原，比賽前或比賽後再用。</p>
             <button id="reset_btn" class="mc-button btn-red">重置資料庫與分數</button>
         </div>

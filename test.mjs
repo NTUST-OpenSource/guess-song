@@ -89,6 +89,23 @@ for (const score of [-1, 1000, "10", null]) {
 // SetScore 也要驗 token（原本 Flask 版沒驗）
 assert.equal((await post("/api/SetScore", { group: 3, score: 99 })).status, 401);
 
+// 後台上下箭頭：delta 可正可負，分數夾在 0–999
+await post("/api/SetScore", { token, group: 4, score: 1 });
+assert.equal((await post("/api/AddScore", { token, group: 4, delta: -1 })).status, 200);
+assert.equal((await scores())["4"], 0);
+await post("/api/AddScore", { token, group: 4, delta: -1 }); // 不會扣到負的
+assert.equal((await scores())["4"], 0);
+await post("/api/AddScore", { token, group: 4, delta: 1 });
+assert.equal((await scores())["4"], 1);
+await post("/api/SetScore", { token, group: 4, score: 999 });
+await post("/api/AddScore", { token, group: 4, delta: 1 }); // 不會超過上限
+assert.equal((await scores())["4"], 999);
+for (const delta of [1.5, "1", 1000, -1000]) {
+    assert.equal((await post("/api/AddScore", { token, group: 4, delta })).status, 400, `delta=${delta}`);
+}
+assert.equal((await post("/api/AddScore", { group: 4, delta: 1 })).status, 401);
+await post("/api/SetScore", { token, group: 4, score: 0 });
+
 // 壞掉的 JSON
 assert.equal((await call("/api/AddScore", { method: "POST", body: "{" })).status, 400);
 
@@ -113,6 +130,8 @@ const join = async (name, code) => post("/api/join", { name, code });
 const joinToken = async (...args) => (await (await join(...args)).json()).token;
 const answer = (t, a) => post("/api/play/answer", { token: t, ...a });
 const playState = async (t) => (await post("/api/play/state", { token: t })).json();
+const history = async (t) => (await (await post("/api/play/history", { token: t })).json()).history;
+const thumb = (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 // 作答 key 是「組別:隨機 id」，改判時用名字從後台資料找出 key
 const playerKey = async (name, songId) =>
     (await (await admin("state", { songId })).json()).answers.find((a) => a.name === name).player;
@@ -135,17 +154,19 @@ const ming = await joinToken("小明", "Red");
 const hua = await joinToken("小華", " red "); // 手機自動大寫、多打空白也能進
 const mei = await joinToken("小美", "BLUE");
 assert.equal((await (await join("小王", "blue")).json()).group, 2); // 回傳組別給前端顯示
+const quiet = await joinToken("阿靜", "blue"); // 加入但都不作答
 
 // 玩家 token 不能當後台 token，反之亦然
 assert.equal((await post("/api/admin/state", { token: ming })).status, 401);
 assert.equal((await post("/api/play/state", { token })).status, 401);
+assert.equal((await post("/api/play/history", { token })).status, 401);
 
 // 歌單格式要驗
 assert.equal((await admin("songs", { songs: [{ year: "2003", artist: "周杰倫", title: "晴天" }] })).status, 400);
 const songs = [
-    { year: 2003, artist: ["周杰倫", "Jay Chou"], title: "晴天", youtube: "https://youtu.be/example" },
+    { year: 2003, artist: ["周杰倫", "Jay Chou"], title: "晴天", youtube: "https://youtu.be/abcDEF12_-x?si=share" },
     { year: 2010, artist: "五月天", title: "倔強" },
-    { year: 2007, artist: "蔡依林", title: "日不落" },
+    { year: 2007, artist: "蔡依林", title: "日不落", youtube: "https://www.youtube.com/watch?v=0123456789A&t=30s" },
 ];
 // youtube 可省略；有填就要是 http(s) 網址
 const badLink = [{ ...songs[1], youtube: "javascript:alert(1)" }];
@@ -153,7 +174,7 @@ assert.equal((await admin("songs", { songs: badLink })).status, 400);
 assert.equal((await admin("songs", { songs })).status, 200);
 {
     const saved = (await (await admin("state")).json()).songs;
-    assert.equal(saved[0].youtube, "https://youtu.be/example");
+    assert.equal(saved[0].youtube, "https://youtu.be/abcDEF12_-x?si=share");
     assert.equal("youtube" in saved[1], false);
 }
 
@@ -180,6 +201,13 @@ let st = await playState(ming);
 assert.deepEqual(st.round, { no: 1, open: true });
 assert.equal(st.highlights, null);
 assert.ok(!JSON.stringify(st).includes("周杰倫"));
+assert.ok(!JSON.stringify(st).includes("abcDEF12")); // 影片 id 也不能漏
+
+// 狀態裡順便帶四組總分和自己的組別（手機上方的總分列不用再另外輪詢）；還沒收過卷就沒有歷史
+assert.deepEqual(st.scores, await scores());
+assert.equal(st.group, 1);
+assert.deepEqual(await history(ming), []);
+const revOpen = st.histRev;
 
 await answer(ming, { year: 2001, artist: "ＪＡＹ chou", title: "" }); // 年份差 2 → +1
 await answer(hua, { year: 2003, artist: "", title: "晴 天" }); // 年份精準 → +3
@@ -205,6 +233,22 @@ assert.deepEqual(st.highlights, [
     { group: 4, name: null, fields: [], points: 0 },
 ]);
 
+// 收卷後玩家看得到：解答（第一種寫法）、縮圖、自己的答案與每項得分、各組這題得分
+assert.notEqual(st.histRev, revOpen); // 版本號變了，手機才會重抓歷史
+assert.deepEqual(await history(ming), [
+    {
+        no: 1,
+        year: 2003,
+        artist: "周杰倫",
+        title: "晴天",
+        thumb: thumb("abcDEF12_-x"),
+        groups: { 1: 5, 2: 3, 3: 0, 4: 0 },
+        mine: { year: 2001, artist: "ＪＡＹ chou", title: "", points: { year: 1, artist: 1, title: 0 } },
+    },
+]);
+assert.deepEqual((await history(mei))[0].mine.points, { year: 1, artist: 1, title: 1 });
+assert.equal((await history(quiet))[0].mine, null); // 沒作答
+
 // 人工改判：年份可以改成 3 / 1 / 0，還原後總分跟著回來
 await judge("小美", "year", 3);
 assert.equal((await scores())[2] - before[2], 5);
@@ -229,6 +273,8 @@ assert.ok(answers.every((a) => !a.player.includes(a.name))); // key 不含名字
 // 同組同名的兩個人各自有自己的答案，不會互相覆蓋
 {
     await admin("open", { songId: 0 });
+    // 收過卷又重開的題目，作答中要從歷史拿掉，不能漏解答
+    assert.deepEqual(await history(ming), []);
     const twinA = await joinToken("阿明", "Red");
     const twinB = await joinToken("阿明", "Red");
     await answer(twinA, { year: 2003, artist: "", title: "" });
@@ -266,9 +312,21 @@ assert.deepEqual((await playState(mei)).highlights.slice(0, 2), [
     { group: 2, name: null, fields: [], points: 0 },
 ]);
 
+// 歷史新的在上；沒填 youtube 就沒有縮圖
+{
+    const h = await history(mei);
+    assert.deepEqual(h.map((x) => x.no), [3, 2, 1]);
+    assert.deepEqual(h.map((x) => x.thumb), [thumb("0123456789A"), null, thumb("abcDEF12_-x")]);
+}
+
 // 人工改判後跑馬燈跟著更新
+const revBeforeJudge = (await playState(mei)).histRev;
 await judge("小美", "title", 1, 2);
 assert.deepEqual((await playState(mei)).highlights[1], { group: 2, name: "小美", fields: ["title"], points: 1 });
+// 歷史也跟著更新
+assert.notEqual((await playState(mei)).histRev, revBeforeJudge);
+assert.equal((await history(mei))[0].mine.points.title, 1);
+assert.equal((await history(mei))[0].groups[2], 1);
 
 // 收卷後修正歌單會重新批改：第 2 首年份改成 2014，小美變精準 +3
 before = await scores();
@@ -276,6 +334,57 @@ await admin("songs", { songs: songs.map((s, i) => (i === 1 ? { ...s, year: 2014 
 after = await scores();
 assert.equal(after[2] - before[2], 3);
 assert.equal(after[1] - before[1], 0); // 小明 2013 仍在 ±3 內
+
+// 縮圖只認 YouTube 的網址格式
+for (const [link, id] of [
+    ["https://www.youtube.com/shorts/ZYXwvu98765", "ZYXwvu98765"],
+    ["https://m.youtube.com/watch?feature=share&v=ZYXwvu98765", "ZYXwvu98765"],
+    ["https://www.youtube.com/embed/ZYXwvu98765?start=10", "ZYXwvu98765"],
+    ["https://music.youtube.com/watch?v=ZYXwvu98765&list=x", "ZYXwvu98765"],
+    ["https://example.com/watch?v=ZYXwvu98765", null],
+    ["https://youtu.be/short", null],
+]) {
+    await admin("songs", { songs: songs.map((s, i) => (i === 1 ? { ...s, youtube: link } : s)) });
+    assert.equal((await history(mei)).find((h) => h.no === 2).thumb, id && thumb(id), link);
+}
+
+// 歷史照收卷順序排，不是照題號：第 1 首重開再收卷，就排到最上面（手機上放大顯示的是剛收卷的那首）
+await admin("open", { songId: 0 });
+await admin("close");
+assert.deepEqual((await history(mei)).map((x) => x.no), [1, 3, 2]);
+// 改歌單、改判只重算分數，不改順序
+await admin("songs", { songs });
+await judge("小美", "year", 3, 1);
+assert.deepEqual((await history(mei)).map((x) => x.no), [1, 3, 2]);
+
+// 收卷過的位置被換成別首歌（插歌、換歌），那首沒播過的歌不能出現在玩家的歷史裡；
+// 同一首歌修正解答（同一支影片、或歌名沒變）照常顯示新的解答
+await admin("songs", {
+    songs: [
+        { ...songs[0], title: ["晴天 Sunny Day"] }, // 同一支影片，歌名修正
+        { year: 1999, artist: "新歌手", title: "沒播過的歌" }, // 換成別首
+        { ...songs[2], year: 2008 }, // 歌名沒變，年份修正
+    ],
+});
+{
+    const h = await history(mei);
+    assert.ok(!JSON.stringify(h).includes("沒播過的歌"));
+    assert.deepEqual(
+        h.map((x) => [x.no, x.year, x.title]),
+        [
+            [1, 2003, "晴天 Sunny Day"],
+            [3, 2008, "日不落"],
+        ],
+    );
+}
+
+// 歌單換成空的：歷史跟著清空，版本號也要變，手機才會重抓
+{
+    const rev = (await playState(mei)).histRev;
+    await admin("songs", { songs: [] });
+    assert.notEqual((await playState(mei)).histRev, rev);
+    assert.deepEqual(await history(mei), []);
+}
 
 // ===== 重置整個資料庫 =====
 assert.equal((await post("/api/admin/reset", {})).status, 401); // 要後台 token
@@ -288,6 +397,16 @@ assert.deepEqual(await scores(), { 1: 0, 2: 0, 3: 0, 4: 0 });
 }
 assert.equal((await join("小明", "Red")).status, 401); // 組別代碼也清掉了
 assert.equal((await playState(ming)).round, null); // 舊玩家看到的是尚未發題
+assert.deepEqual((await playState(ming)).scores, { 1: 0, 2: 0, 3: 0, 4: 0 });
+assert.deepEqual(await history(ming), []);
+
+// 重置後版本號也要變（部署前的舊資料沒有 histRev，手機記的是 0 時也一樣）
+{
+    const legacy = new Scores(mockCtx(), { KV: mockKv(new Map()) });
+    assert.equal((await legacy.playerState(1, "x")).histRev, 0);
+    await legacy.resetAll();
+    assert.notEqual((await legacy.playerState(1, "x")).histRev, 0);
+}
 
 // 重置後不能又從舊 KV 把分數搬回來
 {

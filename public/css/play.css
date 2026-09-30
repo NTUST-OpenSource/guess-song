@@ -1,40 +1,151 @@
-/* 作答頁：沿用 login.css，這裡只補它沒有的元件 */
+/* 作答頁：沿用 login.css，這裡只補它沒有的元件（以手機為主） */
 [hidden] {
   display: none !important;
 }
 
+/* ==========================================
+   四組總分：固定在最上方，捲動也看得到
+   ========================================== */
+.score-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  /* 寬螢幕時四格維持在中間 480px 內 */
+  padding: 8px max(8px, calc((100% - 480px) / 2));
+  background-color: var(--mc-bedrock);
+  border-bottom: 4px solid var(--mc-stone);
+}
+
+.score-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px;
+  background-color: #000000;
+  border: 3px solid var(--mc-stone);
+  color: #dddddd;
+  font-size: 0.75rem;
+}
+
+.score-cell strong {
+  color: var(--mc-gold);
+  font-size: 1.1rem;
+  text-shadow: 2px 2px 0 #554e00;
+}
+
+/* 自己那組 */
+.score-cell.mine {
+  border-color: var(--mc-gold);
+}
+
+/* ==========================================
+   主內容：由上往下排，不垂直置中
+   ========================================== */
+.play-container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 12px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.play-container .login-card {
+  max-width: none;
+}
+
+/* 卡片頂端：左上角題號、中間組別與名字、右上角登出。欄位固定，題號藏起來時名字也不會跑位 */
+.play-head {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+}
+
+.play-head .round-no {
+  grid-column: 1;
+  justify-self: start;
+}
+
 .player-label {
+  grid-column: 2;
   margin: 0;
   text-align: center;
   font-size: 0.9rem;
   color: #dddddd;
   text-shadow: 1px 1px 0 var(--mc-border);
+  word-break: break-all;
+}
+
+.play-head .icon-btn {
+  grid-column: 3;
+  justify-self: end;
+}
+
+/* 題號：小小的黑底金字 */
+.round-no {
+  min-width: 26px;
+  padding: 4px 5px;
+  background-color: #000000;
+  border: 2px solid var(--mc-stone);
+  color: var(--mc-gold);
+  font-size: 0.75rem;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 1px 1px 0 #554e00;
+}
+
+/* 登出：只有圖示的方形按鈕 */
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background-color: var(--mc-btn-gray);
+  border: 3px solid var(--mc-border);
+  box-shadow: inset -3px -3px 0 #3a3a3a,
+              inset 3px 3px 0 #b8b8b8;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.icon-btn:active {
+  transform: translateY(2px);
 }
 
 .answer-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
+}
+
+.answer-form .mc-button {
+  margin-top: 0;
 }
 
 .submitted {
   margin: 0;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   line-height: 1.6;
   word-break: break-all;
 }
 
-.leave-btn {
-  background: none;
-  border: none;
-  color: #cccccc;
-  font-size: 0.8rem;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-/* 跑馬燈 */
+/* ==========================================
+   跑馬燈
+   ========================================== */
 .marquee {
   overflow: hidden;
   white-space: nowrap;
@@ -57,32 +168,142 @@
   to { transform: translateX(-100%); }
 }
 
-/* 計分板 */
-.mini-scores {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+/* ==========================================
+   收卷後的解答：最新一題縮圖放大，舊的縮圖在左邊
+   ========================================== */
+.history {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-.mini-team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 6px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border: 3px solid var(--mc-border);
-  font-size: 0.95rem;
-  text-shadow: 1px 1px 0 var(--mc-border);
+.history-item {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 10px 12px;
+  align-items: start;
+  padding: 12px;
+  background-color: var(--mc-dirt-light);
+  border: 4px solid var(--mc-border);
+  box-shadow: inset -4px -4px 0 var(--mc-dirt-dark),
+              inset 4px 4px 0 #a27856;
 }
 
-.mini-team strong {
+.history-item:first-child,
+.history-item.no-thumb {
+  grid-template-columns: 1fr;
+}
+
+/* 題號疊在縮圖左上角 */
+.history-media {
+  position: relative;
+}
+
+.history-media .round-no {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+.history-thumb {
+  display: block;
   width: 100%;
-  padding: 8px 0;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
   background-color: #000000;
-  border: 3px solid var(--mc-stone);
+  border: 3px solid var(--mc-border);
+}
+
+.history-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* 沒有縮圖時，題號在文字最上面 */
+.history-body > .round-no {
+  align-self: flex-start;
+}
+
+.history-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 2px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.history-row .tag {
+  flex: none;
+  margin-right: 6px;
+  padding: 1px 4px;
+  background-color: rgba(0, 0, 0, 0.35);
+  color: #dddddd;
+  font-size: 0.7rem;
+}
+
+.history-row .sep {
+  color: #bbbbbb;
+}
+
+.history-row .key {
   color: var(--mc-gold);
-  font-size: 1.8rem;
+  text-shadow: 1px 1px 0 #554e00;
+}
+
+.history-row .hit {
+  color: #9be86a;
+}
+
+.history-row .miss {
+  color: #ff8a8a;
+}
+
+.history-groups {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  font-size: 0.7rem;
   text-align: center;
-  text-shadow: 2px 2px 0 #554e00;
+}
+
+.history-groups span {
+  padding: 4px 0;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 2px solid transparent;
+}
+
+.history-groups .mine {
+  border-color: var(--mc-gold);
+}
+
+/* ==========================================
+   手機
+   ========================================== */
+@media (max-width: 480px) {
+  .top-header {
+    padding: 10px;
+    border-bottom-width: 4px;
+  }
+
+  .header-title {
+    font-size: 1.1rem;
+  }
+
+  .play-container .login-card {
+    padding: 18px 14px;
+    gap: 14px;
+  }
+
+  .login-title {
+    font-size: 1.1rem;
+  }
+
+  .marquee {
+    font-size: 0.85rem;
+  }
 }

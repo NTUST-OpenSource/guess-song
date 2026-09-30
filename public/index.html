@@ -11,68 +11,65 @@
     <link rel="stylesheet" href="/css/play.css">
 </head>
 <body>
+    <!-- 四組總分固定在最上方，自己那組框起來 -->
+    <div class="score-bar">
+        <div id="cell_1" class="score-cell"><span>1組</span><strong id="score_1">0</strong></div>
+        <div id="cell_2" class="score-cell"><span>2組</span><strong id="score_2">0</strong></div>
+        <div id="cell_3" class="score-cell"><span>3組</span><strong id="score_3">0</strong></div>
+        <div id="cell_4" class="score-cell"><span>4組</span><strong id="score_4">0</strong></div>
+    </div>
+
     <header class="top-header">
         <a class="header-title" href="/">誰是猜歌王</a>
     </header>
 
-    <!-- 收卷後的跑馬燈：最先答對、連續答對 -->
+    <!-- 收卷後的跑馬燈：每組這首得分最高的人 -->
     <div id="marquee" class="marquee" hidden><span id="marquee_text"></span></div>
 
-    <main class="login-container">
+    <main class="play-container">
         <!-- 加入：名字 + 組別代碼（代碼決定組別） -->
         <div id="join_view" class="login-card" hidden>
-            <h2 class="login-title">加入作答</h2>
-
             <div class="input-group">
-                <label for="player_name">名字</label>
-                <input id="player_name" type="text" maxlength="20" autocomplete="off" placeholder="請輸入名字">
+                <input id="player_name" type="text" maxlength="20" autocomplete="off" placeholder="名字" aria-label="名字">
             </div>
-
             <div class="input-group">
-                <label for="group_code">組別代碼</label>
-                <input id="group_code" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="請輸入工作人員給的組別代碼">
+                <input id="group_code" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="組別代碼" aria-label="組別代碼">
             </div>
-
             <button id="join_btn" class="mc-button">加入</button>
         </div>
 
         <!-- 作答 -->
         <div id="play_view" class="login-card" hidden>
-            <p id="player_label" class="player-label"></p>
+            <!-- 左上角題號、中間組別與名字、右上角登出 -->
+            <div class="play-head">
+                <span id="round_no" class="round-no" hidden></span>
+                <p id="player_label" class="player-label"></p>
+                <button id="leave_btn" class="icon-btn" aria-label="登出" title="登出">
+                    <!-- 門＋箭頭的像素圖示，不用 emoji -->
+                    <svg viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+                        <path d="M1 1H10V5H8V3H3V13H8V11H10V15H1Z M5 7H11V9H5Z M11 4H12V5H13V6H14V7H15V9H14V10H13V11H12V12H11Z"/>
+                    </svg>
+                </button>
+            </div>
             <h2 id="round_status" class="login-title">等待發題…</h2>
 
             <div id="answer_form" class="answer-form" hidden>
                 <div class="input-group">
-                    <label for="ans_year">年份</label>
-                    <input id="ans_year" type="number" inputmode="numeric" placeholder="例如 2003">
+                    <input id="ans_year" type="number" inputmode="numeric" placeholder="年份" aria-label="年份">
                 </div>
                 <div class="input-group">
-                    <label for="ans_artist">歌手</label>
-                    <input id="ans_artist" type="text" maxlength="50" autocomplete="off" placeholder="歌手">
+                    <input id="ans_artist" type="text" maxlength="50" autocomplete="off" placeholder="歌手" aria-label="歌手">
                 </div>
                 <div class="input-group">
-                    <label for="ans_title">歌名</label>
-                    <input id="ans_title" type="text" maxlength="50" autocomplete="off" placeholder="歌名">
+                    <input id="ans_title" type="text" maxlength="50" autocomplete="off" placeholder="歌名" aria-label="歌名">
                 </div>
-                <button id="answer_btn" class="mc-button">送出答案</button>
+                <button id="answer_btn" class="mc-button">送出</button>
+                <p id="submitted" class="submitted"></p>
             </div>
-
-            <p id="submitted" class="submitted"></p>
-            <button id="scores_btn" class="mc-button">看計分板</button>
-            <button id="leave_btn" class="leave-btn">換人作答</button>
         </div>
 
-        <!-- 計分板 -->
-        <div id="score_view" class="login-card" hidden>
-            <h2 class="login-title">計分板</h2>
-            <div class="mini-scores">
-                <div class="mini-team"><span>第一隊</span><strong id="score_1">0</strong></div>
-                <div class="mini-team"><span>第二隊</span><strong id="score_2">0</strong></div>
-                <div class="mini-team"><span>第三隊</span><strong id="score_3">0</strong></div>
-                <div class="mini-team"><span>第四隊</span><strong id="score_4">0</strong></div>
-            </div>
-            <button id="back_btn" class="mc-button">回到作答</button>
-        </div>
+        <!-- 收卷後的解答與自己的作答結果，新的在上 -->
+        <section id="history" class="history" hidden></section>
     </main>
 </body>
 </html>

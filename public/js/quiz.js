@@ -43,7 +43,7 @@ function judgeButton(songId, a, field) {
     const options = FIELD_POINTS[field];
     const next = options[(options.indexOf(pts) + 1) % options.length];
     btn.className = `judge-btn ${pts > 0 ? "correct" : "wrong"}${overridden ? " overridden" : ""}`;
-    btn.textContent = `${pts > 0 ? `+${pts}` : "✗"} ${value || "—"}`;
+    btn.textContent = `+${pts} ${value || "—"}`;
     btn.title = overridden ? "人工改判過，點到回自動批改的分數就是還原" : "點一下改判";
     btn.addEventListener("click", async () => {
         const res = await adminApi("judge", {
@@ -81,7 +81,7 @@ function render(state) {
     if (picked) {
         const query = encodeURIComponent(`${picked.title[0]} ${picked.artist[0]}`);
         link.href = picked.youtube ?? `https://www.youtube.com/results?search_query=${query}`;
-        link.textContent = picked.youtube ? "▶ 在 YouTube 播放" : "🔍 在 YouTube 搜尋這首";
+        link.textContent = picked.youtube ? "在 YouTube 播放" : "在 YouTube 搜尋這首";
     }
 
     $("quiz_status").textContent = round

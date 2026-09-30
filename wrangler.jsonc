@@ -1,6 +1,6 @@
 {
     "name": "guess-song",
-    "account_id": "7659c0dae4e899b3bee76cdb5363057c",
+    "account_id": "645a24d2df77eacbbc8a34a4f4938206",
     "main": "src/index.js",
     "compatibility_date": "2025-11-01",
     "routes": [{ "pattern": "song.ntust.org", "custom_domain": true }],
@@ -13,7 +13,7 @@
     "kv_namespaces": [
         {
             "binding": "KV",
-            "id": "c54be703b1ce4a2983e576d6476d7fd4"
+            "id": "a4e72fd16a59467bbee8748c4ceffb0f"
         }
     ],
     "durable_objects": {

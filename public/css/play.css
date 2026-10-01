@@ -51,7 +51,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .app {
   position: relative; isolation: isolate; overflow: hidden;
   height: 100vh; height: 100dvh;
-  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  /* One column that never grows past the screen, however long the name in the bottom bar is */
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto;
 }
 .bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: radial-gradient(130% 70% at 50% -10%, var(--bg-2), var(--bg) 70%); }
 .float { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); color: var(--float); fill: currentColor; animation: drift var(--t) linear infinite; }

@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#3c1580">
     <title>三『資』小豬 - 作答</title>
+    <link rel="icon" href="/favicon.ico" sizes="32x32">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
@@ -63,7 +66,6 @@
 
             <section class="scene scene-lobby" aria-label="等待發題">
                 <h2 class="lobby-team" id="lobby_team"></h2>
-                <p class="lobby-name" id="lobby_name"></p>
                 <div class="eq" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i></div>
                 <p class="lobby-wait">等待中</p>
             </section>
@@ -97,16 +99,15 @@
 
             <!-- After close: answer key, own answers, group totals, commentary -->
             <section class="scene scene-result" id="result" aria-label="本題結果">
-                <h2 class="q-no rv">第 <b class="round-no"></b> 題</h2>
-                <article class="card key-card rv">
+                <article class="card key-card rv" aria-label="正確答案">
                     <div class="cover" id="key_cover"></div>
                     <div class="key-text">
-                        <p class="key-label">正確答案</p>
                         <h3 class="key-title" id="key_title"></h3>
-                        <p class="key-meta" id="key_meta"></p>
+                        <p class="meta key-meta"><span class="meta-artist" id="key_artist"></span><span class="meta-year" id="key_year"></span></p>
                     </div>
                 </article>
                 <ul class="mine-list" id="mine_list" aria-label="我的答案"></ul>
+                <div class="divider rv" id="divider" aria-hidden="true"><i></i><svg class="shape" data-g="1" style="--i:0"><use href="#sh1"/></svg><svg class="shape" data-g="2" style="--i:1"><use href="#sh2"/></svg><svg class="shape" data-g="3" style="--i:2"><use href="#sh3"/></svg><svg class="shape" data-g="4" style="--i:3"><use href="#sh4"/></svg><i></i></div>
                 <section class="board rv" id="board" aria-label="各組總分">
                     <ol class="board-list" id="board_list"></ol>
                 </section>
@@ -116,10 +117,14 @@
         </main>
 
         <footer class="bottombar">
-            <span class="me-badge" aria-hidden="true"><svg class="shape"><use id="me_shape" href="#sh1"/></svg></span>
-            <span class="me-text"><b class="me-name" id="me_name"></b><span class="me-team" id="me_team"></span></span>
-            <span class="me-round" id="me_round" hidden></span>
-            <button class="icon-btn" id="history_btn" type="button" aria-label="作答紀錄"><svg class="icon" aria-hidden="true"><use href="#ic-list"/></svg></button>
+            <!-- Everything but logout opens the answer history -->
+            <button class="bar-open" id="history_btn" type="button">
+                <span class="me-badge" aria-hidden="true"><svg class="shape"><use id="me_shape" href="#sh1"/></svg></span>
+                <span class="me-text"><b class="me-name" id="me_name"></b><span class="me-team" id="me_team"></span></span>
+                <span class="me-round" id="me_round" hidden></span>
+                <span class="bar-icon" aria-hidden="true"><svg class="icon"><use href="#ic-list"/></svg></span>
+                <span class="sr">作答紀錄</span>
+            </button>
             <button class="icon-btn" id="leave_btn" type="button" aria-label="登出"><svg class="icon" aria-hidden="true"><use href="#ic-exit"/></svg></button>
         </footer>
 

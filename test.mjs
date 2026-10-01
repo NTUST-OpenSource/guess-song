@@ -280,13 +280,19 @@ assert.deepEqual(await history(ming), [
         thumb: thumb("abcDEF12_-x"),
         groups: { 1: 5, 2: 3, 3: 0, 4: 0 },
         mine: { year: 2001, artist: "ＪＡＹ chou", title: "", points: { year: 1, artist: 1, title: 0 } },
-        team: { points: { year: 3, artist: 1, title: 1 }, best: "小華" },
+        team: { year: 2003, artist: "ＪＡＹ chou", title: "晴 天", points: { year: 3, artist: 1, title: 1 }, best: "小華" },
     },
 ]);
 assert.deepEqual((await history(mei))[0].mine.points, { year: 1, artist: 1, title: 1 });
 assert.equal((await history(quiet))[0].mine, null);
-// Teammates see what the group earned.
-assert.deepEqual((await history(quiet))[0].team, { points: { year: 1, artist: 1, title: 1 }, best: "小美" });
+// Teammates see what the group earned and the answers that earned it.
+assert.deepEqual((await history(quiet))[0].team, {
+    year: 2006,
+    artist: "周杰倫",
+    title: "晴天",
+    points: { year: 1, artist: 1, title: 1 },
+    best: "小美",
+});
 
 // Manual judging: year can be set to 3, 1 or 0, and clearing it restores the total.
 await judge("小美", "year", 3);
@@ -359,6 +365,15 @@ assert.deepEqual((await playState(mei)).result.best.slice(0, 2), [
     const h = await history(mei);
     assert.deepEqual(h.map((x) => x.no), [3, 2, 1]);
     assert.deepEqual(h.map((x) => x.thumb), [thumb("0123456789A"), null, thumb("abcDEF12_-x")]);
+    // Fields nobody in the group scored carry no answer.
+    assert.deepEqual(h[0].team, { year: null, artist: null, title: null, points: { year: 0, artist: 0, title: 0 }, best: null });
+    assert.deepEqual((await history(ming))[1].team, {
+        year: 2013,
+        artist: null,
+        title: "倔強",
+        points: { year: 1, artist: 0, title: 1 },
+        best: "小明",
+    });
 }
 
 // Judging updates the top scorers and pushes to phones.

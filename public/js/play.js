@@ -14,6 +14,7 @@ const stamp = $("stamp");
 const flood = $("flood");
 const conn = $("conn");
 const sheet = $("sheet");
+const sheetPanel = sheet.querySelector(".sheet-panel");
 const answerScene = $("answer");
 const resultScene = $("result");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -291,7 +292,8 @@ function renderResult(r, scores, settled) {
     const top = Math.max(1, ...GROUPS.map((g) => scores[g] ?? 0));
     setCover($("key_cover"), r.thumb, r.no);
     $("key_title").textContent = r.title;
-    $("key_meta").textContent = `${r.artist} · ${r.year}`;
+    $("key_artist").textContent = r.artist;
+    $("key_year").textContent = r.year;
     $("mine_list").replaceChildren(...FIELDS.map((f) => mineRow(f, r.mine)));
     buildBoard(settled ? scores : beforeScores(scores, r.groups), r, settled, top);
     $("notes").replaceChildren(...r.notes.map((t) => el("li", "", t)));
@@ -428,7 +430,6 @@ async function playReveal(s) {
     flood.classList.replace("go", "out");
     if (await pause(300, id)) return;
     flood.hidden = true;
-    show(resultScene.querySelector(".q-no"));
     show(resultScene.querySelector(".key-card"));
     if (await pause(520, id)) return;
     for (const row of resultScene.querySelectorAll(".mine-row")) {
@@ -437,9 +438,11 @@ async function playReveal(s) {
     }
     if (total) confetti();
     if (await pause(total ? 700 : 300, id)) return;
-    // The page is long: scroll to the group totals after the player's own rows.
+    // The page is long: scroll to the divider above the group totals after the player's own rows.
+    show($("divider"));
+    stage.scrollTo({ top: $("divider").offsetTop - 12, behavior: reduce.matches || skipping ? "auto" : "smooth" });
+    if (await pause(300, id)) return;
     show($("board"));
-    stage.scrollTo({ top: $("board").offsetTop - 12, behavior: reduce.matches || skipping ? "auto" : "smooth" });
     if (await pause(650, id)) return;
     for (const g of GROUPS) {
         rowByGroup[g].classList.add("scored");
@@ -470,17 +473,13 @@ let historyJson = "";
 let historyCards = [];
 let historySeq = 0;
 
-const teamText = (f, pts) => (pts === 0 ? "沒人答對" : f !== "year" ? "答對" : pts === 3 ? "猜中年份" : "差 3 年內");
-
-// Total and the three [text, points] rows for the current view.
+// Total and the three [text, points] rows for the current view; the group view shows the answers that scored.
 function viewOf(h) {
-    if (historyView === "team") {
-        return { total: h.groups[myGroup()] ?? 0, rows: FIELDS.map((f) => [teamText(f, h.team.points[f]), h.team.points[f]]) };
-    }
-    const m = h.mine;
+    const team = historyView === "team";
+    const a = team ? h.team : h.mine;
     return {
-        total: m ? sumPoints(m.points) : 0,
-        rows: FIELDS.map((f) => (m ? [String(m[f] ?? "") || "—", m.points[f]] : ["未作答", 0])),
+        total: team ? (h.groups[myGroup()] ?? 0) : a ? sumPoints(a.points) : 0,
+        rows: FIELDS.map((f) => (a ? [String(a[f] ?? "") || "—", a.points[f]] : ["未作答", 0])),
     };
 }
 
@@ -507,7 +506,7 @@ function applyView(card, animate) {
     card.gain.classList.toggle("zero", !total);
     rows.forEach(([text, pts], i) => {
         const { row, value, points } = card.cells[i];
-        row.classList.toggle("miss", pts === 0);
+        row.dataset.pts = pts;
         roll(value, text, undefined, animate);
         roll(points, `+${pts}`, pts, animate);
     });
@@ -527,14 +526,19 @@ function groupChips(groups) {
 // One card per round; the top half matches the answer card on the result screen.
 function historyCard(h) {
     const node = el("article", "h-item");
+    node.setAttribute("aria-label", `第 ${h.no} 題`);
     const top = el("div", "h-top");
     const cover = el("div", "cover");
     cover.setAttribute("aria-hidden", "true");
     setCover(cover, h.thumb, h.no);
     const text = el("div", "h-text");
-    text.append(el("p", "h-no", `第 ${h.no} 題`), el("h4", "h-title", h.title), el("p", "h-meta", `${h.artist} · ${h.year}`));
+    const meta = el("p", "meta h-meta");
+    meta.append(el("span", "meta-artist", h.artist), el("span", "meta-year", String(h.year)));
+    text.append(el("h4", "h-title", h.title), meta);
     const gain = el("span", "h-gain roll");
-    top.append(cover, text, gain);
+    const no = el("span", "h-no", String(h.no));
+    no.setAttribute("aria-hidden", "true");
+    top.append(cover, text, gain, no);
     const list = el("ul", "h-rows");
     const cells = FIELDS.map((f) => {
         const row = el("li", "h-row");
@@ -571,6 +575,8 @@ async function loadHistory() {
     const seq = ++historySeq;
     try {
         const { status, data } = await api("/api/play/history", { token: token() });
+        // Swap the content only after the slide-up, so the moving panel is never repainted.
+        await Promise.allSettled(sheetPanel.getAnimations().map((a) => a.finished));
         // A newer request is pending, or the sheet closed while waiting.
         if (seq !== historySeq || sheet.hidden) return;
         if (status === 401) return leave();
@@ -586,13 +592,16 @@ async function loadHistory() {
 
 function openSheet() {
     if (!historyData) $("history_list").replaceChildren(el("p", "h-empty", "載入中…"));
+    sheet.classList.remove("closing");
     sheet.hidden = false;
-    $("sheet_close").focus();
+    // The close button starts below the screen; a scrolling focus would shift the whole page.
+    $("sheet_close").focus({ preventScroll: true });
     void loadHistory();
 }
 
+// The panel slides down first; the animationend listener hides the sheet.
 function closeSheet() {
-    sheet.hidden = true;
+    if (!sheet.hidden) sheet.classList.add("closing");
 }
 
 function setView(view) {
@@ -676,7 +685,6 @@ function showMe() {
     $("me_name").textContent = me?.n ?? "";
     $("me_team").textContent = me ? `第 ${me.g} 組` : "";
     $("lobby_team").textContent = me ? `第 ${me.g} 組` : "";
-    $("lobby_name").textContent = me?.n ?? "";
     // The first pushed state decides the scene.
     setScene("lobby");
 }
@@ -749,6 +757,11 @@ for (const id of ["ans_year", "ans_artist", "ans_title"]) $(id).addEventListener
 $("history_btn").addEventListener("click", openSheet);
 $("leave_btn").addEventListener("click", leave);
 $("sheet_close").addEventListener("click", closeSheet);
+sheetPanel.addEventListener("animationend", (e) => {
+    if (e.animationName !== "sheetDown") return;
+    sheet.hidden = true;
+    sheet.classList.remove("closing");
+});
 sheet.addEventListener("click", (e) => {
     if (e.target === sheet) closeSheet();
 });

@@ -242,6 +242,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Only the veil fades; the panel stays opaque while it slides up */
 .sheet::before { content: ""; position: absolute; inset: 0; background: var(--veil); animation: fadeIn .25s both; }
 .sheet-panel { position: relative; display: flex; flex-direction: column; width: 100%; max-width: calc(var(--content) + 2 * var(--pad)); height: 88%; border-radius: 22px 22px 0 0; background: var(--sheet); color: var(--card-ink); animation: sheetUp .4s var(--ease-out) both; }
+.sheet.closing::before { animation: fadeOut .3s var(--ease-in) both; }
+.sheet.closing .sheet-panel { animation: sheetDown .3s var(--ease-in) both; }
 .sheet-head { display: flex; align-items: center; gap: 10px; padding: 16px var(--pad) 10px; }
 .sheet-head h3 { flex: 1; margin: 0; font: 900 20px var(--font-display); white-space: nowrap; }
 /* Toggle: the dark pill slides and the label colors fade */
@@ -338,6 +340,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes fadeIn { from { opacity: 0; } }
 @keyframes fadeOut { to { opacity: 0; } }
 @keyframes sheetUp { from { transform: translateY(100%); } }
+@keyframes sheetDown { to { transform: translateY(100%); } }
 @keyframes shapeIn { 0% { opacity: 0; transform: scale(.3) rotate(-120deg); } 60% { opacity: 1; transform: scale(1.25) rotate(10deg); } 100% { opacity: 1; transform: none; } }
 @keyframes ruleGrow { from { transform: scaleX(0); } }
 @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translate(-7px, 2px); } 40% { transform: translate(6px, -3px); } 60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, 0); } }

@@ -587,14 +587,16 @@ async function loadHistory() {
 
 function openSheet() {
     if (!historyData) $("history_list").replaceChildren(el("p", "h-empty", "載入中…"));
+    sheet.classList.remove("closing");
     sheet.hidden = false;
     // The close button starts below the screen; a scrolling focus would shift the whole page.
     $("sheet_close").focus({ preventScroll: true });
     void loadHistory();
 }
 
+// The panel slides down first; the animationend listener hides the sheet.
 function closeSheet() {
-    sheet.hidden = true;
+    if (!sheet.hidden) sheet.classList.add("closing");
 }
 
 function setView(view) {
@@ -751,6 +753,11 @@ for (const id of ["ans_year", "ans_artist", "ans_title"]) $(id).addEventListener
 $("history_btn").addEventListener("click", openSheet);
 $("leave_btn").addEventListener("click", leave);
 $("sheet_close").addEventListener("click", closeSheet);
+sheetPanel.addEventListener("animationend", (e) => {
+    if (e.animationName !== "sheetDown") return;
+    sheet.hidden = true;
+    sheet.classList.remove("closing");
+});
 sheet.addEventListener("click", (e) => {
     if (e.target === sheet) closeSheet();
 });

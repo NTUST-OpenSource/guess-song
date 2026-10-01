@@ -292,7 +292,8 @@ function renderResult(r, scores, settled) {
     const top = Math.max(1, ...GROUPS.map((g) => scores[g] ?? 0));
     setCover($("key_cover"), r.thumb, r.no);
     $("key_title").textContent = r.title;
-    $("key_meta").textContent = `${r.artist} · ${r.year}`;
+    $("key_artist").textContent = r.artist;
+    $("key_year").textContent = r.year;
     $("mine_list").replaceChildren(...FIELDS.map((f) => mineRow(f, r.mine)));
     buildBoard(settled ? scores : beforeScores(scores, r.groups), r, settled, top);
     $("notes").replaceChildren(...r.notes.map((t) => el("li", "", t)));
@@ -429,7 +430,6 @@ async function playReveal(s) {
     flood.classList.replace("go", "out");
     if (await pause(300, id)) return;
     flood.hidden = true;
-    show(resultScene.querySelector(".q-no"));
     show(resultScene.querySelector(".key-card"));
     if (await pause(520, id)) return;
     for (const row of resultScene.querySelectorAll(".mine-row")) {

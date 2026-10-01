@@ -100,13 +100,11 @@
 
             <!-- After close: answer key, own answers, group totals, commentary -->
             <section class="scene scene-result" id="result" aria-label="本題結果">
-                <h2 class="q-no rv">第 <b class="round-no"></b> 題</h2>
-                <article class="card key-card rv">
+                <article class="card key-card rv" aria-label="正確答案">
                     <div class="cover" id="key_cover"></div>
                     <div class="key-text">
-                        <p class="key-label">正確答案</p>
                         <h3 class="key-title" id="key_title"></h3>
-                        <p class="key-meta" id="key_meta"></p>
+                        <p class="key-meta"><span class="key-artist" id="key_artist"></span><span class="key-year" id="key_year"></span></p>
                     </div>
                 </article>
                 <ul class="mine-list" id="mine_list" aria-label="我的答案"></ul>

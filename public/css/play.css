@@ -183,10 +183,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: radial-gradient(circle, var(--disc-label) 0 20%, var(--disc) 21% 24%, transparent 25%),
               repeating-radial-gradient(circle, var(--disc) 0 2px, var(--disc-groove) 2px 3px);
 }
-.key-label { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .08em; color: var(--card-dim); }
 /* Long titles and artists are clamped. */
 .key-title { margin: 2px 0; font: 900 20px/1.2 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.key-meta { margin: 0; font-size: 14px; font-weight: 800; color: var(--card-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Artist and year share a line when they fit; otherwise the year wraps alone and the dot before it falls outside the clip */
+.key-meta { display: flex; flex-wrap: wrap; column-gap: 1em; overflow: hidden; margin: 0; font-size: 14px; font-weight: 800; color: var(--card-dim); }
+.key-artist { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.key-year { white-space: nowrap; }
+.key-year::before { content: "·"; display: inline-block; width: 1em; margin-left: -1em; text-align: center; }
 .mine-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .mine-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 30px 44px; align-items: center; gap: 8px; padding: 10px 12px; }
 .m-label { font-size: 13px; font-weight: 900; color: var(--card-dim); }

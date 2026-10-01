@@ -262,15 +262,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sheet-close { padding: 8px 14px; border: 0; border-radius: 99px; background: var(--chip-soft); color: var(--card-ink); font-weight: 800; }
 .sheet-body { display: grid; align-content: start; gap: 12px; overflow-y: auto; overscroll-behavior: contain; padding: 4px var(--pad) max(22px, env(safe-area-inset-bottom)); }
 .h-item { display: flex; flex-direction: column; padding: 0 12px 12px; border-radius: 10px; background: var(--card); box-shadow: var(--shadow-soft); }
-/* Like the answer card, the cover reaches the card's left and top edges; the text and total keep the padding */
-.h-top { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 12px; margin: 0 -12px; }
+/* Like the answer card, the cover reaches the card's left and top edges; the round number is a tab in the top-right corner */
+.h-top { position: relative; display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 12px; margin: 0 -12px; }
 .h-top .cover { min-height: 72px; border-radius: 10px 0 0 0; }
 .h-text { align-self: center; min-width: 0; padding: 10px 0; }
-.h-no { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--card-dim); }
+.h-no { position: absolute; top: 0; right: 0; display: grid; place-items: center; min-width: 30px; height: 24px; padding: 0 8px; border-radius: 0 10px 0 10px; background: var(--card-dim); color: var(--card); font: 900 12px var(--font-num); }
 .h-title { margin: 1px 0 2px; font: 900 18px/1.25 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .h-meta { font-size: 13px; }
 /* Scores are at most +5; a fixed width keeps view switches from re-wrapping the title or the values */
-.h-gain { align-self: center; justify-items: end; width: 1.4em; margin-right: 12px; font: 900 24px var(--font-num); font-variant-numeric: tabular-nums; transition: color .3s; }
+.h-gain { align-self: end; justify-items: end; width: 1.4em; margin: 0 12px 6px 0; font: 900 24px var(--font-num); font-variant-numeric: tabular-nums; transition: color .3s; }
 .h-gain.zero { color: var(--card-dim); }
 .h-rows { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
 .h-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 8px; background: var(--hit-soft); color: var(--hit-ink); font-size: 14px; font-weight: 800; transition: background-color .3s, color .3s; }

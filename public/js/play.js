@@ -526,6 +526,7 @@ function groupChips(groups) {
 // One card per round; the top half matches the answer card on the result screen.
 function historyCard(h) {
     const node = el("article", "h-item");
+    node.setAttribute("aria-label", `第 ${h.no} 題`);
     const top = el("div", "h-top");
     const cover = el("div", "cover");
     cover.setAttribute("aria-hidden", "true");
@@ -533,9 +534,11 @@ function historyCard(h) {
     const text = el("div", "h-text");
     const meta = el("p", "meta h-meta");
     meta.append(el("span", "meta-artist", h.artist), el("span", "meta-year", String(h.year)));
-    text.append(el("p", "h-no", `第 ${h.no} 題`), el("h4", "h-title", h.title), meta);
+    text.append(el("h4", "h-title", h.title), meta);
     const gain = el("span", "h-gain roll");
-    top.append(cover, text, gain);
+    const no = el("span", "h-no", String(h.no));
+    no.setAttribute("aria-hidden", "true");
+    top.append(cover, text, gain, no);
     const list = el("ul", "h-rows");
     const cells = FIELDS.map((f) => {
         const row = el("li", "h-row");

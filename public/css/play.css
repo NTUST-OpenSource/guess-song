@@ -185,8 +185,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .key-label { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .08em; color: var(--card-dim); }
 /* Long titles and artists are clamped. */
-.key-title { margin: 2px 0; font: 900 24px/1.2 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.key-meta { margin: 0; font-weight: 800; color: var(--card-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.key-title { margin: 2px 0; font: 900 20px/1.2 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.key-meta { margin: 0; font-size: 14px; font-weight: 800; color: var(--card-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mine-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .mine-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 30px 44px; align-items: center; gap: 8px; padding: 10px 12px; }
 .m-label { font-size: 13px; font-weight: 900; color: var(--card-dim); }

@@ -117,10 +117,14 @@
         </main>
 
         <footer class="bottombar">
-            <span class="me-badge" aria-hidden="true"><svg class="shape"><use id="me_shape" href="#sh1"/></svg></span>
-            <span class="me-text"><b class="me-name" id="me_name"></b><span class="me-team" id="me_team"></span></span>
-            <span class="me-round" id="me_round" hidden></span>
-            <button class="icon-btn" id="history_btn" type="button" aria-label="作答紀錄"><svg class="icon" aria-hidden="true"><use href="#ic-list"/></svg></button>
+            <!-- Everything but logout opens the answer history -->
+            <button class="bar-open" id="history_btn" type="button">
+                <span class="me-badge" aria-hidden="true"><svg class="shape"><use id="me_shape" href="#sh1"/></svg></span>
+                <span class="me-text"><b class="me-name" id="me_name"></b><span class="me-team" id="me_team"></span></span>
+                <span class="me-round" id="me_round" hidden></span>
+                <span class="bar-icon" aria-hidden="true"><svg class="icon"><use href="#ic-list"/></svg></span>
+                <span class="sr">作答紀錄</span>
+            </button>
             <button class="icon-btn" id="leave_btn" type="button" aria-label="登出"><svg class="icon" aria-hidden="true"><use href="#ic-exit"/></svg></button>
         </footer>
 

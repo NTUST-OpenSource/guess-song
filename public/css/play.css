@@ -87,7 +87,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .app.offline .stage { opacity: .5; transition: opacity .3s; }
 
 /* Bottom bar: player and round on a white card as wide as the content; the sides and the safe area show the background */
-.bottombar { position: relative; z-index: 4; display: flex; align-items: center; gap: 10px; margin: 0 var(--side) max(14px, env(safe-area-inset-bottom)); padding: 8px; border-radius: 16px; background: var(--bar); color: var(--bar-ink); box-shadow: var(--shadow-card); }
+.bottombar { position: relative; z-index: 4; display: flex; align-items: center; margin: 0 var(--side) max(14px, env(safe-area-inset-bottom)); padding-right: 8px; border-radius: 16px; background: var(--bar); color: var(--bar-ink); box-shadow: var(--shadow-card); transition: transform .15s var(--ease-out); }
+.bottombar :focus-visible { outline-color: var(--bar-ink); outline-offset: -3px; }
+/* One button covers the card up to the logout button; the whole card presses in */
+.bar-open { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 8px 10px 8px 8px; border: 0; border-radius: 16px 0 0 16px; background: none; text-align: left; }
+.bottombar:has(.bar-open:active) { transform: scale(.97); }
+.bar-icon { display: grid; place-items: center; width: 40px; height: 40px; flex: none; }
 .me-badge { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 8px; background: var(--my); color: var(--my-ink); }
 .me-badge .shape { width: 17px; height: 17px; }
 .me-text { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.25; }

@@ -222,8 +222,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .scene-result.revealing .mine-row.in .m-pts { animation: popIn .4s .32s var(--ease-pop) both; }
 
 /* Answer history: a fixed-height sheet, so loading never resizes it */
-.sheet { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: var(--veil); animation: fadeIn .25s both; }
-.sheet-panel { display: flex; flex-direction: column; width: 100%; max-width: calc(var(--content) + 2 * var(--pad)); height: 88%; border-radius: 22px 22px 0 0; background: var(--sheet); color: var(--card-ink); animation: sheetUp .4s var(--ease-out) both; }
+.sheet { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+/* Only the veil fades; the panel stays opaque while it slides up */
+.sheet::before { content: ""; position: absolute; inset: 0; background: var(--veil); animation: fadeIn .25s both; }
+.sheet-panel { position: relative; display: flex; flex-direction: column; width: 100%; max-width: calc(var(--content) + 2 * var(--pad)); height: 88%; border-radius: 22px 22px 0 0; background: var(--sheet); color: var(--card-ink); animation: sheetUp .4s var(--ease-out) both; }
 .sheet-head { display: flex; align-items: center; gap: 10px; padding: 16px var(--pad) 10px; }
 .sheet-head h3 { flex: 1; margin: 0; font: 900 20px var(--font-display); white-space: nowrap; }
 /* Toggle: the dark pill slides and the label colors fade */

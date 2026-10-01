@@ -14,6 +14,7 @@ const stamp = $("stamp");
 const flood = $("flood");
 const conn = $("conn");
 const sheet = $("sheet");
+const sheetPanel = sheet.querySelector(".sheet-panel");
 const answerScene = $("answer");
 const resultScene = $("result");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -571,6 +572,8 @@ async function loadHistory() {
     const seq = ++historySeq;
     try {
         const { status, data } = await api("/api/play/history", { token: token() });
+        // Swap the content only after the slide-up, so the moving panel is never repainted.
+        await Promise.allSettled(sheetPanel.getAnimations().map((a) => a.finished));
         // A newer request is pending, or the sheet closed while waiting.
         if (seq !== historySeq || sheet.hidden) return;
         if (status === 401) return leave();
@@ -587,7 +590,8 @@ async function loadHistory() {
 function openSheet() {
     if (!historyData) $("history_list").replaceChildren(el("p", "h-empty", "載入中…"));
     sheet.hidden = false;
-    $("sheet_close").focus();
+    // The close button starts below the screen; a scrolling focus would shift the whole page.
+    $("sheet_close").focus({ preventScroll: true });
     void loadHistory();
 }
 

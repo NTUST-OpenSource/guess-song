@@ -12,7 +12,7 @@
   --btn: #24123f; --btn-ink: #ffffff; --btn-edge: #0d0518;
   --bar: #ffffff; --bar-ink: #22113f; --bar-chip: #ece6f7;
   --chip-shadow: 0 4px 0 rgba(0, 0, 0, .25); --mine-ring: #ffffff; --chip-soft: #efeaf7;
-  --note-bg: rgba(255, 255, 255, .14);
+  --note-bg: rgba(255, 255, 255, .14); --rule: rgba(255, 255, 255, .3);
   --intro-bg: #46178f; --count-bg: #ffffff; --count-ink: #46178f;
   --stamp-bg: #e5243b;
   --stamp-clip: polygon(100% 50%, 89.2% 57.8%, 96.2% 69.1%, 83.3% 72.2%, 85.4% 85.4%, 72.2% 83.3%, 69.1% 96.2%, 57.8% 89.2%, 50% 100%, 42.2% 89.2%, 30.9% 96.2%, 27.8% 83.3%, 14.6% 85.4%, 16.7% 72.2%, 3.8% 69.1%, 10.8% 57.8%, 0% 50%, 10.8% 42.2%, 3.8% 30.9%, 16.7% 27.8%, 14.6% 14.6%, 27.8% 16.7%, 30.9% 3.8%, 42.2% 10.8%, 50% 0%, 57.8% 10.8%, 69.1% 3.8%, 72.2% 16.7%, 85.4% 14.6%, 83.3% 27.8%, 96.2% 30.9%, 89.2% 42.2%);
@@ -191,6 +191,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .mine-row.miss .m-mark { background: var(--bad); color: var(--bad-ink); }
 .m-mark .icon { width: 18px; height: 18px; }
 .m-pts { justify-self: end; font: 900 18px var(--font-num); }
+/* Divider between the player's answers and the ranking */
+.divider { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.divider i { flex: 1; height: 3px; border-radius: 99px; background: var(--rule); }
+.divider i:first-child { transform-origin: right; }
+.divider i:last-child { transform-origin: left; }
+.divider .shape { width: 14px; height: 14px; color: var(--gc); }
 .board { display: flex; flex-direction: column; gap: 8px; scroll-margin-top: 12px; }
 .board-list { position: relative; list-style: none; margin: 0; padding: 0; height: calc(var(--row-h) * 4); }
 .b-row {
@@ -221,6 +227,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .scene-result.revealing .key-card.in, .scene-result.revealing .mine-row.in { animation: flipIn .55s var(--ease-pop) both; transform-origin: 50% 0; }
 .scene-result.revealing .mine-row.in .m-mark { animation: popIn .4s .22s var(--ease-pop) both; }
 .scene-result.revealing .mine-row.in .m-pts { animation: popIn .4s .32s var(--ease-pop) both; }
+/* The shapes spin in one by one and the lines draw outward from them */
+.scene-result.revealing .divider.in { animation: none; }
+.scene-result.revealing .divider.in .shape { animation: shapeIn .5s calc(var(--i) * .08s) var(--ease-out) both; }
+.scene-result.revealing .divider.in i { animation: ruleGrow .55s .2s var(--ease-out) both; }
 
 /* Answer history: a fixed-height sheet, so loading never resizes it */
 .sheet { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
@@ -323,6 +333,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes fadeIn { from { opacity: 0; } }
 @keyframes fadeOut { to { opacity: 0; } }
 @keyframes sheetUp { from { transform: translateY(100%); } }
+@keyframes shapeIn { 0% { opacity: 0; transform: scale(.3) rotate(-120deg); } 60% { opacity: 1; transform: scale(1.25) rotate(10deg); } 100% { opacity: 1; transform: none; } }
+@keyframes ruleGrow { from { transform: scaleX(0); } }
 @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translate(-7px, 2px); } 40% { transform: translate(6px, -3px); } 60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, 0); } }
 @keyframes wipeIn { to { transform: translateX(0) skewX(-12deg); } }
 @keyframes curtainUp { to { transform: translateY(-100%); } }

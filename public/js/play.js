@@ -438,9 +438,11 @@ async function playReveal(s) {
     }
     if (total) confetti();
     if (await pause(total ? 700 : 300, id)) return;
-    // The page is long: scroll to the group totals after the player's own rows.
+    // The page is long: scroll to the divider above the group totals after the player's own rows.
+    show($("divider"));
+    stage.scrollTo({ top: $("divider").offsetTop - 12, behavior: reduce.matches || skipping ? "auto" : "smooth" });
+    if (await pause(300, id)) return;
     show($("board"));
-    stage.scrollTo({ top: $("board").offsetTop - 12, behavior: reduce.matches || skipping ? "auto" : "smooth" });
     if (await pause(650, id)) return;
     for (const g of GROUPS) {
         rowByGroup[g].classList.add("scored");

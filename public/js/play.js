@@ -228,10 +228,7 @@ const beforeScores = (scores, gains) =>
     Object.fromEntries(GROUPS.map((g) => [g, Math.max(0, (scores[g] ?? 0) - (gains[g] ?? 0))]));
 
 const cheer = (mine, total) =>
-    !mine ? "這題沒作答" : total >= 5 ? "完美！" : total >= 3 ? "漂亮！" : total > 0 ? "有拿分！" : "差一點！";
-
-const gainCaption = (total, team, g) =>
-    total ? `你這題拿到 ${total} 分` : team ? `隊友幫第 ${g} 組拿了 ${team} 分` : `第 ${g} 組這題沒拿到分`;
+    !mine ? "未作答" : total >= 5 ? "完美！" : total >= 3 ? "漂亮！" : total > 0 ? "有拿分！" : "差一點！";
 
 function mineRow(f, mine) {
     const pts = mine?.points[f] ?? 0;
@@ -247,11 +244,7 @@ function mineRow(f, mine) {
 // 這題組內最高分（同分取最先送出）的人先秀名字，再跟「第 N 組」輪流淡入淡出
 function groupLabel(g, name) {
     const box = el("span", name ? "b-names swap" : "b-names");
-    if (name) {
-        const who = el("span", "b-who");
-        who.append(icon("ic-star"), name);
-        box.append(who);
-    }
+    if (name) box.append(el("span", "b-who", name));
     box.append(el("span", "b-team", `第 ${g} 組`));
     return box;
 }
@@ -293,14 +286,11 @@ function buildBoard(scores, r, settled, top) {
 
 // settled = 收卷動畫播完的樣子；false = 動畫開始前（總分還是收卷前的）
 function renderResult(r, scores, settled) {
-    const total = r.mine ? sumPoints(r.mine.points) : 0;
     const top = Math.max(1, ...GROUPS.map((g) => scores[g] ?? 0));
     setCover($("key_cover"), r.thumb, r.no);
     $("key_title").textContent = r.title;
     $("key_meta").textContent = `${r.artist} · ${r.year}`;
     $("mine_list").replaceChildren(...FIELDS.map((f) => mineRow(f, r.mine)));
-    $("gain_num").textContent = settled ? total : 0;
-    $("gain_cap").textContent = gainCaption(total, r.groups[myGroup()], myGroup());
     buildBoard(settled ? scores : beforeScores(scores, r.groups), r, settled, top);
     $("notes").replaceChildren(...r.notes.map((t) => el("li", "", t)));
     for (const n of resultScene.querySelectorAll(".rv.in")) n.classList.remove("in");
@@ -413,7 +403,7 @@ async function playIntro() {
     finish(id);
 }
 
-// ===== 每輪結束：TIME'S UP → 全螢幕對錯 → 解答、我的答案、我的分數 → 捲到各組總分 → 名次換位 → 戰況 =====
+// ===== 每輪結束：TIME'S UP → 全螢幕對錯 → 解答、我的答案 → 捲到各組總分 → 名次換位 → 戰況 =====
 async function playReveal(s) {
     const id = begin();
     closeSheet();
@@ -444,10 +434,8 @@ async function playReveal(s) {
         show(row);
         if (await pause(340, id)) return;
     }
-    show(resultScene.querySelector(".gain"));
-    countUp($("gain_num"), 0, total, 700, id);
     if (total) confetti();
-    if (await pause(900, id)) return;
+    if (await pause(total ? 700 : 300, id)) return;
     // 這頁比較長：看完自己的分數就往下捲到各組總分
     show($("board"));
     stage.scrollTo({ top: $("board").offsetTop - 12, behavior: reduce.matches || skipping ? "auto" : "smooth" });
@@ -470,20 +458,54 @@ async function playReveal(s) {
 }
 
 // ===== 作答紀錄：個人 / 小組 =====
+// 卡片只建一次；切換時只換有變的文字和數字，小組才有的部分用收合動畫（CSS 看 #sheet 的 data-view）
 let historyView = "mine";
-let historyData = null;
+let historyData = null; // 上次載入的紀錄：再打開時先秀這份，背景重抓有變才重畫
+let historyJson = "";
+let historyCards = [];
 let historySeq = 0;
 
 const teamText = (f, pts) => (pts === 0 ? "沒人答對" : f !== "year" ? "答對" : pts === 3 ? "猜中年份" : "差 3 年內");
 
-function historyRows(rows) {
-    const ul = el("ul", "h-rows");
-    for (const [f, value, pts] of rows) {
-        const li = el("li", pts > 0 ? "h-row" : "h-row miss");
-        li.append(el("span", "label", FIELD_NAMES[f]), el("span", "value", value), el("span", "pts", `+${pts}`));
-        ul.append(li);
+// 目前檢視要顯示的總分和三列 [文字, 分數]
+function viewOf(h) {
+    if (historyView === "team") {
+        return { total: h.groups[myGroup()] ?? 0, rows: FIELDS.map((f) => [teamText(f, h.team.points[f]), h.team.points[f]]) };
     }
-    return ul;
+    const m = h.mine;
+    return {
+        total: m ? sumPoints(m.points) : 0,
+        rows: FIELDS.map((f) => (m ? [String(m[f] ?? "") || "—", m.points[f]] : ["未作答", 0])),
+    };
+}
+
+// 換內容：數字變大往上滑、變小往下滑，文字一律往上；內容一樣就不動
+function roll(box, text, num, animate) {
+    const current = box.lastElementChild;
+    if (current?.textContent === text) return;
+    const dir = num === undefined || !(num < Number(box.dataset.num)) ? "up" : "down";
+    if (num !== undefined) box.dataset.num = num;
+    if (current) {
+        if (animate) {
+            current.className = `out-${dir}`;
+            setTimeout(() => current.remove(), 400);
+        } else {
+            current.remove();
+        }
+    }
+    box.append(el("span", animate && current ? `in-${dir}` : "", text));
+}
+
+function applyView(card, animate) {
+    const { total, rows } = viewOf(card.h);
+    roll(card.gain, `+${total}`, total, animate);
+    card.gain.classList.toggle("zero", !total);
+    rows.forEach(([text, pts], i) => {
+        const { row, value, points } = card.cells[i];
+        row.classList.toggle("miss", pts === 0);
+        roll(value, text, undefined, animate);
+        roll(points, `+${pts}`, pts, animate);
+    });
 }
 
 function groupChips(groups) {
@@ -497,35 +519,47 @@ function groupChips(groups) {
     return box;
 }
 
-// 一題一張卡，上半跟「本題結果」的解答卡一樣；下半個人看自己的答案，小組看這組每項拿幾分和各組得分
-function historyItem(h) {
-    const team = historyView === "team";
-    const item = el("article", "h-item");
+// 一題一張卡，上半跟「本題結果」的解答卡一樣
+function historyCard(h) {
+    const node = el("article", "h-item");
     const top = el("div", "h-top");
     const cover = el("div", "cover");
     cover.setAttribute("aria-hidden", "true");
     setCover(cover, h.thumb, h.no);
     const text = el("div", "h-text");
     text.append(el("p", "h-no", `第 ${h.no} 題`), el("h4", "h-title", h.title), el("p", "h-meta", `${h.artist} · ${h.year}`));
-    const total = team ? (h.groups[myGroup()] ?? 0) : h.mine ? sumPoints(h.mine.points) : 0;
-    top.append(cover, text, el("span", total ? "h-gain" : "h-gain zero", `+${total}`));
-    item.append(top);
-    if (team) {
-        item.append(historyRows(FIELDS.map((f) => [f, teamText(f, h.team.points[f]), h.team.points[f]])));
-        if (h.team.best) item.append(el("p", "h-note", `組內最高分：${h.team.best}`));
-        item.append(groupChips(h.groups));
-    } else if (h.mine) {
-        item.append(historyRows(FIELDS.map((f) => [f, String(h.mine[f] ?? "") || "—", h.mine.points[f]])));
-    } else {
-        item.append(el("p", "h-note", "這題沒有作答"));
-    }
-    return item;
+    const gain = el("span", "h-gain roll");
+    top.append(cover, text, gain);
+    const list = el("ul", "h-rows");
+    const cells = FIELDS.map((f) => {
+        const row = el("li", "h-row");
+        const value = el("span", "value roll");
+        const points = el("span", "pts roll");
+        row.append(el("span", "label", FIELD_NAMES[f]), value, points);
+        list.append(row);
+        return { row, value, points };
+    });
+    // 小組才有：組內最高分的人、各組這題得分
+    const extra = el("div", "h-extra");
+    const inner = el("div");
+    if (h.team.best) inner.append(el("p", "h-best", h.team.best));
+    inner.append(groupChips(h.groups));
+    extra.append(inner);
+    node.append(top, list, extra);
+    const card = { h, gain, cells };
+    applyView(card, false);
+    return { node, card };
 }
 
 function renderHistory() {
     const list = $("history_list");
-    if (!historyData.length) return list.replaceChildren(el("p", "h-empty", "還沒有收卷的題目"));
-    list.replaceChildren(...historyData.map(historyItem));
+    if (!historyData.length) {
+        historyCards = [];
+        return list.replaceChildren(el("p", "h-empty", "還沒有收卷的題目"));
+    }
+    const built = historyData.map(historyCard);
+    historyCards = built.map((b) => b.card);
+    list.replaceChildren(...built.map((b) => b.node));
 }
 
 async function loadHistory() {
@@ -535,6 +569,9 @@ async function loadHistory() {
         // 已經有更新的請求，或等回應時已經關掉
         if (seq !== historySeq || sheet.hidden) return;
         if (status === 401) return leave();
+        const json = JSON.stringify(data.history ?? []);
+        if (json === historyJson) return; // 沒變就不重畫，畫面不跳
+        historyJson = json;
         historyData = data.history ?? [];
         renderHistory();
     } catch {
@@ -543,8 +580,7 @@ async function loadHistory() {
 }
 
 function openSheet() {
-    historyData = null;
-    $("history_list").replaceChildren(el("p", "h-empty", "載入中…"));
+    if (!historyData) $("history_list").replaceChildren(el("p", "h-empty", "載入中…"));
     sheet.hidden = false;
     $("sheet_close").focus();
     void loadHistory();
@@ -556,11 +592,12 @@ function closeSheet() {
 
 function setView(view) {
     historyView = view;
+    sheet.dataset.view = view;
     try {
         localStorage.setItem(VIEW_KEY, view);
     } catch {}
-    for (const b of sheet.querySelectorAll("[data-view]")) b.setAttribute("aria-pressed", String(b.dataset.view === view));
-    if (historyData) renderHistory();
+    for (const b of sheet.querySelectorAll("button[data-view]")) b.setAttribute("aria-pressed", String(b.dataset.view === view));
+    for (const card of historyCards) applyView(card, true);
 }
 
 // ===== 伺服器推來的狀態 → 畫面 =====
@@ -614,6 +651,9 @@ function forget() {
     latest = null;
     shownKey = undefined;
     shownJson = "";
+    historyData = null;
+    historyJson = "";
+    historyCards = [];
     begin();
     finish(run);
     closeSheet();
@@ -702,7 +742,7 @@ $("sheet_close").addEventListener("click", closeSheet);
 sheet.addEventListener("click", (e) => {
     if (e.target === sheet) closeSheet();
 });
-for (const b of sheet.querySelectorAll("[data-view]")) b.addEventListener("click", () => setView(b.dataset.view));
+for (const b of sheet.querySelectorAll("button[data-view]")) b.addEventListener("click", () => setView(b.dataset.view));
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeSheet();
 });

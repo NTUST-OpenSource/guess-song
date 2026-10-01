@@ -21,7 +21,7 @@
         <symbol id="sh4" viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="2.5"/></symbol>
         <symbol id="ic-check" viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="ic-cross" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></symbol>
-        <symbol id="ic-star" viewBox="0 0 24 24"><path d="M12 2.5 14.9 8.6 21.5 9.4 16.6 13.9 17.9 20.5 12 17.2 6.1 20.5 7.4 13.9 2.5 9.4 9.1 8.6Z" fill="currentColor"/></symbol>
+        <symbol id="ic-note" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></symbol>
         <symbol id="ic-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
         <symbol id="ic-exit" viewBox="0 0 24 24"><path d="M14 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H14M10 12h10m-3.5-3.5L20 12l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     </svg>
@@ -69,21 +69,29 @@
             </section>
 
             <section class="scene scene-answer" id="answer" aria-label="作答">
-                <h2 class="q-no stagger" style="--i:0">第 <b class="round-no"></b> 題</h2>
+                <!-- 轉動的唱片和飄出來的音符：這題正在播 -->
+                <div class="now-playing stagger" style="--i:0" aria-hidden="true">
+                    <span class="np-ring"></span>
+                    <span class="disc"></span>
+                    <svg class="np-note n1"><use href="#ic-note"/></svg>
+                    <svg class="np-note n2"><use href="#ic-note"/></svg>
+                    <svg class="np-note n3"><use href="#ic-note"/></svg>
+                </div>
+                <h2 class="q-no stagger" style="--i:1">第 <b class="round-no"></b> 題</h2>
                 <form class="answer-form" id="answer_form" autocomplete="off">
-                    <label class="card ans-card stagger" style="--i:1">
+                    <label class="card ans-card stagger" style="--i:2">
                         <span class="ans-label">年份</span>
                         <input class="ans-input" id="ans_year" type="number" inputmode="numeric" placeholder="西元年">
                     </label>
-                    <label class="card ans-card stagger" style="--i:2">
+                    <label class="card ans-card stagger" style="--i:3">
                         <span class="ans-label">歌手</span>
                         <input class="ans-input" id="ans_artist" maxlength="50">
                     </label>
-                    <label class="card ans-card stagger" style="--i:3">
+                    <label class="card ans-card stagger" style="--i:4">
                         <span class="ans-label">歌名</span>
                         <input class="ans-input" id="ans_title" maxlength="50">
                     </label>
-                    <button class="btn-main stagger" id="answer_btn" type="submit" style="--i:4"><svg class="icon" aria-hidden="true"><use href="#ic-check"/></svg><span id="answer_label">送出答案</span></button>
+                    <button class="btn-main stagger" id="answer_btn" type="submit" style="--i:5"><svg class="icon" aria-hidden="true"><use href="#ic-check"/></svg><span id="answer_label">送出答案</span></button>
                 </form>
             </section>
 
@@ -99,12 +107,7 @@
                     </div>
                 </article>
                 <ul class="mine-list" id="mine_list" aria-label="我的答案"></ul>
-                <div class="gain rv">
-                    <span class="gain-num">+<b id="gain_num">0</b></span>
-                    <span class="gain-cap" id="gain_cap"></span>
-                </div>
-                <section class="board rv" id="board" aria-labelledby="board_title">
-                    <h3 class="board-title" id="board_title">各組總分</h3>
+                <section class="board rv" id="board" aria-label="各組總分">
                     <ol class="board-list" id="board_list"></ol>
                 </section>
                 <ul class="notes rv" id="notes" aria-label="戰況"></ul>
@@ -138,7 +141,7 @@
             <p class="flood-pts" id="flood_pts"></p>
         </div>
         <div class="conn" id="conn" role="status" hidden><span class="spin" aria-hidden="true"></span><span id="conn_text"></span></div>
-        <div class="sheet" id="sheet" hidden>
+        <div class="sheet" id="sheet" data-view="mine" hidden>
             <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet_title">
                 <header class="sheet-head">
                     <h3 id="sheet_title">作答紀錄</h3>

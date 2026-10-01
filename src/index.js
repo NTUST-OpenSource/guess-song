@@ -256,8 +256,9 @@ export class Scores extends DurableObject {
 
     webSocketClose(ws, code, reason) {
         try {
-            ws.close(code, reason);
-        } catch {} // 1005、1006 這類保留碼不能回送，對方本來就斷了
+            // 1005 = 對方沒帶代碼，不能原樣回送，改回 1000 才會真的關掉
+            ws.close(code === 1005 ? 1000 : code, reason);
+        } catch {} // 1006 這類是連線已經斷了，回不了也沒關係
     }
 
     // players = false：只有後台要知道的變動（有人作答、選歌），不用重算每支手機的狀態

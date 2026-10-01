@@ -147,7 +147,8 @@ function countUp(node, from, to, ms, id) {
     }
     const t0 = performance.now();
     const tick = (now) => {
-        if (id !== run) return;
+        // 序列結束（播完或點一下跳過）就停，不然會蓋掉之後推來的新分數
+        if (id !== run || playing !== id) return;
         const k = Math.min(1, (now - t0) / ms);
         node.textContent = skipping ? to : Math.round(from + (to - from) * (1 - (1 - k) ** 3));
         if (k < 1 && !skipping) requestAnimationFrame(tick);
@@ -453,6 +454,9 @@ async function playReveal(s) {
     show($("notes"));
     show(resultScene.querySelector(".wait-next"));
     if (await pause(500, id)) return;
+    // 跳過、或分頁在背景時數字動畫可能沒跑完，收尾直接寫上最後的分數
+    renderTop(s.scores);
+    for (const g of GROUPS) rowByGroup[g].querySelector(".b-total").textContent = s.scores[g] ?? 0;
     resultScene.classList.remove("revealing");
     finish(id);
 }

@@ -12,7 +12,7 @@ function live(onMessage, token = () => null, onStatus = () => {}) {
         clearTimeout(timer);
         if (ws) {
             ws.onclose = null;
-            ws.close();
+            ws.close(1000); // 不帶代碼的話伺服器收到 1005，回不了關閉訊息，連線會掛著十幾秒
         }
         const t = token();
         const scheme = location.protocol === "https:" ? "wss" : "ws";

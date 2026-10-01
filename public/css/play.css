@@ -171,8 +171,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .n3 { --c: var(--ink); --d: 1.6s; --nx: 16px; }
 
 /* Round result */
-.key-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px; }
-.key-text { min-width: 0; }
+/* The cover fills the card's left side up to its edges; the text keeps the padding */
+.key-card { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 14px; overflow: hidden; }
+.key-text { align-self: center; min-width: 0; padding: 12px 12px 12px 0; }
+.key-card .cover { position: relative; aspect-ratio: auto; min-height: 76px; border-radius: 0; }
+/* The image never sets the card's height; YouTube's 4:3 thumbnails letterbox 16:9 videos, so zoom past the bars */
+.key-card .cover img { position: absolute; inset: 0; transform: scale(1.34); }
 .cover {
   display: grid; place-items: center; aspect-ratio: 16 / 9; max-width: 100%; overflow: hidden; border-radius: 6px;
   background: linear-gradient(135deg, var(--c1, var(--g2)), var(--c2, var(--g1)));
@@ -184,7 +188,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
               repeating-radial-gradient(circle, var(--disc) 0 2px, var(--disc-groove) 2px 3px);
 }
 /* Long titles and artists are clamped. */
-.key-title { margin: 2px 0; font: 900 20px/1.2 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.key-title { margin: 2px 0; font: 900 18px/1.2 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 /* Artist and year share a line when they fit; otherwise the year wraps alone and the dot before it falls outside the clip */
 .key-meta { display: flex; flex-wrap: wrap; column-gap: 1em; overflow: hidden; margin: 0; font-size: 14px; font-weight: 800; color: var(--card-dim); }
 .key-artist { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

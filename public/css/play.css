@@ -260,7 +260,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .h-no { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--card-dim); }
 .h-title { margin: 1px 0 2px; font: 900 18px/1.25 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .h-meta { margin: 0; font-size: 13px; font-weight: 800; color: var(--card-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.h-gain { justify-items: end; font: 900 24px var(--font-num); transition: color .3s; }
+/* Scores are at most +5; a fixed width keeps view switches from re-wrapping the title or the values */
+.h-gain { justify-items: end; width: 1.4em; font: 900 24px var(--font-num); font-variant-numeric: tabular-nums; transition: color .3s; }
 .h-gain.zero { color: var(--card-dim); }
 .h-rows { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
 .h-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 8px; background: var(--hit-soft); color: var(--hit-ink); font-size: 14px; font-weight: 800; transition: background-color .3s, color .3s; }
@@ -268,7 +269,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .h-row .label { font-size: 12px; opacity: .85; }
 .h-row .value { display: grid; min-width: 0; overflow: hidden; }
 .h-row .value > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.h-row .pts { justify-items: end; font-family: var(--font-num); font-weight: 900; }
+.h-row .pts { justify-items: end; width: 1.4em; font-family: var(--font-num); font-weight: 900; font-variant-numeric: tabular-nums; }
 /* Rolling content: new values enter from below, or from above when a number shrinks */
 .roll { display: inline-grid; overflow: hidden; }
 .roll > span { grid-area: 1 / 1; }

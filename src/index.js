@@ -1,3 +1,5 @@
+import { notes } from "./notes.js";
+
 const GROUPS = 4;
 const TOKEN_TTL = 12 * 60 * 60; // seconds
 const MAX_SCORE = 999; // UI 的 score box 只有兩位數
@@ -126,22 +128,23 @@ function grade(song, answers) {
     });
 }
 
-// 每組每項只算一次：取組內該項最高分
-const groupPoints = (graded) =>
-    Object.fromEntries(
-        Array.from({ length: GROUPS }, (_, i) => {
-            const mine = graded.filter((a) => a.group === i + 1);
-            const sum = FIELDS.reduce((t, f) => t + Math.max(0, ...mine.map((a) => a.points[f])), 0);
-            return [String(i + 1), sum];
-        }),
-    );
+const sumPoints = (points) => FIELDS.reduce((t, f) => t + points[f], 0);
 
-// 跑馬燈用：每組個人得分最高的人，同分取最先送出的（看最後一次送出的時間）
+// 每組每項只算一次：取組內該項最高分
+const fieldBest = (graded, group) => {
+    const mine = graded.filter((a) => a.group === group);
+    return Object.fromEntries(FIELDS.map((f) => [f, Math.max(0, ...mine.map((a) => a.points[f]))]));
+};
+
+const groupPoints = (graded) =>
+    Object.fromEntries(Array.from({ length: GROUPS }, (_, i) => [String(i + 1), sumPoints(fieldBest(graded, i + 1))]));
+
+// 每組個人得分最高的人，同分取最先送出的（看最後一次送出的時間）；手機的各組總分會輪流顯示他的名字
 const groupBest = (graded) =>
     Array.from({ length: GROUPS }, (_, i) => {
         const best = graded
             .filter((a) => a.group === i + 1)
-            .map((a) => ({ ...a, total: FIELDS.reduce((t, f) => t + a.points[f], 0) }))
+            .map((a) => ({ ...a, total: sumPoints(a.points) }))
             .sort((x, y) => y.total - x.total || x.at - y.at)[0];
         return best?.total > 0
             ? { group: i + 1, name: best.name, fields: FIELDS.filter((f) => best.points[f] > 0), points: best.total }
@@ -176,6 +179,27 @@ function youtubeId(link) {
 const songMark = (song) => ({ title: norm(song.title[0]), youtube: youtubeId(song.youtube) });
 const sameSong = (a, b) => Boolean(a.youtube && a.youtube === b.youtube) || a.title === b.title;
 
+const thumbOf = (song) => {
+    const video = youtubeId(song.youtube);
+    return video ? `https://i.ytimg.com/vi/${video}/hqdefault.jpg` : null;
+};
+
+// 收過卷、而且歌單上那個位置還是同一首的題目，最近收卷的在前。
+// 作答中的那題（包含收過卷又重開的）、收卷後被換成別首的位置，都不能給玩家看到
+function closedIds(songs, round, awarded, closed) {
+    return (
+        Object.keys(awarded)
+            .map(Number)
+            .filter((s) => songs[s] && !(round?.open && round.songId === s))
+            // 部署前收卷的舊資料沒有記號，照常顯示
+            .filter((s) => !closed[s] || sameSong(songMark(songs[s]), closed[s]))
+            // 舊資料沒有收卷時間，就照題號排
+            .sort((x, y) => (closed[y]?.at ?? 0) - (closed[x]?.at ?? 0) || y - x)
+    );
+}
+
+const ownAnswer = (a) => (a ? { year: a.year, artist: a.artist, title: a.title, points: a.points } : null);
+
 function parseSongs(v) {
     if (!Array.isArray(v)) return null;
     if (!v.every((s) => isLink(s?.youtube))) return null;
@@ -189,16 +213,10 @@ function parseSongs(v) {
 }
 
 // 單一 DO 序列化所有寫入：每個動作只改自己那組，多管理員同時操作不會互蓋。
-// （舊版 KV read-modify-write 會把整包舊分數壓回去，造成別組分數突然倒退。）
+// 狀態一改就用 WebSocket 推出去：玩家拿自己的狀態，計分板和後台只拿總分（後台收到再自己重抓）。
 export class Scores extends DurableObject {
     async read() {
-        let scores = await this.ctx.storage.get("scores");
-        if (!scores) {
-            // ponytail: 一次性從舊 KV 資料 seed，部署當下分數不歸零；之後 KV 可整個拆掉
-            scores = (await this.env.KV.get("scores", "json")) ?? emptyScores();
-            await this.ctx.storage.put("scores", scores);
-        }
-        return scores;
+        return (await this.ctx.storage.get("scores")) ?? emptyScores();
     }
 
     async add(group, delta) {
@@ -207,18 +225,60 @@ export class Scores extends DurableObject {
             ...scores,
             [group]: Math.max(0, Math.min(MAX_SCORE, (scores[group] ?? 0) + delta)),
         });
+        await this.push();
     }
 
     async set(group, score) {
         const scores = await this.read();
         await this.ctx.storage.put("scores", { ...scores, [group]: score });
+        await this.push();
+    }
+
+    // ===== WebSocket =====
+    // Worker 驗過 token 才轉進來：網址帶 g、id 是玩家；沒帶就是只收總分的連線（計分板、後台、還沒加入的手機）
+    async fetch(request) {
+        const url = new URL(request.url);
+        const g = Number(url.searchParams.get("g"));
+        const who = isGroup(g) ? { g, id: url.searchParams.get("id") } : null;
+        const [client, server] = Object.values(new WebSocketPair());
+        // 手機定時送 ping 保持連線，runtime 直接回 pong，不會把休眠中的 DO 叫醒
+        this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
+        this.ctx.acceptWebSocket(server);
+        server.serializeAttachment(who);
+        const first = who
+            ? this.playerView(await this.shared(), who)
+            : { type: "scores", scores: await this.read(), ...(url.searchParams.has("rejoin") && { rejoin: true }) };
+        server.send(JSON.stringify(first));
+        return new Response(null, { status: 101, webSocket: client });
+    }
+
+    webSocketMessage() {} // 只會收到 ping，auto-response 已經回了
+
+    webSocketClose(ws, code, reason) {
+        try {
+            ws.close(code, reason);
+        } catch {} // 1005、1006 這類保留碼不能回送，對方本來就斷了
+    }
+
+    // players = false：只有後台要知道的變動（有人作答、選歌），不用重算每支手機的狀態
+    async push(players = true) {
+        const sockets = this.ctx.getWebSockets();
+        if (!sockets.length) return;
+        const shared = players ? await this.shared() : null;
+        const scores = JSON.stringify({ type: "scores", scores: shared?.scores ?? (await this.read()) });
+        for (const ws of sockets) {
+            const who = ws.deserializeAttachment();
+            if (who && !players) continue;
+            try {
+                ws.send(who ? JSON.stringify(this.playerView(shared, who)) : scores);
+            } catch {} // ponytail: 正在關的連線送不出去就算了，重連時會拿到完整狀態
+        }
     }
 
     // ===== 手機作答 =====
-    // storage keys: songs（歌單+解答）、groupPw、round {songId, open}、selected（後台選到的題號，/host 顯示它的解答）、
+    // storage keys: scores、songs（歌單+解答）、groupPw、round {songId, open}、selected（後台選到的題號，/host 顯示它的解答）、
     // ans:<songId> {"<組>:<玩家 id>": 答案}、awarded {songId: {組: 已加的分}}、
-    // highlights {songId: 跑馬燈內容}、closed {songId: {at 最後一次收卷的時間, title, youtube 收卷時是哪首歌}}、
-    // histRev（玩家歷史的版本，變了手機才重抓）
+    // closed {songId: {at 最後一次收卷的時間, title, youtube 收卷時是哪首歌}}
 
     async load(key, fallback) {
         return (await this.ctx.storage.get(key)) ?? fallback;
@@ -236,55 +296,84 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put("groupPw", passwords);
     }
 
-    // 只回題號和自己的答案，絕對不能帶到解答；順便帶四組總分，手機不用再另外輪詢計分板
-    async playerState(group, id) {
-        const round = await this.load("round", null);
-        const a = round && (await this.load(`ans:${round.songId}`, {}))[`${group}:${id}`];
+    // 每支手機共用的部分只算一次：目前題目、這題所有答案、收卷後的解答和戰況短評
+    async shared() {
+        const [scores, songs, round, awarded, closed] = await Promise.all([
+            this.read(),
+            this.load("songs", []),
+            this.load("round", null),
+            this.load("awarded", {}),
+            this.load("closed", {}),
+        ]);
+        const answers = round && songs[round.songId] ? await this.load(`ans:${round.songId}`, {}) : {};
+        const ids = round && !round.open ? closedIds(songs, round, awarded, closed) : [];
+        if (!ids.includes(round?.songId)) return { scores, round, answers, graded: [], result: null };
+        const song = songs[round.songId];
+        const graded = grade(song, answers);
+        const teams = Object.fromEntries(Array.from({ length: GROUPS }, (_, i) => [i + 1, fieldBest(graded, i + 1)]));
+        const rounds = ids.slice(ids.indexOf(round.songId)).reverse().map((s) => awarded[s]);
         return {
-            round: round && { no: round.songId + 1, open: round.open },
-            answer: a ? { year: a.year, artist: a.artist, title: a.title } : null,
-            highlights: round && !round.open ? ((await this.load("highlights", {}))[round.songId] ?? null) : null,
-            scores: await this.read(),
-            histRev: await this.load("histRev", 0),
+            scores,
+            round,
+            answers,
+            graded,
+            result: {
+                no: round.songId + 1,
+                year: song.year,
+                artist: song.artist[0],
+                title: song.title[0],
+                thumb: thumbOf(song),
+                groups: awarded[round.songId],
+                best: groupBest(graded),
+                notes: notes(rounds, scores, teams),
+            },
         };
     }
 
-    // 已收卷的題目，最近收卷的在上：解答（第一種寫法）、縮圖、自己的答案與每項得分、各組這題得分。
-    // 作答中的那題（包含收過卷又重開的）、收卷後被換成別首的位置，絕對不能出現
+    // 作答中只有題號和自己的答案，絕對不能帶到解答；收卷後才有 result（解答、自己的得分、各組得分、戰況）
+    playerView({ scores, round, answers, graded, result }, { g, id }) {
+        const key = `${g}:${id}`;
+        const a = round?.open ? answers[key] : null;
+        return {
+            type: "state",
+            group: g,
+            scores,
+            round: round && { no: round.songId + 1, open: round.open },
+            answer: a ? { year: a.year, artist: a.artist, title: a.title } : null,
+            result: result && { ...result, mine: ownAnswer(graded.find((x) => x.player === key)) },
+        };
+    }
+
+    async playerState(group, id) {
+        return this.playerView(await this.shared(), { g: group, id });
+    }
+
+    // 收過卷的題目，最近收卷的在上：解答（第一種寫法）、縮圖、自己的答案與每項得分、
+    // 自己這組每項拿到幾分和組內最高分的人、各組這題得分
     async playerHistory(group, id) {
-        const songs = await this.load("songs", []);
-        const round = await this.load("round", null);
-        const awarded = await this.load("awarded", {});
-        const closed = await this.load("closed", {});
-        const ids = Object.keys(awarded)
-            .map(Number)
-            .filter((s) => songs[s] && !(round?.open && round.songId === s))
-            // 部署前收卷的舊資料沒有記號，照常顯示
-            .filter((s) => !closed[s] || sameSong(songMark(songs[s]), closed[s]))
-            // 舊資料沒有收卷時間，就照題號排
-            .sort((x, y) => (closed[y]?.at ?? 0) - (closed[x]?.at ?? 0) || y - x);
+        const [songs, round, awarded, closed] = await Promise.all([
+            this.load("songs", []),
+            this.load("round", null),
+            this.load("awarded", {}),
+            this.load("closed", {}),
+        ]);
         const key = `${group}:${id}`;
         const history = [];
-        for (const songId of ids) {
+        for (const songId of closedIds(songs, round, awarded, closed)) {
             const song = songs[songId];
-            const a = (await this.load(`ans:${songId}`, {}))[key];
-            const mine = a && grade(song, { [key]: a })[0];
-            const video = youtubeId(song.youtube);
+            const graded = grade(song, await this.load(`ans:${songId}`, {}));
             history.push({
                 no: songId + 1,
                 year: song.year,
                 artist: song.artist[0],
                 title: song.title[0],
-                thumb: video ? `https://i.ytimg.com/vi/${video}/hqdefault.jpg` : null,
+                thumb: thumbOf(song),
                 groups: awarded[songId],
-                mine: mine ? { year: mine.year, artist: mine.artist, title: mine.title, points: mine.points } : null,
+                mine: ownAnswer(graded.find((a) => a.player === key)),
+                team: { points: fieldBest(graded, group), best: groupBest(graded)[group - 1].name },
             });
         }
         return history;
-    }
-
-    async touchHistory() {
-        await this.ctx.storage.put("histRev", Date.now());
     }
 
     async submit(group, id, name, answer) {
@@ -295,6 +384,7 @@ export class Scores extends DurableObject {
         // 改答案就清掉人工改判，因為那是針對舊答案判的
         answers[`${group}:${id}`] = { group, name, ...answer, at: Date.now(), override: {} };
         await this.ctx.storage.put(key, answers);
+        await this.push(false); // 只有後台的作答列表要更新
         return true;
     }
 
@@ -303,13 +393,14 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put("songs", songs);
         // 修正解答後重新批改已收卷的題目
         for (const id of Object.keys(await this.load("awarded", {}))) await this.settle(Number(id));
-        await this.touchHistory(); // 歌被刪掉時 settle 不會跑，這裡再保證手機會重抓歷史
+        await this.push();
         return true;
     }
 
     async select(songId) {
         if (!(await this.load("songs", []))[songId]) return false;
         await this.ctx.storage.put("selected", songId);
+        await this.push(false); // /host 跟著換解答
         return true;
     }
 
@@ -318,7 +409,7 @@ export class Scores extends DurableObject {
         if (!(await this.load("songs", []))[songId]) return "沒有這首歌";
         await this.ctx.storage.put("round", { songId, open: true });
         await this.ctx.storage.put("selected", songId);
-        await this.touchHistory(); // 重開收過卷的歌，要讓手機把它從歷史拿掉
+        await this.push();
         return null;
     }
 
@@ -333,6 +424,7 @@ export class Scores extends DurableObject {
             [round.songId]: { at: Date.now(), ...(song ? songMark(song) : {}) },
         });
         await this.settle(round.songId);
+        await this.push();
         return true;
     }
 
@@ -346,6 +438,7 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put(key, answers);
         const round = await this.load("round", null);
         if (!(round?.open && round.songId === songId)) await this.settle(songId);
+        await this.push();
         return true;
     }
 
@@ -353,8 +446,7 @@ export class Scores extends DurableObject {
     async settle(songId) {
         const song = (await this.load("songs", []))[songId];
         if (!song) return;
-        const graded = grade(song, await this.load(`ans:${songId}`, {}));
-        const points = groupPoints(graded);
+        const points = groupPoints(grade(song, await this.load(`ans:${songId}`, {})));
         const awarded = await this.load("awarded", {});
         const prev = awarded[songId] ?? {};
         const scores = await this.read();
@@ -364,16 +456,12 @@ export class Scores extends DurableObject {
         }
         await this.ctx.storage.put("scores", scores);
         await this.ctx.storage.put("awarded", { ...awarded, [songId]: points });
-        const highlights = await this.load("highlights", {});
-        await this.ctx.storage.put("highlights", { ...highlights, [songId]: groupBest(graded) });
-        await this.touchHistory();
     }
 
-    // 清空所有資料；分數直接寫成全 0，避免下次 read() 又從舊 KV 把分數搬回來
+    // 清空所有資料：分數、歌單、代碼、作答、選歌
     async resetAll() {
         await this.ctx.storage.deleteAll();
-        await this.ctx.storage.put("scores", emptyScores());
-        await this.touchHistory(); // 不能回到 0：手機記的可能剛好就是 0，會一直顯示舊歷史
+        await this.push();
     }
 
     async adminState(songId) {
@@ -393,6 +481,25 @@ export class Scores extends DurableObject {
 }
 
 const scoresStub = (env) => env.SCORES.getByName("main");
+
+// ponytail: 瀏覽器的 WebSocket 不能帶自訂 header，玩家 token 只好放網址，可能留在 Cloudflare 的請求紀錄；
+// 玩家 token 只能作答、12 小時到期。後台頁面連線不帶 token，只收總分，收到再用 POST 重抓
+async function handleSocket(env, request) {
+    if (request.headers.get("Upgrade") !== "websocket") return fail("expected websocket", 426);
+    const token = new URL(request.url).searchParams.get("token");
+    const target = new URL("https://scores/ws");
+    if (token) {
+        const player = await verifyPlayerToken(env.AUTH_SECRET, token);
+        if (player?.id) {
+            target.searchParams.set("g", String(player.g));
+            target.searchParams.set("id", player.id);
+        } else {
+            // token 失效（過期、換了 AUTH_SECRET、舊版沒有 id）：照樣連上當只收總分的連線，請手機重新加入
+            target.searchParams.set("rejoin", "1");
+        }
+    }
+    return scoresStub(env).fetch(new Request(target, request));
+}
 
 async function requireAuth(env, body) {
     return verifyToken(env.AUTH_SECRET, body?.token);
@@ -442,7 +549,8 @@ async function handlePlay(env, action, body) {
     if (!player?.id) return fail("please join", 401);
     const stub = scoresStub(env);
 
-    if (action === "state") return ok({ group: player.g, ...(await stub.playerState(player.g, player.id)) });
+    // 跟 WebSocket 推的是同一份；手機平常用推播，這裡留給除錯和測試
+    if (action === "state") return ok(await stub.playerState(player.g, player.id));
     if (action === "history") return ok({ history: await stub.playerHistory(player.g, player.id) });
 
     if (action === "answer") {
@@ -514,6 +622,8 @@ async function handleAdmin(env, action, body) {
 export default {
     async fetch(request, env) {
         const { pathname } = new URL(request.url);
+
+        if (pathname === "/api/ws") return handleSocket(env, request);
 
         if (pathname === "/api/GetScore" && request.method === "GET") {
             return json(await scoresStub(env).read());

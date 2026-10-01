@@ -1,13 +1,15 @@
 // ponytail: 一個檔案的煙霧測試，跑 `node test.mjs`。沒有測試框架。
 import assert from "node:assert/strict";
 import worker, { Scores } from "./src/index.js";
+import { notes } from "./src/notes.js";
 
-const mockKv = (map) => ({
-    get: async (k, type) => {
-        const v = map.get(k) ?? null;
-        return v && type === "json" ? JSON.parse(v) : v;
-    },
-});
+// 假的 WebSocket：記下 DO 推過來的訊息；who 是 serializeAttachment 存的身分（null = 只收總分的連線）
+const sockets = [];
+const fakeSocket = (who) => {
+    const ws = { sent: [], send: (m) => ws.sent.push(JSON.parse(m)), deserializeAttachment: () => who };
+    sockets.push(ws);
+    return ws;
+};
 
 const mockCtx = () => {
     const store = new Map();
@@ -17,15 +19,14 @@ const mockCtx = () => {
             put: async (k, v) => store.set(k, v),
             deleteAll: async () => store.clear(),
         },
+        getWebSockets: () => sockets,
     };
 };
 
-const kv = new Map();
 const env = {
     USERNAME: "admin",
     PASSWORD: "pw",
     AUTH_SECRET: "secret",
-    KV: mockKv(kv),
 };
 const scoresDo = new Scores(mockCtx(), env);
 env.SCORES = { getByName: () => scoresDo };
@@ -109,15 +110,12 @@ await post("/api/SetScore", { token, group: 4, score: 0 });
 // 壞掉的 JSON
 assert.equal((await call("/api/AddScore", { method: "POST", body: "{" })).status, 400);
 
-// DO 首次啟動要從舊 KV 資料 seed（部署當下分數不歸零）
+// 改 group 2 不能動到 group 1（舊版 KV read-modify-write 互蓋的 regression）
 {
-    const seeded = new Scores(mockCtx(), {
-        KV: mockKv(new Map([["scores", JSON.stringify({ 1: 7, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 })]])),
-    });
-    assert.equal((await seeded.read())["1"], 7);
-    // 改 group 2 不能動到 group 1（互蓋 regression）
-    await seeded.set(2, 5);
-    assert.equal((await seeded.read())["1"], 7);
+    const other = new Scores(mockCtx(), env);
+    await other.set(1, 7);
+    await other.set(2, 5);
+    assert.deepEqual(await other.read(), { 1: 7, 2: 5, 3: 0, 4: 0 });
 }
 
 
@@ -191,29 +189,42 @@ assert.equal((await admin("select", { songId: 1 })).status, 200);
     assert.equal(host.songs[1].title[0], songs[1].title);
 }
 
+// WebSocket 推播：玩家的連線拿到自己的狀態，計分板、後台的連線只拿總分
+const idOf = (t) => JSON.parse(Buffer.from(t.split(".")[0], "base64url")).id;
+const watchWs = fakeSocket(null);
+const mingWs = fakeSocket({ g: 1, id: idOf(ming) });
+const lastState = () => mingWs.sent.at(-1);
+
 assert.equal((await admin("open", { songId: 0 })).status, 200);
+assert.equal(lastState().type, "state");
+assert.deepEqual(lastState().round, { no: 1, open: true }); // 發題就推給手機
+assert.ok(!JSON.stringify(mingWs.sent).includes("周杰倫")); // 推播一樣不能漏解答
+assert.deepEqual(watchWs.sent.at(-1), { type: "scores", scores: await scores() });
 assert.equal((await admin("open", { songId: 1 })).status, 400); // 要先收卷
 assert.equal((await (await admin("state")).json()).songId, 0); // 發題會把選歌帶到這首
 assert.equal((await admin("songs", { songs: [] })).status, 400); // 作答中不能改歌單
 
-// 玩家看得到題號，看不到解答；作答中沒有跑馬燈
+// 玩家看得到題號，看不到解答；作答中沒有 result
 let st = await playState(ming);
 assert.deepEqual(st.round, { no: 1, open: true });
-assert.equal(st.highlights, null);
+assert.equal(st.result, null);
 assert.ok(!JSON.stringify(st).includes("周杰倫"));
 assert.ok(!JSON.stringify(st).includes("abcDEF12")); // 影片 id 也不能漏
 
-// 狀態裡順便帶四組總分和自己的組別（手機上方的總分列不用再另外輪詢）；還沒收過卷就沒有歷史
+// 狀態裡帶四組總分和自己的組別；還沒收過卷就沒有歷史
 assert.deepEqual(st.scores, await scores());
 assert.equal(st.group, 1);
 assert.deepEqual(await history(ming), []);
-const revOpen = st.histRev;
 
+const [pushed, watched] = [mingWs.sent.length, watchWs.sent.length];
 await answer(ming, { year: 2001, artist: "ＪＡＹ chou", title: "" }); // 年份差 2 → +1
 await answer(hua, { year: 2003, artist: "", title: "晴 天" }); // 年份精準 → +3
 await answer(mei, { year: 2007, artist: "", title: "" });
 await answer(mei, { year: 2006, artist: "周杰倫", title: "晴天" }); // 以最後一次為準；年份差 3 → +1
 assert.equal((await playState(mei)).answer.title, "晴天");
+// 有人作答只通知後台（只收總分的連線），不重推每支手機
+assert.equal(mingWs.sent.length, pushed);
+assert.equal(watchWs.sent.length, watched + 4);
 
 let before = await scores();
 assert.equal((await admin("close")).status, 200);
@@ -223,18 +234,31 @@ let after = await scores();
 assert.equal(after[1] - before[1], 5);
 assert.equal(after[2] - before[2], 3);
 
-// 跑馬燈：每組個人得分最高的人（小明 年份+歌手 2 分、小華 年份+歌名 4 分 → 取小華）
+// 收卷就推給手機：解答、自己的得分、各組這題得分、戰況短評；跟 HTTP 拿到的是同一份
+{
+    const { status, msg, ...view } = await playState(ming);
+    assert.deepEqual(lastState(), view);
+    const { result } = view;
+    assert.deepEqual([result.no, result.year, result.artist, result.title], [1, 2003, "周杰倫", "晴天"]);
+    assert.equal(result.thumb, thumb("abcDEF12_-x"));
+    assert.deepEqual(result.mine, { year: 2001, artist: "ＪＡＹ chou", title: "", points: { year: 1, artist: 1, title: 0 } });
+    assert.deepEqual(result.groups, { 1: 5, 2: 3, 3: 0, 4: 0 });
+    assert.deepEqual(result.notes, ["第 1 組這題拿下滿分！", "第 1 組年份一年不差！"]);
+    assert.equal((await playState(quiet)).result.mine, null); // 沒作答
+}
+
+// 每組個人得分最高的人（小明 年份+歌手 2 分、小華 年份+歌名 4 分 → 取小華），手機的各組總分會輪流顯示他的名字
 st = await playState(ming);
 assert.equal(st.round.open, false);
-assert.deepEqual(st.highlights, [
+assert.deepEqual(st.result.best, [
     { group: 1, name: "小華", fields: ["year", "title"], points: 4 },
     { group: 2, name: "小美", fields: ["year", "artist", "title"], points: 3 },
     { group: 3, name: null, fields: [], points: 0 }, // 沒人作答
     { group: 4, name: null, fields: [], points: 0 },
 ]);
 
-// 收卷後玩家看得到：解答（第一種寫法）、縮圖、自己的答案與每項得分、各組這題得分
-assert.notEqual(st.histRev, revOpen); // 版本號變了，手機才會重抓歷史
+// 收卷後玩家看得到：解答（第一種寫法）、縮圖、自己的答案與每項得分、
+// 自己這組每項拿幾分和組內最高分的人、各組這題得分
 assert.deepEqual(await history(ming), [
     {
         no: 1,
@@ -244,10 +268,12 @@ assert.deepEqual(await history(ming), [
         thumb: thumb("abcDEF12_-x"),
         groups: { 1: 5, 2: 3, 3: 0, 4: 0 },
         mine: { year: 2001, artist: "ＪＡＹ chou", title: "", points: { year: 1, artist: 1, title: 0 } },
+        team: { points: { year: 3, artist: 1, title: 1 }, best: "小華" },
     },
 ]);
 assert.deepEqual((await history(mei))[0].mine.points, { year: 1, artist: 1, title: 1 });
 assert.equal((await history(quiet))[0].mine, null); // 沒作答
+assert.deepEqual((await history(quiet))[0].team, { points: { year: 1, artist: 1, title: 1 }, best: "小美" }); // 組員看得到隊友拿的分
 
 // 人工改判：年份可以改成 3 / 1 / 0，還原後總分跟著回來
 await judge("小美", "year", 3);
@@ -296,7 +322,7 @@ await admin("close");
 after = await scores();
 assert.equal(after[1] - before[1], 2);
 assert.equal(after[2] - before[2], 1);
-assert.deepEqual((await playState(hua)).highlights.slice(0, 2), [
+assert.deepEqual((await playState(hua)).result.best.slice(0, 2), [
     { group: 1, name: "小明", fields: ["year", "title"], points: 2 },
     { group: 2, name: "小美", fields: ["title"], points: 1 },
 ]);
@@ -307,7 +333,7 @@ await answer(hua, { year: 2007, artist: "", title: "日不落" });
 await answer(ming, { year: 2007, artist: "", title: "日不落" });
 await answer(mei, { year: 1990, artist: "", title: "" });
 await admin("close");
-assert.deepEqual((await playState(mei)).highlights.slice(0, 2), [
+assert.deepEqual((await playState(mei)).result.best.slice(0, 2), [
     { group: 1, name: "小華", fields: ["year", "title"], points: 4 },
     { group: 2, name: null, fields: [], points: 0 },
 ]);
@@ -319,12 +345,12 @@ assert.deepEqual((await playState(mei)).highlights.slice(0, 2), [
     assert.deepEqual(h.map((x) => x.thumb), [thumb("0123456789A"), null, thumb("abcDEF12_-x")]);
 }
 
-// 人工改判後跑馬燈跟著更新
-const revBeforeJudge = (await playState(mei)).histRev;
+// 人工改判後各組最高分的人跟著更新，也會推給手機
+const beforeJudge = mingWs.sent.length;
 await judge("小美", "title", 1, 2);
-assert.deepEqual((await playState(mei)).highlights[1], { group: 2, name: "小美", fields: ["title"], points: 1 });
+assert.deepEqual((await playState(mei)).result.best[1], { group: 2, name: "小美", fields: ["title"], points: 1 });
+assert.equal(mingWs.sent.length, beforeJudge + 1);
 // 歷史也跟著更新
-assert.notEqual((await playState(mei)).histRev, revBeforeJudge);
 assert.equal((await history(mei))[0].mine.points.title, 1);
 assert.equal((await history(mei))[0].groups[2], 1);
 
@@ -378,12 +404,38 @@ await admin("songs", {
     );
 }
 
-// 歌單換成空的：歷史跟著清空，版本號也要變，手機才會重抓
+// 歌單換成空的：歷史跟著清空，手機上這題的結果也拿掉
+await admin("songs", { songs: [] });
+assert.deepEqual(await history(mei), []);
+assert.equal((await playState(mei)).result, null);
+assert.equal(lastState().result, null);
+
+// ===== 戰況短評 =====
 {
-    const rev = (await playState(mei)).histRev;
-    await admin("songs", { songs: [] });
-    assert.notEqual((await playState(mei)).histRev, rev);
-    assert.deepEqual(await history(mei), []);
+    const g4 = (a, b, c, d) => ({ 1: a, 2: b, 3: c, 4: d });
+    // 第一題就有人領先：搶得頭香；拿滿分另外講
+    assert.deepEqual(notes([g4(5, 3, 0, 1)], g4(5, 3, 0, 1)), ["第 1 組搶得頭香，暫居第一！", "第 1 組這題拿下滿分！"]);
+    // 超車，被超的那組只差 1 分
+    assert.deepEqual(notes([g4(3, 0, 0, 0), g4(0, 4, 0, 0)], g4(3, 4, 0, 0)), [
+        "第 2 組超車成功，登上第一！",
+        "第 1 組仍緊追不放，只差 1 分！",
+    ]);
+    // 四組都沒分
+    assert.equal(notes([g4(1, 0, 0, 0), g4(0, 0, 0, 0)], g4(1, 0, 0, 0))[0], "這題四組全軍覆沒，太難了吧！");
+    // 連續滿分比連續得分優先
+    const hot = [g4(1, 1, 0, 0), g4(2, 0, 0, 0), g4(1, 0, 0, 0), g4(5, 0, 1, 0), g4(5, 0, 0, 1)];
+    assert.deepEqual(notes(hot, g4(14, 1, 1, 1)), ["第 1 組連續 2 題滿分，神準！", "第 1 組連續 5 題得分，手感正燙！"]);
+    // 同分並列第一；連兩題沒分的組終於拿分
+    assert.deepEqual(notes([g4(2, 0, 0, 0), g4(0, 0, 0, 0), g4(0, 2, 0, 0)], g4(2, 2, 0, 0)), [
+        "第 1、2 組同分，並列第一！",
+        "第 2 組終於開張！",
+    ]);
+    // 中段爬升
+    assert.deepEqual(notes([g4(5, 3, 2, 0), g4(0, 0, 0, 4)], g4(5, 3, 2, 4)), [
+        "第 4 組大躍進，從第 4 名衝到第 2 名！",
+        "第 4 組仍緊追不放，只差 1 分！",
+    ]);
+    assert.deepEqual(notes([], g4(0, 0, 0, 0)), []);
 }
 
 // ===== 重置整個資料庫 =====
@@ -400,22 +452,6 @@ assert.equal((await playState(ming)).round, null); // 舊玩家看到的是尚�
 assert.deepEqual((await playState(ming)).scores, { 1: 0, 2: 0, 3: 0, 4: 0 });
 assert.deepEqual(await history(ming), []);
 
-// 重置後版本號也要變（部署前的舊資料沒有 histRev，手機記的是 0 時也一樣）
-{
-    const legacy = new Scores(mockCtx(), { KV: mockKv(new Map()) });
-    assert.equal((await legacy.playerState(1, "x")).histRev, 0);
-    await legacy.resetAll();
-    assert.notEqual((await legacy.playerState(1, "x")).histRev, 0);
-}
-
-// 重置後不能又從舊 KV 把分數搬回來
-{
-    const seeded = new Scores(mockCtx(), {
-        KV: mockKv(new Map([["scores", JSON.stringify({ 1: 7, 2: 0, 3: 0, 4: 0 })]])),
-    });
-    assert.equal((await seeded.read())["1"], 7);
-    await seeded.resetAll();
-    assert.equal((await seeded.read())["1"], 0);
-}
+assert.equal(lastState().round, null); // 重置也推給手機
 
 console.log("ok");

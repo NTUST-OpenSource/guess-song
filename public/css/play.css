@@ -139,7 +139,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Lobby */
 .scene-lobby { justify-content: center; align-items: center; gap: 8px; text-align: center; }
 .lobby-team { margin: 0; font: 900 34px/1.2 var(--font-display); }
-.lobby-name { margin: 0; font-size: 17px; font-weight: 700; color: var(--ink-dim); }
 .eq { display: flex; align-items: flex-end; gap: 5px; height: 34px; margin-top: 22px; }
 .eq i { width: 7px; height: 100%; border-radius: 2px; background: var(--ink); transform-origin: bottom; animation: eq .9s var(--ease-io) infinite; animation-delay: calc(var(--i) * -.18s); }
 .eq.small { height: 16px; margin: 0; gap: 3px; }

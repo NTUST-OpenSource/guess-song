@@ -685,7 +685,6 @@ function showMe() {
     $("me_name").textContent = me?.n ?? "";
     $("me_team").textContent = me ? `第 ${me.g} 組` : "";
     $("lobby_team").textContent = me ? `第 ${me.g} 組` : "";
-    $("lobby_name").textContent = me?.n ?? "";
     // The first pushed state decides the scene.
     setScene("lobby");
 }

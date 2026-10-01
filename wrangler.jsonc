@@ -6,7 +6,7 @@
     "routes": [{ "pattern": "song.ntust.org", "custom_domain": true }],
     "assets": {
         "directory": "./public",
-        // /api/* 一律交給 Worker，其餘走靜態檔（/login -> public/login.html）
+        // /api/* goes to the Worker; everything else is a static file (/login -> public/login.html).
         "run_worker_first": ["/api/*"]
     },
     "durable_objects": {

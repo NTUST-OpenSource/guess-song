@@ -13,7 +13,7 @@
     <script src="/js/play.js" defer></script>
 </head>
 <body>
-    <!-- 四組圖形和勾叉等圖示，不用 emoji -->
+    <!-- Group shapes and icons -->
     <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
         <symbol id="sh1" viewBox="0 0 32 32"><path d="M16 3.5 30 28.5H2Z"/></symbol>
         <symbol id="sh2" viewBox="0 0 32 32"><path d="M16 1.5 30.5 16 16 30.5 1.5 16Z"/></symbol>
@@ -34,7 +34,7 @@
             <svg class="float f4"><use href="#sh4"/></svg>
         </div>
 
-        <!-- 四組總分固定在最上方，自己那組框起來 -->
+        <!-- Group totals stay pinned at the top; the player's group is outlined -->
         <header class="topbar" aria-label="四組總分">
             <div class="gcell" data-g="1" id="top_1"><svg class="shape" aria-hidden="true"><use href="#sh1"/></svg><span class="sr">第 1 組</span><b>0</b></div>
             <div class="gcell" data-g="2" id="top_2"><svg class="shape" aria-hidden="true"><use href="#sh2"/></svg><span class="sr">第 2 組</span><b>0</b></div>
@@ -43,7 +43,7 @@
         </header>
 
         <main class="stage" id="stage">
-            <!-- 加入：名字 + 組別代碼（代碼決定組別） -->
+            <!-- Join: name and group code; the code decides the group -->
             <section class="scene scene-join" aria-label="加入遊戲">
                 <div class="brand">
                     <p class="brand-kicker">三『資』小豬</p>
@@ -69,7 +69,7 @@
             </section>
 
             <section class="scene scene-answer" id="answer" aria-label="作答">
-                <!-- 轉動的唱片和飄出來的音符：這題正在播 -->
+                <!-- Now playing -->
                 <div class="now-playing stagger" style="--i:0" aria-hidden="true">
                     <span class="np-ring"></span>
                     <span class="disc"></span>
@@ -95,7 +95,7 @@
                 </form>
             </section>
 
-            <!-- 收卷後：解答、自己的答案、這題得分、各組總分、戰況 -->
+            <!-- After close: answer key, own answers, group totals, commentary -->
             <section class="scene scene-result" id="result" aria-label="本題結果">
                 <h2 class="q-no rv">第 <b class="round-no"></b> 題</h2>
                 <article class="card key-card rv">
@@ -123,7 +123,7 @@
             <button class="icon-btn" id="leave_btn" type="button" aria-label="登出"><svg class="icon" aria-hidden="true"><use href="#ic-exit"/></svg></button>
         </footer>
 
-        <!-- 發題：轉場 → 第 N 題 → 3、2、1 → 開始作答 -->
+        <!-- Round start: wipe, round number, countdown -->
         <div class="fx intro" id="intro" hidden>
             <div class="wipe" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i></div>
             <div class="intro-col">
@@ -133,7 +133,7 @@
             <p class="intro-go">開始作答</p>
             <p class="skip-hint">點一下跳過</p>
         </div>
-        <!-- 收卷：蓋章 → 全螢幕對錯 → 結果一項一項出來 -->
+        <!-- Round end: stamp, then a full-screen result -->
         <div class="fx stamp" id="stamp" hidden><div class="stamp-mark"><span>TIME'S</span><span>UP!</span></div></div>
         <div class="fx flood" id="flood" hidden>
             <div class="flood-icon"><svg class="icon" aria-hidden="true"><use id="flood_use" href="#ic-check"/></svg></div>

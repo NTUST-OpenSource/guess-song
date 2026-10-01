@@ -1,5 +1,5 @@
-// 作答頁（defer 載入，DOM 已就緒）：狀態全由 WebSocket 推過來（live.js），只有加入、送答案、看作答紀錄才打 API。
-// 每輪開始（發題）和結束（收卷）各有一段動畫，播放中點一下畫面就直接跳到結果
+// Player page: state is pushed over WebSocket (live.js); only joining, answering and history call the API.
+// Each round opens and closes with an animation; tapping the screen skips to the end.
 const PLAYER_KEY = "ntust_camp_player";
 const VIEW_KEY = "ntust_camp_history_view";
 const GROUPS = [1, 2, 3, 4];
@@ -22,7 +22,7 @@ const token = () => localStorage.getItem(PLAYER_KEY);
 const sumPoints = (p) => FIELDS.reduce((t, f) => t + p[f], 0);
 const myGroup = () => Number(app.dataset.me);
 
-// token 前半段是 base64url 的 {g 組別, n 名字}，只拿來顯示，驗證交給伺服器
+// The token's first part is base64url {g: group, n: name}; it is read for display only and verified by the server.
 function whoAmI() {
     try {
         const b64 = token().split(".")[0].replace(/-/g, "+").replace(/_/g, "/");
@@ -41,7 +41,7 @@ async function api(url, payload) {
     return { status: res.status, data: await res.json() };
 }
 
-// 名字、答案是玩家輸入的，一律用 textContent，不能拼 HTML
+// Names and answers are user input: always use textContent, never HTML.
 function el(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -61,7 +61,7 @@ function svgUse(className, id) {
 const shape = (g) => svgUse("shape", `sh${g}`);
 const icon = (id) => svgUse("icon", id);
 
-// ===== 動畫排程：run 換號就取消舊的序列；skip() 讓剩下的等待立刻結束 =====
+// ===== Sequencing: a new run cancels the previous sequence; skip() resolves the remaining waits =====
 let run = 0;
 let playing = 0;
 let skipping = false;
@@ -107,7 +107,7 @@ function begin() {
     return run;
 }
 
-// 序列播完：期間又推來的狀態（例如後台改判）這時才套上
+// Apply any state that arrived while the sequence was playing.
 function finish(id) {
     if (id !== run) return;
     playing = 0;
@@ -147,7 +147,7 @@ function countUp(node, from, to, ms, id) {
     }
     const t0 = performance.now();
     const tick = (now) => {
-        // 序列結束（播完或點一下跳過）就停，不然會蓋掉之後推來的新分數
+        // Stop once the sequence ends (finished or skipped) so newer pushed totals are not overwritten.
         if (id !== run || playing !== id) return;
         const k = Math.min(1, (now - t0) / ms);
         node.textContent = skipping ? to : Math.round(from + (to - from) * (1 - (1 - k) ** 3));
@@ -163,7 +163,7 @@ function floatPlus(g, n) {
     setTimeout(() => f.remove(), 1600);
 }
 
-// ===== 畫面 =====
+// ===== Screens =====
 function setScene(name) {
     if (app.dataset.scene === name) return;
     app.dataset.scene = name;
@@ -183,7 +183,7 @@ function setRoundNo(no) {
     $("me_round").textContent = no ? `第 ${no} 題` : "";
 }
 
-// 有 YouTube 縮圖就放縮圖，沒有或載不到就放唱片
+// YouTube thumbnail when available, otherwise or on error a record.
 function setCover(box, thumb, no) {
     box.style.setProperty("--c1", `var(--g${(no % 4) + 1})`);
     box.style.setProperty("--c2", `var(--g${((no + 2) % 4) + 1})`);
@@ -197,8 +197,9 @@ function setCover(box, thumb, no) {
     box.replaceChildren(img);
 }
 
-// ===== 作答 =====
-let sent = null; // 最後一次成功送出的答案（JSON），按鈕用來判斷「已送出」還是「更新答案」
+// ===== Answering =====
+// Last answer the server accepted, as JSON; drives the button's sent and update states.
+let sent = null;
 
 function readAnswer() {
     const year = $("ans_year").valueAsNumber;
@@ -223,7 +224,7 @@ function fillAnswer(a) {
     markSent();
 }
 
-// ===== 本題結果 =====
+// ===== Round result =====
 const rowByGroup = {};
 const beforeScores = (scores, gains) =>
     Object.fromEntries(GROUPS.map((g) => [g, Math.max(0, (scores[g] ?? 0) - (gains[g] ?? 0))]));
@@ -242,7 +243,7 @@ function mineRow(f, mine) {
     return li;
 }
 
-// 這題組內最高分（同分取最先送出）的人先秀名字，再跟「第 N 組」輪流淡入淡出
+// The group's top scorer for the round (ties go to the earliest submission) alternates with the group name.
 function groupLabel(g, name) {
     const box = el("span", name ? "b-names swap" : "b-names");
     if (name) box.append(el("span", "b-who", name));
@@ -254,7 +255,7 @@ function setRanks(scores) {
     const order = [...GROUPS].sort((x, y) => scores[y] - scores[x] || x - y);
     for (const g of GROUPS) {
         rowByGroup[g].style.setProperty("--rank", order.indexOf(g));
-        // 同分同名次
+        // Tied groups share a place.
         rowByGroup[g].querySelector(".b-rank").textContent = 1 + GROUPS.filter((x) => scores[x] > scores[g]).length;
     }
 }
@@ -285,7 +286,7 @@ function buildBoard(scores, r, settled, top) {
     setBars(scores, top);
 }
 
-// settled = 收卷動畫播完的樣子；false = 動畫開始前（總分還是收卷前的）
+// settled: the screen after the reveal; false: before it, with the totals from before the round.
 function renderResult(r, scores, settled) {
     const top = Math.max(1, ...GROUPS.map((g) => scores[g] ?? 0));
     setCover($("key_cover"), r.thumb, r.no);
@@ -305,7 +306,7 @@ function renderFlood(r) {
     $("flood_pts").textContent = `+${total}`;
 }
 
-// ===== 彩帶：四組的四種圖形 =====
+// ===== Confetti in the four group shapes =====
 const canvas = $("confetti");
 const ctx = canvas.getContext("2d");
 let confettiRaf = 0;
@@ -349,7 +350,6 @@ function confetti() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const css = getComputedStyle(app);
     const colors = GROUPS.map((g) => css.getPropertyValue(`--g${g}`).trim());
-    // ponytail: 90 片、2.8 秒、一張 canvas；低階手機掉幀再減片數
     const bits = Array.from({ length: 90 }, (_, i) => ({
         x: width / 2 + (Math.random() - 0.5) * 80,
         y: height * 0.45,
@@ -381,7 +381,7 @@ function confetti() {
     confettiRaf = requestAnimationFrame(frame);
 }
 
-// ===== 每輪開始：轉場 → 第 N 題 → 3、2、1 → 開始作答 =====
+// ===== Round start: wipe, round number, 3-2-1 countdown, start =====
 async function playIntro() {
     const id = begin();
     closeSheet();
@@ -404,7 +404,7 @@ async function playIntro() {
     finish(id);
 }
 
-// ===== 每輪結束：TIME'S UP → 全螢幕對錯 → 解答、我的答案 → 捲到各組總分 → 名次換位 → 戰況 =====
+// ===== Round end: TIME'S UP, full-screen result, answer key and own answers, group totals, re-ranking, commentary =====
 async function playReveal(s) {
     const id = begin();
     closeSheet();
@@ -437,7 +437,7 @@ async function playReveal(s) {
     }
     if (total) confetti();
     if (await pause(total ? 700 : 300, id)) return;
-    // 這頁比較長：看完自己的分數就往下捲到各組總分
+    // The page is long: scroll to the group totals after the player's own rows.
     show($("board"));
     stage.scrollTo({ top: $("board").offsetTop - 12, behavior: reduce.matches || skipping ? "auto" : "smooth" });
     if (await pause(650, id)) return;
@@ -454,24 +454,25 @@ async function playReveal(s) {
     show($("notes"));
     show(resultScene.querySelector(".wait-next"));
     if (await pause(500, id)) return;
-    // 跳過、或分頁在背景時數字動畫可能沒跑完，收尾直接寫上最後的分數
+    // Count-ups may not finish when skipped or in a background tab, so write the final totals.
     renderTop(s.scores);
     for (const g of GROUPS) rowByGroup[g].querySelector(".b-total").textContent = s.scores[g] ?? 0;
     resultScene.classList.remove("revealing");
     finish(id);
 }
 
-// ===== 作答紀錄：個人 / 小組 =====
-// 卡片只建一次；切換時只換有變的文字和數字，小組才有的部分用收合動畫（CSS 看 #sheet 的 data-view）
+// ===== Answer history: personal / group =====
+// Cards are built once; switching views only replaces changed text and numbers, and group-only parts collapse via #sheet[data-view].
 let historyView = "mine";
-let historyData = null; // 上次載入的紀錄：再打開時先秀這份，背景重抓有變才重畫
+// Last loaded history: shown at once on reopen and re-rendered only when a refetch differs.
+let historyData = null;
 let historyJson = "";
 let historyCards = [];
 let historySeq = 0;
 
 const teamText = (f, pts) => (pts === 0 ? "沒人答對" : f !== "year" ? "答對" : pts === 3 ? "猜中年份" : "差 3 年內");
 
-// 目前檢視要顯示的總分和三列 [文字, 分數]
+// Total and the three [text, points] rows for the current view.
 function viewOf(h) {
     if (historyView === "team") {
         return { total: h.groups[myGroup()] ?? 0, rows: FIELDS.map((f) => [teamText(f, h.team.points[f]), h.team.points[f]]) };
@@ -483,7 +484,7 @@ function viewOf(h) {
     };
 }
 
-// 換內容：數字變大往上滑、變小往下滑，文字一律往上；內容一樣就不動
+// Numbers slide up when they grow and down when they shrink; text always slides up.
 function roll(box, text, num, animate) {
     const current = box.lastElementChild;
     if (current?.textContent === text) return;
@@ -523,7 +524,7 @@ function groupChips(groups) {
     return box;
 }
 
-// 一題一張卡，上半跟「本題結果」的解答卡一樣
+// One card per round; the top half matches the answer card on the result screen.
 function historyCard(h) {
     const node = el("article", "h-item");
     const top = el("div", "h-top");
@@ -543,7 +544,7 @@ function historyCard(h) {
         list.append(row);
         return { row, value, points };
     });
-    // 小組才有：組內最高分的人、各組這題得分
+    // Group view only: the group's top scorer and every group's points.
     const extra = el("div", "h-extra");
     const inner = el("div");
     if (h.team.best) inner.append(el("p", "h-best", h.team.best));
@@ -570,11 +571,11 @@ async function loadHistory() {
     const seq = ++historySeq;
     try {
         const { status, data } = await api("/api/play/history", { token: token() });
-        // 已經有更新的請求，或等回應時已經關掉
+        // A newer request is pending, or the sheet closed while waiting.
         if (seq !== historySeq || sheet.hidden) return;
         if (status === 401) return leave();
         const json = JSON.stringify(data.history ?? []);
-        if (json === historyJson) return; // 沒變就不重畫，畫面不跳
+        if (json === historyJson) return;
         historyJson = json;
         historyData = data.history ?? [];
         renderHistory();
@@ -604,10 +605,13 @@ function setView(view) {
     for (const card of historyCards) applyView(card, true);
 }
 
-// ===== 伺服器推來的狀態 → 畫面 =====
-let latest = null; // 最近一次推來的狀態；動畫播放中先存著，播完再套上
-let shownKey; // 畫面上是哪一題、作答中還是收卷（"none"、"3:true"、"3:false"），變了才換畫面
-let shownJson = ""; // 畫面上那份狀態，一模一樣就不重畫
+// ===== Pushed state to screen =====
+// Latest pushed state; held during an animation and applied when it ends.
+let latest = null;
+// Round on screen ("none", "3:true", "3:false"); the scene changes only when it differs.
+let shownKey;
+// State currently rendered; identical pushes are ignored.
+let shownJson = "";
 
 function sync(s) {
     const json = JSON.stringify(s);
@@ -618,18 +622,20 @@ function sync(s) {
     const from = shownKey;
     shownKey = key;
     setRoundNo(s.round?.no);
-    if (!sheet.hidden) void loadHistory(); // 改判、改歌單時紀錄也要跟著變
+    // Judging and list corrections change the history too.
+    if (!sheet.hidden) void loadHistory();
 
     if (s.round?.open) {
         renderTop(s.scores);
-        if (key === from) return; // 同一題還在作答：只更新總分，不動正在打的字
+        // Same open round: update the totals only and leave the inputs alone.
+        if (key === from) return;
         fillAnswer(s.answer);
-        // 剛打開頁面就停在作答畫面；看著它發題才播開場動畫
+        // Play the intro only when the round opens while this page is watching.
         if (from === undefined) return setScene("answer");
         return void playIntro();
     }
     if (s.result) {
-        // 看著它收卷才播結算動畫；之後改判、重整都直接顯示結果
+        // Play the reveal only when this page saw the round open; otherwise show the result directly.
         if (from === `${s.result.no}:true`) return void playReveal(s);
         renderTop(s.scores);
         renderResult(s.result, s.scores, true);
@@ -641,7 +647,7 @@ function sync(s) {
 
 function onMessage(msg) {
     if (msg.type === "scores") {
-        // token 失效（過期、換了密鑰）：伺服器把連線降成只收總分，請玩家重新加入
+        // The server downgraded an invalid token to a totals-only socket: join again.
         if (msg.rejoin && token()) return leave();
         if (!token()) renderTop(msg.scores);
         return;
@@ -650,7 +656,7 @@ function onMessage(msg) {
     if (!playing) sync(msg);
 }
 
-// ===== 加入 / 登出 =====
+// ===== Join / leave =====
 function forget() {
     latest = null;
     shownKey = undefined;
@@ -671,7 +677,8 @@ function showMe() {
     $("me_team").textContent = me ? `第 ${me.g} 組` : "";
     $("lobby_team").textContent = me ? `第 ${me.g} 組` : "";
     $("lobby_name").textContent = me?.n ?? "";
-    setScene("lobby"); // 等第一份狀態推過來再決定停在哪
+    // The first pushed state decides the scene.
+    setScene("lobby");
 }
 
 async function join(e) {
@@ -690,7 +697,6 @@ async function join(e) {
 
 function leave() {
     localStorage.removeItem(PLAYER_KEY);
-    localStorage.removeItem("ntust_camp_player_label"); // 舊版存的顯示名稱
     forget();
     app.dataset.me = "";
     setRoundNo(null);
@@ -706,7 +712,7 @@ async function submitAnswer(e) {
     try {
         const { status, data } = await api("/api/play/answer", { token: token(), ...answer });
         if (status === 401) return leave();
-        // 剛好收卷就不跳 alert：結算動畫會跟著推過來，alert 會把動畫卡住
+        // No alert once the round has closed: the reveal is on its way and an alert would block it.
         if (data.status !== 1) return latest?.round?.open ? alert(data.msg) : undefined;
         sent = JSON.stringify(answer);
         markSent();
@@ -717,7 +723,7 @@ async function submitAnswer(e) {
     }
 }
 
-// ===== 連線狀態：切網路、手機睡醒常常一兩秒就連回來，晚一點才顯示，避免一直閃 =====
+// ===== Connection banner, delayed because short drops usually reconnect within a second or two =====
 let connTimer = 0;
 function onStatus(up) {
     clearTimeout(connTimer);
@@ -754,7 +760,7 @@ app.addEventListener("pointerdown", () => {
     if (playing) skip();
 });
 
-// 網址帶 ?code=1111 時預先填好組別代碼（可用 QR code 發給各組）
+// ?code= prefills the group code, e.g. from a QR code.
 const presetCode = new URLSearchParams(location.search).get("code");
 if (presetCode) $("group_code").value = presetCode;
 

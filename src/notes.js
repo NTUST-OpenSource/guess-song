@@ -1,7 +1,7 @@
-// 收卷後的戰況短評：看每題各組得分（舊 → 新）和目前總分，挑最有戲的兩句給手機顯示。
-// rounds: [{ "1": 5, "2": 3, ... }, ...]，最後一筆是剛收卷的這題
-// scores: 目前總分；teams: 這題各組每項取組內最高分 { 1: { year, artist, title }, ... }
-// 數字小的優先，同優先照下面判斷的順序
+// Post-round commentary: the two most notable lines given each round's group points and the current totals.
+// rounds: group points per round, oldest first; the last entry is the round that just closed.
+// scores: current totals. teams: this round's best points per field within each group.
+// Lower priority numbers win; equal priorities keep the order of the checks below.
 const team = (g) => `第 ${g} 組`;
 const teamList = (gs) => `第 ${gs.join("、")} 組`;
 
@@ -12,14 +12,14 @@ export function notes(rounds, scores, teams = {}) {
     const pts = (round, g) => round[g] ?? 0;
     const before = Object.fromEntries(groups.map((g) => [g, scores[g] - pts(last, g)]));
     const rank = (s) => [...groups].sort((x, y) => s[y] - s[x] || x - y);
-    // 名次：同分同名次（開賽時四組都 0 分，大家都是第 1 名）
+    // Tied groups share a place.
     const place = (s, g) => 1 + groups.filter((x) => s[x] > s[g]).length;
     const tops = (s) => groups.filter((g) => s[g] === s[rank(s)[0]]);
     const now = rank(scores);
     const was = rank(before);
     const leaders = tops(scores);
     const wasLeaders = tops(before);
-    // 從第 end 題往回數，連續幾題符合 ok
+    // Number of consecutive rounds up to `end` that satisfy `ok`.
     const streak = (g, ok, end = rounds.length - 1) => {
         let k = 0;
         while (end - k >= 0 && ok(pts(rounds[end - k], g))) k++;
@@ -48,7 +48,7 @@ export function notes(rounds, scores, teams = {}) {
         else if (perfectRun === 1) perfect.push(g);
         if (scoredRun >= 5) say(3, `${team(g)}連續 ${scoredRun} 題得分，好電！`);
         else if (scoredRun >= 3) say(6, `${team(g)}連續 ${scoredRun} 題得分`);
-        // 衝上第一已經有上面那句，這裡只講中段的爬升
+        // Taking 1st is reported above; this only covers climbs below 1st.
         const [from, to] = [place(before, g), place(scores, g)];
         if (to > 1 && from - to >= 2) say(3, `${team(g)}大躍進，從第 ${from} 名衝到第 ${to} 名！`);
         if (scoredRun === 1 && streak(g, (p) => p === 0, rounds.length - 2) >= 2) say(5, `${team(g)}終於開張！`);

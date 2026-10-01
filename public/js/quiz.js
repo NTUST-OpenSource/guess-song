@@ -1,10 +1,11 @@
-// defer 載入，接在 dashboard.js 後面；TOKEN_KEY、logout、refreshScores 來自前面的 script
+// Loaded after dashboard.js; TOKEN_KEY, logout and refreshScores come from the earlier scripts.
 const FIELD_NAMES = { year: "年份", artist: "歌手", title: "歌名" };
 const $ = (id) => document.getElementById(id);
 
-let loaded = false; // 歌單、代碼只在第一次載入時填進表單，避免輪詢蓋掉正在編輯的內容
+// Fill the song list and codes only on first load so refreshes do not overwrite edits.
+let loaded = false;
 
-// quiet：輪詢用，失敗不跳 alert
+// quiet: background refreshes fail without an alert.
 async function adminApi(action, payload = {}, quiet = false) {
     try {
         const res = await fetch(`/api/admin/${action}`, {
@@ -24,7 +25,7 @@ async function adminApi(action, payload = {}, quiet = false) {
 
 const selectedSong = () => ($("quiz_song").value === "" ? undefined : Number($("quiz_song").value));
 
-// 名字是玩家輸入的，一律用 textContent，不能拼 HTML
+// Names are user input: always use textContent, never HTML.
 function cell(content) {
     const td = document.createElement("td");
     if (content instanceof Node) td.append(content);
@@ -32,7 +33,7 @@ function cell(content) {
     return td;
 }
 
-// 每點一下換到下一個分數（年份 3 → 1 → 0，其他 1 → 0），轉回自動批改的分數就等於還原
+// Each click cycles the points (year 3 -> 1 -> 0, others 1 -> 0); returning to the automatic grade clears the override.
 const FIELD_POINTS = { year: [3, 1, 0], artist: [1, 0], title: [1, 0] };
 
 function judgeButton(songId, a, field) {
@@ -63,18 +64,18 @@ function judgeButton(songId, a, field) {
 function render(state) {
     const { songs, round, groupPw, songId, answers, awarded } = state;
 
-    // 選項帶歌名方便辨認；歌單有改（數量或歌名）才重建，避免打斷正在選的選單
+    // Rebuild the options only when the list changes, so an open menu is not interrupted.
     const select = $("quiz_song");
     const labels = songs.map((s, i) => `第 ${i + 1} 首｜${s.title[0]}`);
     if ([...select.options].map((o) => o.text).join("\n") !== labels.join("\n")) {
         const keep = selectedSong() ?? songId ?? 0;
         select.replaceChildren(...labels.map((label, i) => new Option(label, String(i))));
         if (songs.length) select.value = String(Math.min(keep, songs.length - 1));
-        // 伺服器還沒有選到的歌（剛上傳歌單），把預設的第一首同步給 /host
+        // Nothing selected yet (a fresh list): sync the default first song to /host.
         if (songs.length && songId === null) void adminApi("select", { songId: selectedSong() }, true);
     }
 
-    // 有填 youtube 就直接連過去，沒填就用「歌名 歌手」搜尋
+    // Link to the video, or search YouTube for "title artist" when there is none.
     const picked = songs[selectedSong()];
     const link = $("youtube_link");
     link.hidden = !picked;
@@ -126,7 +127,7 @@ async function refreshQuiz(quiet = false) {
     if (state) render(state);
 }
 
-// 組別代碼欄位
+// Group code inputs.
 $("group_passwords").replaceChildren(
     ...Array.from({ length: 4 }, (_, i) => {
         const label = document.createElement("label");
@@ -140,7 +141,7 @@ $("group_passwords").replaceChildren(
     }).flat(),
 );
 
-// 選歌同步到伺服器，/host 的主持人就會看到這首的解答
+// Selecting a song shows its answer key on /host.
 $("quiz_song").addEventListener("change", async () => {
     await adminApi("select", { songId: selectedSong() });
     void refreshQuiz();
@@ -188,13 +189,14 @@ $("reset_btn").addEventListener("click", async () => {
         "確定要重置嗎？\n\n會清空：四組分數、歌單與解答、組別代碼、所有作答紀錄。\n這個動作無法復原。",
     );
     if (!ok || !(await adminApi("reset"))) return;
-    loaded = false; // 讓歌單、代碼欄位跟著清空
+    // Clear the song list and code inputs too.
+    loaded = false;
     void refreshScores();
     void refreshQuiz();
     alert("已重置");
 });
 
-// 伺服器狀態一變就重抓（scores.js 收到推播會發 "live"）；玩家同時送出很多份就合併成一次
+// Refetch when scores.js reports a push, batching bursts of answers into one request.
 let liveTimer = 0;
 document.addEventListener("live", () => {
     clearTimeout(liveTimer);

@@ -1,8 +1,9 @@
-// 跟 Scores DO 保持一條 WebSocket（defer 載入）：斷線自動重連、切回前景馬上補連、定時 ping 保活。
-// token() 有值就是玩家連線（推個人狀態），沒有就只收總分；回傳的 reconnect() 換身分（加入、登出）時用
+// Keeps one WebSocket to the Scores object: reconnects with backoff, reconnects on wake, and pings to stay alive.
+// With a token the socket receives the player's state, otherwise only totals; reconnect() switches identity after join or logout.
 function live(onMessage, token = () => null, onStatus = () => {}) {
     const PING_MS = 25000;
-    const DEAD_MS = 60000; // 這麼久沒收到任何東西（包含 pong）就當作斷了，手機睡醒常常是這樣
+    // No message (pongs included) for this long means the socket is dead.
+    const DEAD_MS = 60000;
     let ws = null;
     let retry = 0;
     let timer = 0;
@@ -12,7 +13,8 @@ function live(onMessage, token = () => null, onStatus = () => {}) {
         clearTimeout(timer);
         if (ws) {
             ws.onclose = null;
-            ws.close(1000); // 不帶代碼的話伺服器收到 1005，回不了關閉訊息，連線會掛著十幾秒
+            // Send a code so the server can echo the close and end the connection.
+            ws.close(1000);
         }
         const t = token();
         const scheme = location.protocol === "https:" ? "wss" : "ws";
@@ -28,7 +30,7 @@ function live(onMessage, token = () => null, onStatus = () => {}) {
         };
         ws.onclose = () => {
             onStatus(false);
-            // 1、2、4、8 秒…最多隔 10 秒重試一次
+            // Retry after 1, 2, 4 and 8 seconds, then every 10 seconds.
             timer = setTimeout(connect, Math.min(10000, 1000 * 2 ** retry++));
         };
     }
@@ -39,7 +41,7 @@ function live(onMessage, token = () => null, onStatus = () => {}) {
         ws.send("ping");
     }, PING_MS);
 
-    // 手機切回前景、網路恢復：連線不在或太久沒消息就馬上重連，不等退避的計時器
+    // When the page returns or the network comes back, reconnect at once if the socket is gone or silent.
     const wake = () => {
         if (document.hidden) return;
         if (ws.readyState !== WebSocket.OPEN || Date.now() - seen > PING_MS * 1.5) connect();

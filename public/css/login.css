@@ -1,16 +1,14 @@
-/* ==========================================
-   全域設定與 Minecraft 變數
-   ========================================== */
+/* Globals and Minecraft palette */
 :root {
-  --mc-green: #5b8731;        /* 草方塊綠 */
+  --mc-green: #5b8731;
   --mc-green-light: #72a83e;
-  --mc-dirt-dark: #573d26;     /* 泥土深棕 */
-  --mc-dirt-light: #866043;    /* 泥土淺棕 */
-  --mc-stone: #3c3c3c;         /* 石頭灰 */
-  --mc-bedrock: #212121;       /* 基岩黑 */
-  --mc-gold: #fcf350;          /* 標題/焦點黃 */
-  --mc-border: #121212;        /* 像素黑邊 */
-  --mc-btn-gray: #7d7d7d;      /* 按鈕灰 */
+  --mc-dirt-dark: #573d26;
+  --mc-dirt-light: #866043;
+  --mc-stone: #3c3c3c;
+  --mc-bedrock: #212121;
+  --mc-gold: #fcf350;
+  --mc-border: #121212;
+  --mc-btn-gray: #7d7d7d;
 }
 
 * {
@@ -29,9 +27,7 @@ html, body {
   flex-direction: column;
 }
 
-/* ==========================================
-   頂端欄 (與 index.css 完全一致)
-   ========================================== */
+/* Top header */
 .top-header {
   width: 100%;
   background-color: var(--mc-green);
@@ -51,9 +47,7 @@ html, body {
   display: inline-block;
 }
 
-/* ==========================================
-   登入容器 (畫面上完全置中)
-   ========================================== */
+/* Login card */
 .login-container {
   flex: 1;
   display: flex;
@@ -62,7 +56,6 @@ html, body {
   padding: 20px 15px;
 }
 
-/* 泥土卡片容器 */
 .login-card {
   width: 100%;
   max-width: 380px;
@@ -85,9 +78,7 @@ html, body {
   text-shadow: 2px 2px 0 var(--mc-border);
 }
 
-/* ==========================================
-   輸入框樣式
-   ========================================== */
+/* Inputs */
 .input-group {
   display: flex;
   flex-direction: column;
@@ -114,9 +105,7 @@ html, body {
   border-color: var(--mc-gold);
 }
 
-/* ==========================================
-   Minecraft 像素風格按鈕
-   ========================================== */
+/* Pixel buttons */
 .mc-button {
   margin-top: 10px;
   width: 100%;
@@ -133,23 +122,19 @@ html, body {
   user-select: none;
 }
 
-/* 按鈕懸停狀態 */
 .mc-button:hover {
   background-color: var(--mc-green);
   box-shadow: inset -3px -3px 0 #3b591f, 
               inset 3px 3px 0 var(--mc-green-light);
 }
 
-/* 按鈕點擊狀態 (按下效果) */
 .mc-button:active {
   box-shadow: inset 3px 3px 0 #212121, 
               inset -3px -3px 0 #888888;
   transform: translateY(2px);
 }
 
-/* ==========================================
-   手機畫面適應
-   ========================================== */
+/* Small screens */
 @media (max-width: 380px) {
   .header-title {
     font-size: 1.2rem;

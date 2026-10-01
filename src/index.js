@@ -1,12 +1,13 @@
 import { notes } from "./notes.js";
 
 const GROUPS = 4;
-const TOKEN_TTL = 12 * 60 * 60; // seconds
-const MAX_SCORE = 999; // UI 的 score box 只有兩位數
+// Token lifetime in seconds.
+const TOKEN_TTL = 12 * 60 * 60;
+const MAX_SCORE = 999;
 
 const enc = new TextEncoder();
 
-// ponytail: node test.mjs 解析不了 cloudflare:workers,補一個同形狀的 base class
+// Node (test.mjs) cannot import cloudflare:workers, so fall back to a base class with the same shape.
 let DurableObject = class {
     constructor(ctx, env) {
         this.ctx = ctx;
@@ -44,8 +45,8 @@ const hmacKey = (secret) =>
         "verify",
     ]);
 
-// ponytail: 無狀態簽章 token，不存 KV。代價是 logout 無法主動撤銷，
-// 想撤銷就換掉 AUTH_SECRET（所有 token 立即失效）。
+// Tokens are stateless HMAC signatures, so logging out cannot revoke one.
+// Rotating AUTH_SECRET invalidates every token at once.
 async function issueToken(secret) {
     const exp = String(Math.floor(Date.now() / 1000) + TOKEN_TTL);
     const sig = await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(exp));
@@ -68,10 +69,10 @@ async function verifyToken(secret, token) {
     }
 }
 
-// 玩家 token 簽 "p." + payload，跟後台 token（只簽 exp）分開，兩種不能互用
+// Player tokens sign "p." + payload and admin tokens sign only exp, so neither can pass as the other.
 async function issuePlayerToken(secret, group, name) {
     const exp = Math.floor(Date.now() / 1000) + TOKEN_TTL;
-    // id 是每次加入時隨機產生的玩家識別；同組同名的人也會各自有一份答案
+    // A random id per join keeps answers apart even for players with the same name in one group.
     const payload = b64u(enc.encode(JSON.stringify({ g: group, n: name, id: crypto.randomUUID(), exp })));
     const sig = await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(`p.${payload}`));
     return `${payload}.${b64u(sig)}`;
@@ -98,14 +99,14 @@ async function verifyPlayerToken(secret, token) {
 
 const isGroup = (v) => Number.isInteger(v) && v >= 1 && v <= GROUPS;
 
-// 組別代碼不分大小寫、忽略前後空白（手機常自動大寫第一個字）
+// Group codes ignore case and surrounding spaces; phones often capitalize the first letter.
 const codeKey = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
 
-// 每項可能拿到的分數：年份精準 3、差 3 年以內 1；歌手、歌名答對 1
+// Points per field: exact year 3, within 3 years 1; artist and title 1 each.
 const FIELD_POINTS = { year: [3, 1, 0], artist: [1, 0], title: [1, 0] };
 const FIELDS = Object.keys(FIELD_POINTS);
 
-// 忽略大小寫、全半形、空白和標點
+// Ignore case, full-width forms, whitespace and punctuation.
 const norm = (s) =>
     String(s)
         .normalize("NFKC")
@@ -116,7 +117,7 @@ const textOk = (ans, accepted) => norm(ans) !== "" && accepted.some((a) => norm(
 
 const yearPoints = (ans, year) => (ans === null ? 0 : ans === year ? 3 : Math.abs(ans - year) <= 3 ? 1 : 0);
 
-// auto 是自動批改的分數，points 是套上人工改判後的最終分數
+// auto is the automatic grade; points applies manual overrides on top of it.
 function grade(song, answers) {
     return Object.entries(answers).map(([player, a]) => {
         const auto = {
@@ -130,7 +131,7 @@ function grade(song, answers) {
 
 const sumPoints = (points) => FIELDS.reduce((t, f) => t + points[f], 0);
 
-// 每組每項只算一次：取組內該項最高分
+// Each field counts once per group: the best points among its members.
 const fieldBest = (graded, group) => {
     const mine = graded.filter((a) => a.group === group);
     return Object.fromEntries(FIELDS.map((f) => [f, Math.max(0, ...mine.map((a) => a.points[f]))]));
@@ -139,7 +140,7 @@ const fieldBest = (graded, group) => {
 const groupPoints = (graded) =>
     Object.fromEntries(Array.from({ length: GROUPS }, (_, i) => [String(i + 1), sumPoints(fieldBest(graded, i + 1))]));
 
-// 每組個人得分最高的人，同分取最先送出的（看最後一次送出的時間）；手機的各組總分會輪流顯示他的名字
+// Each group's top scorer for a round; ties go to whoever submitted their final answer first.
 const groupBest = (graded) =>
     Array.from({ length: GROUPS }, (_, i) => {
         const best = graded
@@ -153,10 +154,10 @@ const groupBest = (graded) =>
 
 const toList = (v) => (Array.isArray(v) ? v : [v]).filter((s) => typeof s === "string" && s.trim() !== "");
 
-// youtube 可省略，有填只收 http(s) 網址（後台會拿來當超連結）
+// youtube is optional; when present it must be an http(s) URL because the dashboard links to it.
 const isLink = (v) => v === undefined || (typeof v === "string" && /^https?:\/\//i.test(v.trim()));
 
-// 從 youtube 網址取出影片 id，收卷後給玩家看縮圖；不是 YouTube 的網址就沒有縮圖
+// Video id for the thumbnail; links that are not YouTube have none.
 const YOUTUBE_HOSTS = ["youtube.com", "youtu.be", "youtube-nocookie.com"];
 
 function youtubeId(link) {
@@ -174,8 +175,8 @@ function youtubeId(link) {
     }
 }
 
-// 收卷時記下是哪首歌。之後歌單在那個位置換成別首（插歌、換歌），沒播過的歌不能出現在玩家的歷史裡；
-// 同一支影片、或歌名沒變，就當作同一首只是修正解答
+// Identity of the song that was played, recorded at close time. Two songs are the same
+// when their videos match, or when their titles match and either one has no video.
 const songMark = (song) => ({ title: norm(song.title[0]), youtube: youtubeId(song.youtube) });
 const sameSong = (a, b) => (a.youtube && b.youtube ? a.youtube === b.youtube : a.title === b.title);
 
@@ -184,16 +185,16 @@ const thumbOf = (song) => {
     return video ? `https://i.ytimg.com/vi/${video}/hqdefault.jpg` : null;
 };
 
-// 收過卷、而且歌單上那個位置還是同一首的題目，最近收卷的在前。
-// 作答中的那題（包含收過卷又重開的）、收卷後被換成別首的位置，都不能給玩家看到
+// Closed rounds whose song is still the one that was played, most recently closed first.
+// The open round must never reach players.
 function closedIds(songs, round, awarded, closed) {
     return (
         Object.keys(awarded)
             .map(Number)
             .filter((s) => songs[s] && !(round?.open && round.songId === s))
-            // 部署前收卷的舊資料沒有記號，照常顯示
+            // Rounds without a close record are shown as they are.
             .filter((s) => !closed[s] || sameSong(songMark(songs[s]), closed[s]))
-            // 舊資料沒有收卷時間，就照題號排
+            // Rounds without a close time fall back to song order.
             .sort((x, y) => (closed[y]?.at ?? 0) - (closed[x]?.at ?? 0) || y - x)
     );
 }
@@ -212,8 +213,8 @@ function parseSongs(v) {
     return songs.every((s) => Number.isInteger(s.year) && s.artist.length && s.title.length) ? songs : null;
 }
 
-// 單一 DO 序列化所有寫入：每個動作只改自己那組，多管理員同時操作不會互蓋。
-// 狀態一改就用 WebSocket 推出去：玩家拿自己的狀態，計分板和後台只拿總分（後台收到再自己重抓）。
+// One Durable Object serializes every write. Each change is pushed over WebSocket:
+// players get their own state, other sockets get the totals and refetch what they need.
 export class Scores extends DurableObject {
     async read() {
         return (await this.ctx.storage.get("scores")) ?? emptyScores();
@@ -235,13 +236,13 @@ export class Scores extends DurableObject {
     }
 
     // ===== WebSocket =====
-    // Worker 驗過 token 才轉進來：網址帶 g、id 是玩家；沒帶就是只收總分的連線（計分板、後台、還沒加入的手機）
+    // The Worker verifies the token first: g and id mark a player socket; without them the socket only receives totals.
     async fetch(request) {
         const url = new URL(request.url);
         const g = Number(url.searchParams.get("g"));
         const who = isGroup(g) ? { g, id: url.searchParams.get("id") } : null;
         const [client, server] = Object.values(new WebSocketPair());
-        // 手機定時送 ping 保持連線，runtime 直接回 pong，不會把休眠中的 DO 叫醒
+        // Answer client pings without waking a hibernating object.
         this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
         this.ctx.acceptWebSocket(server);
         server.serializeAttachment(who);
@@ -252,16 +253,19 @@ export class Scores extends DurableObject {
         return new Response(null, { status: 101, webSocket: client });
     }
 
-    webSocketMessage() {} // 只會收到 ping，auto-response 已經回了
+    // Clients only send pings, which the auto-response answers.
+    webSocketMessage() {}
 
     webSocketClose(ws, code, reason) {
         try {
-            // 1005 = 對方沒帶代碼，不能原樣回送，改回 1000 才會真的關掉
+            // 1005 means the client sent no code, which cannot be echoed back.
             ws.close(code === 1005 ? 1000 : code, reason);
-        } catch {} // 1006 這類是連線已經斷了，回不了也沒關係
+        } catch {
+            // The connection is already gone, e.g. 1006.
+        }
     }
 
-    // players = false：只有後台要知道的變動（有人作答、選歌），不用重算每支手機的狀態
+    // players = false is for changes only the admin pages show, such as new answers or song selection.
     async push(players = true) {
         const sockets = this.ctx.getWebSockets();
         if (!sockets.length) return;
@@ -272,20 +276,22 @@ export class Scores extends DurableObject {
             if (who && !players) continue;
             try {
                 ws.send(who ? JSON.stringify(this.playerView(shared, who)) : scores);
-            } catch {} // ponytail: 正在關的連線送不出去就算了，重連時會拿到完整狀態
+            } catch {
+                // A closing socket receives the full state again when it reconnects.
+            }
         }
     }
 
-    // ===== 手機作答 =====
-    // storage keys: scores、songs（歌單+解答）、groupPw、round {songId, open}、selected（後台選到的題號，/host 顯示它的解答）、
-    // ans:<songId> {"<組>:<玩家 id>": 答案}、awarded {songId: {組: 已加的分}}、
-    // closed {songId: {at 最後一次收卷的時間, title, youtube 收卷時是哪首歌}}
+    // ===== Rounds =====
+    // Storage keys: scores, songs (with answers), groupPw, round {songId, open}, selected (song shown on /host),
+    // ans:<songId> {"<group>:<player id>": answer}, awarded {songId: {group: points added}},
+    // closed {songId: {at: last close time, title, youtube: identity of the song that was played}}
 
     async load(key, fallback) {
         return (await this.ctx.storage.get(key)) ?? fallback;
     }
 
-    // 用組別代碼找組別；空代碼 = 該組不開放
+    // An empty code keeps that group closed.
     async groupForCode(code) {
         const key = codeKey(code);
         if (!key) return null;
@@ -297,7 +303,7 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put("groupPw", passwords);
     }
 
-    // 每支手機共用的部分只算一次：目前題目、這題所有答案、收卷後的解答和戰況短評
+    // The part of every player's view that is the same for all, computed once per push.
     async shared() {
         const [scores, songs, round, awarded, closed] = await Promise.all([
             this.read(),
@@ -331,7 +337,7 @@ export class Scores extends DurableObject {
         };
     }
 
-    // 作答中只有題號和自己的答案，絕對不能帶到解答；收卷後才有 result（解答、自己的得分、各組得分、戰況）
+    // While a round is open this must never include the answer key; result exists only after close.
     playerView({ scores, round, answers, graded, result }, { g, id }) {
         const key = `${g}:${id}`;
         const a = round?.open ? answers[key] : null;
@@ -349,8 +355,7 @@ export class Scores extends DurableObject {
         return this.playerView(await this.shared(), { g: group, id });
     }
 
-    // 收過卷的題目，最近收卷的在上：解答（第一種寫法）、縮圖、自己的答案與每項得分、
-    // 自己這組每項拿到幾分和組內最高分的人、各組這題得分
+    // Closed rounds, most recently closed first, with the player's own answer and their group's points per field.
     async playerHistory(group, id) {
         const [songs, round, awarded, closed] = await Promise.all([
             this.load("songs", []),
@@ -382,10 +387,10 @@ export class Scores extends DurableObject {
         if (!round?.open) return false;
         const key = `ans:${round.songId}`;
         const answers = await this.load(key, {});
-        // 改答案就清掉人工改判，因為那是針對舊答案判的
+        // A new answer clears manual overrides made for the previous one.
         answers[`${group}:${id}`] = { group, name, ...answer, at: Date.now(), override: {} };
         await this.ctx.storage.put(key, answers);
-        await this.push(false); // 只有後台的作答列表要更新
+        await this.push(false);
         return true;
     }
 
@@ -410,7 +415,7 @@ export class Scores extends DurableObject {
     async select(songId) {
         if (!(await this.load("songs", []))[songId]) return false;
         await this.ctx.storage.put("selected", songId);
-        await this.push(false); // /host 跟著換解答
+        await this.push(false);
         return true;
     }
 
@@ -452,7 +457,7 @@ export class Scores extends DurableObject {
         return true;
     }
 
-    // 重算這首歌每組該得幾分，跟上次加的分比較，只把差額加減到總分
+    // Regrade a song and apply only the difference from the points awarded before.
     async settle(songId) {
         const song = (await this.load("songs", []))[songId];
         if (!song) return;
@@ -468,7 +473,6 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put("awarded", { ...awarded, [songId]: points });
     }
 
-    // 清空所有資料：分數、歌單、代碼、作答、選歌
     async resetAll() {
         await this.ctx.storage.deleteAll();
         await this.push();
@@ -492,8 +496,8 @@ export class Scores extends DurableObject {
 
 const scoresStub = (env) => env.SCORES.getByName("main");
 
-// ponytail: 瀏覽器的 WebSocket 不能帶自訂 header，玩家 token 只好放網址，可能留在 Cloudflare 的請求紀錄；
-// 玩家 token 只能作答、12 小時到期。後台頁面連線不帶 token，只收總分，收到再用 POST 重抓
+// Browsers cannot set headers on a WebSocket request, so the player token travels in the query string
+// and may appear in request logs. Admin pages connect without a token and refetch over POST.
 async function handleSocket(env, request) {
     if (request.headers.get("Upgrade") !== "websocket") return fail("expected websocket", 426);
     const token = new URL(request.url).searchParams.get("token");
@@ -504,7 +508,7 @@ async function handleSocket(env, request) {
             target.searchParams.set("g", String(player.g));
             target.searchParams.set("id", player.id);
         } else {
-            // token 失效（過期、換了 AUTH_SECRET、舊版沒有 id）：照樣連上當只收總分的連線，請手機重新加入
+            // Invalid or expired token: connect as a totals-only socket and ask the phone to join again.
             target.searchParams.set("rejoin", "1");
         }
     }
@@ -527,7 +531,7 @@ async function handleAddScore(env, body) {
     if (!(await requireAuth(env, body))) return fail("please login", 401);
     if (!isGroup(body.group)) return fail("unaccept group value");
 
-    // 後台上下箭頭送 delta（可負）；舊版的勾選欄位每個 true 加 1
+    // The dashboard sends delta (may be negative); without it, each true field adds 1.
     const delta = body.delta ?? [body.year, body.name, body.sing, body.dance].filter((v) => v === true).length;
     if (!Number.isInteger(delta) || Math.abs(delta) > MAX_SCORE) return fail("unaccept delta value");
     await scoresStub(env).add(body.group, delta);
@@ -555,11 +559,11 @@ async function handleJoin(env, body) {
 
 async function handlePlay(env, action, body) {
     const player = await verifyPlayerToken(env.AUTH_SECRET, body.token);
-    // 舊版 token 沒有 id，請玩家重新加入
+    // Tokens without a player id must join again.
     if (!player?.id) return fail("please join", 401);
     const stub = scoresStub(env);
 
-    // 跟 WebSocket 推的是同一份；手機平常用推播，這裡留給除錯和測試
+    // Same payload as the WebSocket push; kept for debugging and tests.
     if (action === "state") return ok(await stub.playerState(player.g, player.id));
     if (action === "history") return ok({ history: await stub.playerHistory(player.g, player.id) });
 

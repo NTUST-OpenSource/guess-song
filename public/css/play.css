@@ -1,5 +1,5 @@
-/* 作答頁（手機為主），派對風格：紫色舞台，四組各一個顏色和圖形（紅三角、藍菱形、黃圓、綠方塊）。
-   動畫只動 transform、opacity、clip-path */
+/* Player page (phone first), party style: a purple stage and one color and shape per group.
+   Animations only touch transform, opacity and clip-path. */
 :root {
   --bg: #3c1580; --bg-2: #5b25b8; --ink: #ffffff; --ink-dim: rgba(255, 255, 255, .74); --float: rgba(255, 255, 255, .075);
   --card: #ffffff; --card-ink: #22113f; --card-dim: #6d5f88;
@@ -25,7 +25,7 @@
   --ease-pop: cubic-bezier(.34, 1.56, .64, 1); --ease-out: cubic-bezier(.2, .8, .2, 1);
   --ease-in: cubic-bezier(.6, 0, .8, .2); --ease-io: cubic-bezier(.45, 0, .55, 1);
   --pad: 18px; --row-h: 50px; --content: 440px;
-  /* 寬螢幕時上下兩條的內容維持在中間 --content 寬 */
+  /* On wide screens the top and bottom bars keep their content within --content. */
   --side: max(var(--pad), calc((100% - var(--content)) / 2));
 }
 [data-g="1"] { --gc: var(--g1); --gc-ink: var(--g1-ink); }
@@ -60,7 +60,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .f3 { --s: 176px; --x: 58%; --y: 60%; --t: 31s; --dx: -30px; --dy: -26px; }
 .f4 { --s: 92px; --x: 5%; --y: 76%; --t: 19s; --dx: 22px; --dy: -30px; }
 
-/* 上方：四組總分 */
+/* Top bar: group totals */
 .topbar { position: relative; z-index: 4; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: max(14px, env(safe-area-inset-top)) var(--side) 10px; }
 .gcell {
   position: relative; display: flex; align-items: center; justify-content: center; gap: 7px; height: 42px;
@@ -75,7 +75,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   pointer-events: none; animation: floatUp 1.5s var(--ease-out) forwards;
 }
 
-/* 中間：可捲動的場景 */
+/* Scrollable stage */
 .stage { position: relative; z-index: 1; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 6px var(--pad) 24px; display: flex; flex-direction: column; }
 .stage::-webkit-scrollbar { display: none; }
 .scene { display: none; flex: 1; flex-direction: column; gap: 14px; width: 100%; max-width: var(--content); margin-inline: auto; }
@@ -85,7 +85,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .app.shake .stage, .app.shake .topbar { animation: shake .45s; }
 .app.offline .stage { opacity: .5; transition: opacity .3s; }
 
-/* 下方：我是誰、第幾題 */
+/* Bottom bar: player and round */
 .bottombar { position: relative; z-index: 4; display: flex; align-items: center; gap: 10px; padding: 10px var(--side) max(14px, env(safe-area-inset-bottom)); background: var(--bar); color: var(--bar-ink); }
 .me-badge { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 8px; background: var(--my); color: var(--my-ink); }
 .me-badge .shape { width: 17px; height: 17px; }
@@ -96,7 +96,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .icon-btn { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border: 0; border-radius: 10px; background: transparent; color: inherit; }
 .icon-btn:active { transform: scale(.9); }
 
-/* 共用 */
+/* Shared */
 .card { background: var(--card); color: var(--card-ink); border-radius: 10px; box-shadow: var(--shadow-card); }
 .btn-main {
   display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px;
@@ -107,7 +107,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn-main:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--btn-edge); }
 .btn-main:disabled { opacity: .7; }
 .btn-main .icon { display: none; }
-/* 送出過、而且欄位沒再改：按鈕變綠打勾；改了字就變回「更新答案」 */
+/* Sent and unchanged: green with a check; editing a field reverts it to the update state. */
 .btn-main.sent { background: var(--ok); box-shadow: 0 5px 0 var(--ok-edge); }
 .btn-main.sent:active { box-shadow: 0 1px 0 var(--ok-edge); }
 .btn-main.sent .icon { display: block; animation: popIn .4s var(--ease-pop) both; }
@@ -118,7 +118,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .input:focus, .ans-input:focus { outline: none; border-color: var(--focus); }
 .input::placeholder, .ans-input::placeholder { color: var(--card-dim); opacity: .7; font-weight: 500; }
 
-/* 加入 */
+/* Join */
 .scene-join { justify-content: center; gap: 22px; }
 .brand { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
 .brand-kicker { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .2em; color: var(--ink-dim); }
@@ -130,7 +130,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .join-card .btn-main { margin-top: 8px; }
 .field-label { font-size: 13px; font-weight: 800; color: var(--card-dim); }
 
-/* 等待發題 */
+/* Lobby */
 .scene-lobby { justify-content: center; align-items: center; gap: 8px; text-align: center; }
 .lobby-team { margin: 0; font: 900 34px/1.2 var(--font-display); }
 .lobby-name { margin: 0; font-size: 17px; font-weight: 700; color: var(--ink-dim); }
@@ -140,7 +140,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .eq.small i { width: 4px; }
 .lobby-wait { margin: 0; font-weight: 800; color: var(--ink-dim); }
 
-/* 作答 */
+/* Answer */
 .q-no { margin: 0; padding-top: 4px; font: 900 30px/1.15 var(--font-display); }
 .q-no b { font-family: var(--font-num); }
 .answer-form { display: flex; flex-direction: column; gap: 12px; }
@@ -151,11 +151,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .ans-input::-webkit-inner-spin-button, .ans-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .answer-form .btn-main { margin-top: 4px; }
 .scene-answer.entering .stagger { animation: riseIn .5s var(--ease-pop) both; animation-delay: calc(var(--i) * 70ms + 60ms); }
-/* 欄位垂直置中；用 auto margin 而不是 justify-content，鍵盤彈出、內容比畫面高時上面才不會被裁掉 */
+/* Center with auto margins so the top stays reachable when content outgrows the screen. */
 .scene-answer > :first-child { margin-top: auto; }
 .scene-answer > :last-child { margin-bottom: auto; }
 .scene-answer .q-no { padding-top: 0; text-align: center; }
-/* 正在播：轉動的唱片、往外擴的聲波、飄出來的音符 */
+/* Now playing: spinning record, expanding ring, floating notes */
 .now-playing { position: relative; display: grid; place-items: center; width: 76px; height: 76px; margin-inline: auto; }
 .now-playing .disc { height: 100%; animation-duration: 3s; }
 .np-ring { position: absolute; inset: 0; border: 3px solid var(--ink); border-radius: 50%; opacity: 0; animation: npRing 1.6s var(--ease-out) infinite; }
@@ -164,7 +164,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .n2 { --c: var(--g3); --d: .8s; --nx: 42px; }
 .n3 { --c: var(--ink); --d: 1.6s; --nx: 16px; }
 
-/* 本題結果 */
+/* Round result */
 .key-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px; }
 .key-text { min-width: 0; }
 .cover {
@@ -178,7 +178,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
               repeating-radial-gradient(circle, var(--disc) 0 2px, var(--disc-groove) 2px 3px);
 }
 .key-label { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .08em; color: var(--card-dim); }
-/* 歌名、歌手太長就截斷，不撐破版面 */
+/* Long titles and artists are clamped. */
 .key-title { margin: 2px 0; font: 900 24px/1.2 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .key-meta { margin: 0; font-weight: 800; color: var(--card-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mine-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -201,7 +201,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .b-fill { position: absolute; inset: 0; z-index: -1; background: var(--gc); opacity: var(--fill-op); transform-origin: left; transform: scaleX(var(--p, 0)); transition: transform .9s var(--ease-out); }
 .b-rank { font: 900 15px var(--font-num); color: var(--card-dim); }
 .b-row > .shape { width: 20px; height: 20px; color: var(--gc); }
-/* 這題組內最高分的人先出現，再跟「第 N 組」輪流淡入淡出 */
+/* The group's top scorer alternates with the group name. */
 .b-names { display: grid; min-width: 0; }
 .b-names > span { grid-area: 1 / 1; display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 15px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .b-names.swap .b-who { animation: whoSwap 6s var(--ease-io) infinite; }
@@ -214,19 +214,19 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .notes li { padding: 10px 14px; border-radius: 10px; background: var(--note-bg); font-size: 15px; font-weight: 900; text-align: center; text-wrap: balance; }
 .wait-next { margin: 2px 0 0; display: flex; justify-content: center; align-items: center; gap: 10px; font-weight: 800; color: var(--ink-dim); }
 
-/* 收卷動畫：各區塊等 JS 加上 .in 才出現 */
+/* Reveal: blocks stay hidden until JS adds .in */
 .scene-result.revealing .rv:not(.in) { opacity: 0; }
 .scene-result.revealing .rv.in { animation: riseIn .45s var(--ease-out) both; }
 .scene-result.revealing .key-card.in, .scene-result.revealing .mine-row.in { animation: flipIn .55s var(--ease-pop) both; transform-origin: 50% 0; }
 .scene-result.revealing .mine-row.in .m-mark { animation: popIn .4s .22s var(--ease-pop) both; }
 .scene-result.revealing .mine-row.in .m-pts { animation: popIn .4s .32s var(--ease-pop) both; }
 
-/* 作答紀錄：面板固定高度，載入前後不會忽大忽小；切換個人／小組只換有變的內容 */
+/* Answer history: a fixed-height sheet, so loading never resizes it */
 .sheet { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: var(--veil); animation: fadeIn .25s both; }
 .sheet-panel { display: flex; flex-direction: column; width: 100%; max-width: calc(var(--content) + 2 * var(--pad)); height: 88%; border-radius: 22px 22px 0 0; background: var(--sheet); color: var(--card-ink); animation: sheetUp .4s var(--ease-out) both; }
 .sheet-head { display: flex; align-items: center; gap: 10px; padding: 16px var(--pad) 10px; }
 .sheet-head h3 { flex: 1; margin: 0; font: 900 20px var(--font-display); white-space: nowrap; }
-/* 開關：深色的底塊滑過去，字色跟著淡入淡出 */
+/* Toggle: the dark pill slides and the label colors fade */
 .seg { position: relative; isolation: isolate; display: grid; grid-template-columns: 1fr 1fr; padding: 3px; border-radius: 99px; background: var(--chip-soft); }
 .seg::before { content: ""; position: absolute; z-index: -1; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 99px; background: var(--card-ink); transition: transform .35s cubic-bezier(.3, 1.3, .5, 1); }
 .sheet[data-view="team"] .seg::before { transform: translateX(100%); }
@@ -249,14 +249,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .h-row .value { display: grid; min-width: 0; overflow: hidden; }
 .h-row .value > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .h-row .pts { justify-items: end; font-family: var(--font-num); font-weight: 900; }
-/* 換內容：新的從下面滑上來（數字變小時從上面滑下來），舊的同方向滑走 */
+/* Rolling content: new values enter from below, or from above when a number shrinks */
 .roll { display: inline-grid; overflow: hidden; }
 .roll > span { grid-area: 1 / 1; }
 .in-up { animation: rollInUp .32s var(--ease-out) both; }
 .out-up { animation: rollOutUp .32s var(--ease-out) both; }
 .in-down { animation: rollInDown .32s var(--ease-out) both; }
 .out-down { animation: rollOutDown .32s var(--ease-out) both; }
-/* 小組才有的部分（組內最高分的人、各組得分）用收合展開，不會一下子跳出來 */
+/* Group-only parts expand and collapse */
 .h-extra { display: grid; grid-template-rows: 0fr; overflow: hidden; opacity: 0; transition: grid-template-rows .35s var(--ease-out), opacity .3s; }
 .h-extra > div { display: grid; gap: 8px; min-height: 0; overflow: hidden; }
 .h-extra > div > :first-child { margin-top: 10px; }
@@ -268,7 +268,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .h-groups span.mine { box-shadow: inset 0 0 0 2px var(--card-ink); }
 .h-empty { margin: 28px 0; text-align: center; font-weight: 800; color: var(--card-dim); }
 
-/* 全螢幕的過場 */
+/* Full-screen overlays */
 .fx { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; overflow: hidden; }
 .wipe { position: absolute; inset: 0; overflow: hidden; }
 .wipe i { position: absolute; top: 0; bottom: 0; left: -30%; right: -30%; background: var(--c); transform: translateX(-135%) skewX(-12deg); }
@@ -278,7 +278,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .wipe i:nth-child(4) { --c: var(--intro-bg); }
 .intro.s-wipe .wipe i { animation: wipeIn .5s var(--ease-out) forwards; animation-delay: calc(var(--i) * 80ms); }
 .intro.s-out { animation: curtainUp .45s var(--ease-in) forwards; }
-/* 「第 N 題」往上提，跟下面的倒數拉開距離 */
+/* Lift the round number to leave room above the countdown */
 .intro-col { position: relative; display: flex; flex-direction: column; align-items: center; margin-bottom: 12vh; color: var(--ink); }
 .intro-no { margin: 0; font: 900 64px/1 var(--font-display); opacity: 0; }
 .intro-no b { font-family: var(--font-num); }
@@ -344,7 +344,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   .app *, .app *::before, .app *::after { animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
-  /* 不輪播：名字和組別並排 */
+  /* No alternation: name and group side by side */
   .b-names.swap { display: flex; gap: 6px; }
   .b-names.swap > span { animation: none !important; }
 }

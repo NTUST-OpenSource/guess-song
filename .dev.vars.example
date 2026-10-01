@@ -1,5 +1,5 @@
-# 複製成 .dev.vars 給 `wrangler dev` 用（.dev.vars 已被 gitignore）
-# 正式環境用 `wrangler secret put <NAME>` 設定，不要寫進 wrangler.jsonc
+# Copy to .dev.vars for `wrangler dev` (.dev.vars is gitignored).
+# In production set these with `wrangler secret put <NAME>`, never in wrangler.jsonc.
 USERNAME = "admin"
 PASSWORD = "change-me"
 AUTH_SECRET = "run: openssl rand -base64 32"

@@ -506,7 +506,7 @@ function applyView(card, animate) {
     card.gain.classList.toggle("zero", !total);
     rows.forEach(([text, pts], i) => {
         const { row, value, points } = card.cells[i];
-        row.classList.toggle("miss", pts === 0);
+        row.dataset.pts = pts;
         roll(value, text, undefined, animate);
         roll(points, `+${pts}`, pts, animate);
     });

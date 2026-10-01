@@ -8,7 +8,7 @@
   --g1: #e5243b; --g2: #1764d6; --g3: #f0a800; --g4: #26890c;
   --g1-ink: #ffffff; --g2-ink: #ffffff; --g3-ink: #2b1d00; --g4-ink: #ffffff;
   --ok: #26890c; --ok-ink: #ffffff; --ok-edge: #165206; --bad: #e5243b; --bad-ink: #ffffff;
-  --hit-soft: #e2f3dc; --hit-ink: #1d6b09; --miss-soft: #f1edf7; --miss-ink: #7a6d92;
+  --hit-soft: #e2f3dc; --hit-ink: #1d6b09; --miss-soft: #f1edf7; --miss-ink: #7a6d92; --exact-soft: #ffefbf; --exact-ink: #7a5200;
   --btn: #24123f; --btn-ink: #ffffff; --btn-edge: #0d0518;
   --bar: #ffffff; --bar-ink: #22113f; --bar-chip: #ece6f7;
   --chip-shadow: 0 4px 0 rgba(0, 0, 0, .25); --mine-ring: #ffffff; --chip-soft: #efeaf7;
@@ -274,7 +274,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .h-gain.zero { color: var(--card-dim); }
 .h-rows { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
 .h-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 8px; background: var(--hit-soft); color: var(--hit-ink); font-size: 14px; font-weight: 800; transition: background-color .3s, color .3s; }
-.h-row.miss { background: var(--miss-soft); color: var(--miss-ink); }
+/* Row colors follow the points: +3 gold, +1 green, +0 grey */
+.h-row[data-pts="3"] { background: var(--exact-soft); color: var(--exact-ink); }
+.h-row[data-pts="0"] { background: var(--miss-soft); color: var(--miss-ink); }
 .h-row .label { font-size: 12px; opacity: .85; }
 .h-row .value { display: grid; min-width: 0; overflow: hidden; }
 .h-row .value > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

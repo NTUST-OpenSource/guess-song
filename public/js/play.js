@@ -229,7 +229,7 @@ const beforeScores = (scores, gains) =>
     Object.fromEntries(GROUPS.map((g) => [g, Math.max(0, (scores[g] ?? 0) - (gains[g] ?? 0))]));
 
 const cheer = (mine, total) =>
-    !mine ? "未作答" : total >= 5 ? "完美！" : total >= 3 ? "漂亮！" : total > 0 ? "有拿分！" : "差一點！";
+    !mine ? "未作答" : total >= 5 ? "完美！" : total >= 3 ? "漂亮！" : total > 0 ? "加油！" : "差一點！";
 
 function mineRow(f, mine) {
     const pts = mine?.points[f] ?? 0;
@@ -559,7 +559,7 @@ function renderHistory() {
     const list = $("history_list");
     if (!historyData.length) {
         historyCards = [];
-        return list.replaceChildren(el("p", "h-empty", "還沒有收卷的題目"));
+        return list.replaceChildren(el("p", "h-empty", "無題目"));
     }
     const built = historyData.map(historyCard);
     historyCards = built.map((b) => b.card);

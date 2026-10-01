@@ -383,32 +383,32 @@ await admin("songs", { songs });
 await judge("小美", "year", 3, 1);
 assert.deepEqual((await history(mei)).map((x) => x.no), [1, 3, 2]);
 
-// 收卷過的位置被換成別首歌（插歌、換歌），那首沒播過的歌不能出現在玩家的歷史裡；
-// 同一首歌修正解答（同一支影片、或歌名沒變）照常顯示新的解答
-await admin("songs", {
-    songs: [
-        { ...songs[0], title: ["晴天 Sunny Day"] }, // 同一支影片，歌名修正
-        { year: 1999, artist: "新歌手", title: "沒播過的歌" }, // 換成別首
-        { ...songs[2], year: 2008 }, // 歌名沒變，年份修正
-    ],
-});
+// A played song can only be corrected in place: same video, or same title when either side has no video
 {
-    const h = await history(mei);
-    assert.ok(!JSON.stringify(h).includes("沒播過的歌"));
+    const corrected = [{ ...songs[0], title: ["晴天 Sunny Day"] }, songs[1], { ...songs[2], year: 2008 }];
+    const stranger = { year: 1999, artist: "新歌手", title: "沒播過的歌" };
+    before = await scores();
+    const replaced = await admin("songs", { songs: [corrected[0], stranger, corrected[2]] });
+    assert.equal(replaced.status, 400);
+    assert.equal((await replaced.json()).msg, "第 2 首已經收卷，只能修正解答，不能刪掉或換成別首歌");
+    assert.equal((await admin("songs", { songs: corrected.slice(0, 2) })).status, 400);
+    assert.equal((await admin("songs", { songs: [] })).status, 400);
+    const otherVideo = { ...songs[2], youtube: "https://youtu.be/ZYXwvu98765" };
+    assert.equal((await admin("songs", { songs: [corrected[0], corrected[1], otherVideo] })).status, 400);
+    assert.deepEqual(await scores(), before);
+    assert.ok(!JSON.stringify(await history(mei)).includes("沒播過的歌"));
+
+    // New songs go at the end
+    assert.equal((await admin("songs", { songs: [...corrected, stranger] })).status, 200);
     assert.deepEqual(
-        h.map((x) => [x.no, x.year, x.title]),
+        (await history(mei)).map((x) => [x.no, x.year, x.title]),
         [
             [1, 2003, "晴天 Sunny Day"],
             [3, 2008, "日不落"],
+            [2, 2010, "倔強"],
         ],
     );
 }
-
-// 歌單換成空的：歷史跟著清空，手機上這題的結果也拿掉
-await admin("songs", { songs: [] });
-assert.deepEqual(await history(mei), []);
-assert.equal((await playState(mei)).result, null);
-assert.equal(lastState().result, null);
 
 // ===== 戰況短評 =====
 {
@@ -421,13 +421,13 @@ assert.equal(lastState().result, null);
         "第 1 組仍緊追不放，只差 1 分！",
     ]);
     // 四組都沒分
-    assert.equal(notes([g4(1, 0, 0, 0), g4(0, 0, 0, 0)], g4(1, 0, 0, 0))[0], "這題四組全軍覆沒，太難了吧！");
+    assert.equal(notes([g4(1, 0, 0, 0), g4(0, 0, 0, 0)], g4(1, 0, 0, 0))[0], "怎麼沒人答對，出題在搞！");
     // 連續滿分比連續得分優先
     const hot = [g4(1, 1, 0, 0), g4(2, 0, 0, 0), g4(1, 0, 0, 0), g4(5, 0, 1, 0), g4(5, 0, 0, 1)];
-    assert.deepEqual(notes(hot, g4(14, 1, 1, 1)), ["第 1 組連續 2 題滿分，神準！", "第 1 組連續 5 題得分，手感正燙！"]);
+    assert.deepEqual(notes(hot, g4(14, 1, 1, 1)), ["第 1 組連續 2 題滿分，書卷了吧...", "第 1 組連續 5 題得分，好電！"]);
     // 同分並列第一；連兩題沒分的組終於拿分
     assert.deepEqual(notes([g4(2, 0, 0, 0), g4(0, 0, 0, 0), g4(0, 2, 0, 0)], g4(2, 2, 0, 0)), [
-        "第 1、2 組同分，並列第一！",
+        "第 1、2 組並列第一！",
         "第 2 組終於開張！",
     ]);
     // 中段爬升

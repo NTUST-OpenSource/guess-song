@@ -177,7 +177,7 @@ function youtubeId(link) {
 // 收卷時記下是哪首歌。之後歌單在那個位置換成別首（插歌、換歌），沒播過的歌不能出現在玩家的歷史裡；
 // 同一支影片、或歌名沒變，就當作同一首只是修正解答
 const songMark = (song) => ({ title: norm(song.title[0]), youtube: youtubeId(song.youtube) });
-const sameSong = (a, b) => Boolean(a.youtube && a.youtube === b.youtube) || a.title === b.title;
+const sameSong = (a, b) => (a.youtube && b.youtube ? a.youtube === b.youtube : a.title === b.title);
 
 const thumbOf = (song) => {
     const video = youtubeId(song.youtube);
@@ -389,13 +389,22 @@ export class Scores extends DurableObject {
         return true;
     }
 
+    // Returns an error message, or null when the list was saved.
     async setSongs(songs) {
-        if ((await this.load("round", null))?.open) return false;
+        if ((await this.load("round", null))?.open) return "作答中不能改歌單，請先收卷";
+        const [current, awarded, closed] = await Promise.all([
+            this.load("songs", []),
+            this.load("awarded", {}),
+            this.load("closed", {}),
+        ]);
+        // A played song can only be corrected in place; removing or replacing it would regrade its points against another song.
+        const played = Object.keys(awarded).map(Number).filter((i) => closed[i] || current[i]);
+        const changed = played.find((i) => !songs[i] || !sameSong(songMark(songs[i]), closed[i] ?? songMark(current[i])));
+        if (changed !== undefined) return `第 ${changed + 1} 首已經收卷，只能修正解答，不能刪掉或換成別首歌`;
         await this.ctx.storage.put("songs", songs);
-        // 修正解答後重新批改已收卷的題目
-        for (const id of Object.keys(await this.load("awarded", {}))) await this.settle(Number(id));
+        for (const id of Object.keys(awarded)) await this.settle(Number(id));
         await this.push();
-        return true;
+        return null;
     }
 
     async select(songId) {
@@ -579,7 +588,8 @@ async function handleAdmin(env, action, body) {
     if (action === "songs") {
         const songs = parseSongs(body.songs);
         if (!songs) return fail("歌單格式錯誤");
-        return (await stub.setSongs(songs)) ? ok() : fail("作答中不能改歌單，請先收卷");
+        const err = await stub.setSongs(songs);
+        return err ? fail(err) : ok();
     }
 
     if (action === "select") {

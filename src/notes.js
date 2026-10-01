@@ -28,7 +28,7 @@ export function notes(rounds, scores, teams = {}) {
     const said = [];
     const say = (priority, text) => said.push({ priority, text });
 
-    if (groups.every((g) => pts(last, g) === 0)) say(1, "這題四組全軍覆沒，太難了吧！");
+    if (groups.every((g) => pts(last, g) === 0)) say(1, "怎麼沒人答對，出題在搞！");
     if (leaders.length === 1 && wasLeaders.join() !== leaders.join()) {
         const g = leaders[0];
         if (rounds.length === 1) say(1, `${team(g)}搶得頭香，暫居第一！`);
@@ -36,7 +36,7 @@ export function notes(rounds, scores, teams = {}) {
         else say(1, `${team(g)}超車成功，登上第一！`);
     }
     if (leaders.length > 1 && scores[leaders[0]] > 0 && wasLeaders.join() !== leaders.join()) {
-        say(2, `${teamList(leaders)}同分，並列第一！`);
+        say(2, `${teamList(leaders)}並列第一！`);
     }
 
     const perfect = [];
@@ -44,9 +44,9 @@ export function notes(rounds, scores, teams = {}) {
         const perfectRun = streak(g, (p) => p >= 5);
         const scoredRun = streak(g, (p) => p > 0);
         const dryRun = streak(g, (p) => p === 0);
-        if (perfectRun >= 2) say(2, `${team(g)}連續 ${perfectRun} 題滿分，神準！`);
+        if (perfectRun >= 2) say(2, `${team(g)}連續 ${perfectRun} 題滿分，書卷了吧...`);
         else if (perfectRun === 1) perfect.push(g);
-        if (scoredRun >= 5) say(3, `${team(g)}連續 ${scoredRun} 題得分，手感正燙！`);
+        if (scoredRun >= 5) say(3, `${team(g)}連續 ${scoredRun} 題得分，好電！`);
         else if (scoredRun >= 3) say(6, `${team(g)}連續 ${scoredRun} 題得分`);
         // 衝上第一已經有上面那句，這裡只講中段的爬升
         const [from, to] = [place(before, g), place(scores, g)];

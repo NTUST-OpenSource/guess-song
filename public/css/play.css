@@ -158,8 +158,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .answer-form .btn-main { margin-top: 4px; }
 .scene-answer.entering .stagger { animation: riseIn .5s var(--ease-pop) both; animation-delay: calc(var(--i) * 70ms + 60ms); }
 /* Center with auto margins so the top stays reachable when content outgrows the screen. */
-.scene-answer > :first-child { margin-top: auto; }
-.scene-answer > :last-child { margin-bottom: auto; }
+.scene-answer > :first-child, .scene-result > :first-child { margin-top: auto; }
+.scene-answer > :last-child, .scene-result > :last-child { margin-bottom: auto; }
 .scene-answer .q-no { padding-top: 0; text-align: center; }
 /* Now playing: spinning record, expanding ring, floating notes */
 .now-playing { position: relative; display: grid; place-items: center; width: 76px; height: 76px; margin-inline: auto; }

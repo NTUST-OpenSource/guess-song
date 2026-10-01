@@ -76,8 +76,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   pointer-events: none; animation: floatUp 1.5s var(--ease-out) forwards;
 }
 
-/* Scrollable stage */
-.stage { position: relative; z-index: 1; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 6px var(--pad) 24px; display: flex; flex-direction: column; }
+/* Scrollable stage; content fades out above the bottom bar instead of being cut */
+.stage { position: relative; z-index: 1; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 6px var(--pad) 24px; display: flex; flex-direction: column; mask-image: linear-gradient(#000 calc(100% - 16px), transparent); }
 .stage::-webkit-scrollbar { display: none; }
 .scene { display: none; flex: 1; flex-direction: column; gap: 14px; width: 100%; max-width: var(--content); margin-inline: auto; }
 .app[data-scene="join"] .scene-join, .app[data-scene="lobby"] .scene-lobby,
@@ -86,8 +86,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .app.shake .stage, .app.shake .topbar { animation: shake .45s; }
 .app.offline .stage { opacity: .5; transition: opacity .3s; }
 
-/* Bottom bar: player and round */
-.bottombar { position: relative; z-index: 4; display: flex; align-items: center; gap: 10px; padding: 10px var(--side) max(14px, env(safe-area-inset-bottom)); background: var(--bar); color: var(--bar-ink); }
+/* Bottom bar: player and round on a white card as wide as the content; the sides and the safe area show the background */
+.bottombar { position: relative; z-index: 4; display: flex; align-items: center; gap: 10px; margin: 0 var(--side) max(14px, env(safe-area-inset-bottom)); padding: 8px; border-radius: 16px; background: var(--bar); color: var(--bar-ink); box-shadow: var(--shadow-card); }
 .me-badge { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 8px; background: var(--my); color: var(--my-ink); }
 .me-badge .shape { width: 17px; height: 17px; }
 .me-text { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.25; }

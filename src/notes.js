@@ -12,6 +12,8 @@ export function notes(rounds, scores, teams = {}) {
     const pts = (round, g) => round[g] ?? 0;
     const before = Object.fromEntries(groups.map((g) => [g, scores[g] - pts(last, g)]));
     const rank = (s) => [...groups].sort((x, y) => s[y] - s[x] || x - y);
+    // 名次：同分同名次（開賽時四組都 0 分，大家都是第 1 名）
+    const place = (s, g) => 1 + groups.filter((x) => s[x] > s[g]).length;
     const tops = (s) => groups.filter((g) => s[g] === s[rank(s)[0]]);
     const now = rank(scores);
     const was = rank(before);
@@ -47,9 +49,8 @@ export function notes(rounds, scores, teams = {}) {
         if (scoredRun >= 5) say(3, `${team(g)}連續 ${scoredRun} 題得分，手感正燙！`);
         else if (scoredRun >= 3) say(6, `${team(g)}連續 ${scoredRun} 題得分`);
         // 衝上第一已經有上面那句，這裡只講中段的爬升
-        if (now.indexOf(g) > 0 && was.indexOf(g) - now.indexOf(g) >= 2) {
-            say(3, `${team(g)}大躍進，從第 ${was.indexOf(g) + 1} 名衝到第 ${now.indexOf(g) + 1} 名！`);
-        }
+        const [from, to] = [place(before, g), place(scores, g)];
+        if (to > 1 && from - to >= 2) say(3, `${team(g)}大躍進，從第 ${from} 名衝到第 ${to} 名！`);
         if (scoredRun === 1 && streak(g, (p) => p === 0, rounds.length - 2) >= 2) say(5, `${team(g)}終於開張！`);
         if (dryRun >= 3) say(8, `${team(g)}已經連續 ${dryRun} 題沒拿分，加油！`);
     }

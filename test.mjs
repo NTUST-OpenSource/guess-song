@@ -435,6 +435,8 @@ assert.equal(lastState().result, null);
         "第 4 組大躍進，從第 4 名衝到第 2 名！",
         "第 4 組仍緊追不放，只差 1 分！",
     ]);
+    // 開賽時四組同分都算第 1 名，第一題拿分不算爬升
+    assert.ok(!notes([g4(5, 0, 0, 2)], g4(5, 0, 0, 2)).some((n) => n.includes("大躍進")));
     assert.deepEqual(notes([], g4(0, 0, 0, 0)), []);
 }
 

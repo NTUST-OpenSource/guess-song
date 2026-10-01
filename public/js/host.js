@@ -95,7 +95,11 @@ $("close_btn").addEventListener("click", async () => {
     }
 });
 
+// 伺服器狀態一變就重抓（scores.js 收到推播會發 "live"）；同時來好幾個就合併成一次
+let liveTimer = 0;
+document.addEventListener("live", () => {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => void refresh(), 200);
+});
+
 void refresh();
-setInterval(() => {
-    if (!document.hidden) void refresh();
-}, 1000);

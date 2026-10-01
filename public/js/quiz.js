@@ -194,7 +194,11 @@ $("reset_btn").addEventListener("click", async () => {
     alert("已重置");
 });
 
+// 伺服器狀態一變就重抓（scores.js 收到推播會發 "live"）；玩家同時送出很多份就合併成一次
+let liveTimer = 0;
+document.addEventListener("live", () => {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => void refreshQuiz(true), 300);
+});
+
 void refreshQuiz();
-setInterval(() => {
-    if (!document.hidden) void refreshQuiz(true);
-}, 2000);

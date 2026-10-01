@@ -471,17 +471,13 @@ let historyJson = "";
 let historyCards = [];
 let historySeq = 0;
 
-const teamText = (f, pts) => (pts === 0 ? "沒人答對" : f !== "year" ? "答對" : pts === 3 ? "猜中年份" : "差 3 年內");
-
-// Total and the three [text, points] rows for the current view.
+// Total and the three [text, points] rows for the current view; the group view shows the answers that scored.
 function viewOf(h) {
-    if (historyView === "team") {
-        return { total: h.groups[myGroup()] ?? 0, rows: FIELDS.map((f) => [teamText(f, h.team.points[f]), h.team.points[f]]) };
-    }
-    const m = h.mine;
+    const team = historyView === "team";
+    const a = team ? h.team : h.mine;
     return {
-        total: m ? sumPoints(m.points) : 0,
-        rows: FIELDS.map((f) => (m ? [String(m[f] ?? "") || "—", m.points[f]] : ["未作答", 0])),
+        total: team ? (h.groups[myGroup()] ?? 0) : a ? sumPoints(a.points) : 0,
+        rows: FIELDS.map((f) => (a ? [String(a[f] ?? "") || "—", a.points[f]] : ["未作答", 0])),
     };
 }
 

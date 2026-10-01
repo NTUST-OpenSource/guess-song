@@ -137,6 +137,17 @@ const fieldBest = (graded, group) => {
     return Object.fromEntries(FIELDS.map((f) => [f, Math.max(0, ...mine.map((a) => a.points[f]))]));
 };
 
+// Per field, the answer behind the group's best points (null when nobody scored); ties go to the earliest submission.
+const fieldAnswers = (graded, group) => {
+    const mine = graded.filter((a) => a.group === group).sort((x, y) => x.at - y.at);
+    return Object.fromEntries(
+        FIELDS.map((f) => {
+            const top = mine.reduce((best, a) => (a.points[f] > (best?.points[f] ?? 0) ? a : best), null);
+            return [f, top ? top[f] : null];
+        }),
+    );
+};
+
 const groupPoints = (graded) =>
     Object.fromEntries(Array.from({ length: GROUPS }, (_, i) => [String(i + 1), sumPoints(fieldBest(graded, i + 1))]));
 
@@ -355,7 +366,7 @@ export class Scores extends DurableObject {
         return this.playerView(await this.shared(), { g: group, id });
     }
 
-    // Closed rounds, most recently closed first, with the player's own answer and their group's points per field.
+    // Closed rounds, most recently closed first, with the player's own answer and their group's scoring answers and points per field.
     async playerHistory(group, id) {
         const [songs, round, awarded, closed] = await Promise.all([
             this.load("songs", []),
@@ -376,7 +387,7 @@ export class Scores extends DurableObject {
                 thumb: thumbOf(song),
                 groups: awarded[songId],
                 mine: ownAnswer(graded.find((a) => a.player === key)),
-                team: { points: fieldBest(graded, group), best: groupBest(graded)[group - 1].name },
+                team: { ...fieldAnswers(graded, group), points: fieldBest(graded, group), best: groupBest(graded)[group - 1].name },
             });
         }
         return history;

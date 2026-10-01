@@ -171,17 +171,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .n3 { --c: var(--ink); --d: 1.6s; --nx: 16px; }
 
 /* Round result */
-/* The cover fills the card's left side up to its edges; the text keeps the padding */
-.key-card { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 14px; overflow: hidden; }
+.key-card { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 14px; }
+.key-card .cover { min-height: 76px; border-radius: 10px 0 0 10px; }
 .key-text { align-self: center; min-width: 0; padding: 12px 12px 12px 0; }
-.key-card .cover { position: relative; aspect-ratio: auto; min-height: 76px; border-radius: 0; }
-/* The image never sets the card's height; YouTube's 4:3 thumbnails letterbox 16:9 videos, so zoom past the bars */
-.key-card .cover img { position: absolute; inset: 0; transform: scale(1.34); }
+/* Covers fill their card's left side up to the edges; the image never sets the card's height */
 .cover {
-  display: grid; place-items: center; aspect-ratio: 16 / 9; max-width: 100%; overflow: hidden; border-radius: 6px;
+  position: relative; display: grid; place-items: center; overflow: hidden;
   background: linear-gradient(135deg, var(--c1, var(--g2)), var(--c2, var(--g1)));
 }
-.cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* YouTube's 4:3 thumbnails letterbox 16:9 videos; zoom past the bars */
+.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.34); }
 .disc {
   height: 84%; aspect-ratio: 1; border-radius: 50%; animation: spin 5s linear infinite;
   background: radial-gradient(circle, var(--disc-label) 0 20%, var(--disc) 21% 24%, transparent 25%),
@@ -190,10 +189,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Long titles and artists are clamped. */
 .key-title { margin: 2px 0; font: 900 18px/1.2 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 /* Artist and year share a line when they fit; otherwise the year wraps alone and the dot before it falls outside the clip */
-.key-meta { display: flex; flex-wrap: wrap; column-gap: 1em; overflow: hidden; margin: 0; font-size: 14px; font-weight: 800; color: var(--card-dim); }
-.key-artist { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.key-year { white-space: nowrap; }
-.key-year::before { content: "·"; display: inline-block; width: 1em; margin-left: -1em; text-align: center; }
+.meta { display: flex; flex-wrap: wrap; column-gap: 1em; overflow: hidden; margin: 0; font-weight: 800; color: var(--card-dim); }
+.meta-artist { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta-year { white-space: nowrap; }
+.meta-year::before { content: "·"; display: inline-block; width: 1em; margin-left: -1em; text-align: center; }
+.key-meta { font-size: 14px; }
 .mine-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .mine-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 30px 44px; align-items: center; gap: 8px; padding: 10px 12px; }
 .m-label { font-size: 13px; font-weight: 900; color: var(--card-dim); }
@@ -261,14 +261,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .seg button[aria-pressed="true"] { color: var(--card); }
 .sheet-close { padding: 8px 14px; border: 0; border-radius: 99px; background: var(--chip-soft); color: var(--card-ink); font-weight: 800; }
 .sheet-body { display: grid; align-content: start; gap: 12px; overflow-y: auto; overscroll-behavior: contain; padding: 4px var(--pad) max(22px, env(safe-area-inset-bottom)); }
-.h-item { display: flex; flex-direction: column; padding: 12px; border-radius: 10px; background: var(--card); box-shadow: var(--shadow-soft); }
-.h-top { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
-.h-text { min-width: 0; }
+.h-item { display: flex; flex-direction: column; padding: 0 12px 12px; border-radius: 10px; background: var(--card); box-shadow: var(--shadow-soft); }
+/* Like the answer card, the cover reaches the card's left and top edges; the text and total keep the padding */
+.h-top { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 12px; margin: 0 -12px; }
+.h-top .cover { min-height: 72px; border-radius: 10px 0 0 0; }
+.h-text { align-self: center; min-width: 0; padding: 10px 0; }
 .h-no { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--card-dim); }
 .h-title { margin: 1px 0 2px; font: 900 18px/1.25 var(--font-display); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.h-meta { margin: 0; font-size: 13px; font-weight: 800; color: var(--card-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h-meta { font-size: 13px; }
 /* Scores are at most +5; a fixed width keeps view switches from re-wrapping the title or the values */
-.h-gain { justify-items: end; width: 1.4em; font: 900 24px var(--font-num); font-variant-numeric: tabular-nums; transition: color .3s; }
+.h-gain { align-self: center; justify-items: end; width: 1.4em; margin-right: 12px; font: 900 24px var(--font-num); font-variant-numeric: tabular-nums; transition: color .3s; }
 .h-gain.zero { color: var(--card-dim); }
 .h-rows { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
 .h-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 8px; background: var(--hit-soft); color: var(--hit-ink); font-size: 14px; font-weight: 800; transition: background-color .3s, color .3s; }

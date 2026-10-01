@@ -531,7 +531,9 @@ function historyCard(h) {
     cover.setAttribute("aria-hidden", "true");
     setCover(cover, h.thumb, h.no);
     const text = el("div", "h-text");
-    text.append(el("p", "h-no", `第 ${h.no} 題`), el("h4", "h-title", h.title), el("p", "h-meta", `${h.artist} · ${h.year}`));
+    const meta = el("p", "meta h-meta");
+    meta.append(el("span", "meta-artist", h.artist), el("span", "meta-year", String(h.year)));
+    text.append(el("p", "h-no", `第 ${h.no} 題`), el("h4", "h-title", h.title), meta);
     const gain = el("span", "h-gain roll");
     top.append(cover, text, gain);
     const list = el("ul", "h-rows");

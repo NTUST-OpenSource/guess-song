@@ -1,4 +1,4 @@
-// defer 載入，DOM 已就緒；refreshScores 來自 /js/scores.js
+// refreshScores comes from /js/scores.js.
 const TOKEN_KEY = "ntust_camp_token";
 const MAX_SCORE = 999;
 
@@ -11,7 +11,7 @@ function logout() {
     window.location.href = "/login";
 }
 
-// ponytail: token 過期就直接踢回登入頁，沒有 refresh 機制
+// An expired token sends the admin back to the login page.
 async function post(url, payload) {
     try {
         const res = await fetch(url, {
@@ -31,8 +31,8 @@ async function post(url, payload) {
     return false;
 }
 
-// 上下箭頭：畫面先 ±1，再把 delta 交給伺服器加減，不會蓋掉同時進來的收卷計分。
-// 送出中的那格先不給輪詢覆蓋（scores.js 看 data-pending），連點才不會跳回舊分數
+// Arrow buttons update the box first, then send a delta so a concurrent close is not overwritten.
+// data-pending keeps pushes from overwriting a box while its update is in flight.
 for (const btn of document.querySelectorAll(".score-step")) {
     btn.addEventListener("click", async () => {
         const group = Number(btn.dataset.group);
@@ -46,7 +46,7 @@ for (const btn of document.querySelectorAll(".score-step")) {
     });
 }
 
-// 直接打分數：Enter 存、Esc 取消；沒按 Enter 就離開等於取消（離開後輪詢會蓋回伺服器的分數）
+// Typed scores: Enter saves; Escape or leaving the box cancels and restores the server value.
 for (const box of document.querySelectorAll(".score-editor .score-box")) {
     box.addEventListener("keydown", async (e) => {
         if (e.key === "Escape") return box.blur();

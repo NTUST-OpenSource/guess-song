@@ -1,5 +1,5 @@
-// /host 主持人頁（defer 載入，DOM 已就緒）：顯示後台選到那首的解答，可以發題 / 收卷。
-// 帳密跟後台同一組，共用同一個 token；refreshScores 來自 /js/scores.js
+// /host: shows the answer key of the song selected in the dashboard, and opens or closes rounds.
+// Shares the dashboard login token; refreshScores comes from /js/scores.js.
 const TOKEN_KEY = "ntust_camp_token";
 const $ = (id) => document.getElementById(id);
 
@@ -10,9 +10,10 @@ const toLogin = () => {
 
 if (!localStorage.getItem(TOKEN_KEY)) toLogin();
 
-let current = null; // 最近一次的 state，按鈕用
+// Latest admin state, used by the buttons.
+let current = null;
 
-// quiet：輪詢用，失敗不跳 alert
+// quiet: background refreshes fail without an alert.
 async function adminApi(action, payload = {}, quiet = false) {
     try {
         const res = await fetch(`/api/admin/${action}`, {
@@ -30,7 +31,7 @@ async function adminApi(action, payload = {}, quiet = false) {
     return null;
 }
 
-// 第一個寫法放大，其他可接受的寫法小字列在下面
+// The first accepted spelling is shown large, the others below it.
 function showKey(id, values) {
     const [main, ...alts] = values;
     const dd = $(id);
@@ -95,7 +96,11 @@ $("close_btn").addEventListener("click", async () => {
     }
 });
 
+// Refetch when scores.js reports a push, batching bursts into one request.
+let liveTimer = 0;
+document.addEventListener("live", () => {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => void refresh(), 200);
+});
+
 void refresh();
-setInterval(() => {
-    if (!document.hidden) void refresh();
-}, 1000);

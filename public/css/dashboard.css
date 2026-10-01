@@ -1,17 +1,15 @@
-/* ==========================================
-   全域設定與 Minecraft 變數
-   ========================================== */
+/* Globals and Minecraft palette */
 :root {
-  --mc-green: #5b8731;        /* 草方塊綠 */
+  --mc-green: #5b8731;
   --mc-green-light: #72a83e;
-  --mc-dirt-dark: #573d26;     /* 泥土深棕 */
-  --mc-dirt-light: #866043;    /* 泥土淺棕 */
-  --mc-stone: #3c3c3c;         /* 石頭灰 */
-  --mc-bedrock: #212121;       /* 基岩黑 */
-  --mc-gold: #fcf350;          /* 金黃色分數/警告色 */
-  --mc-border: #121212;        /* 像素黑邊 */
-  --mc-red: #a82b2b;           /* 登出紅色 */
-  --mc-btn-gray: #7d7d7d;      /* 預設灰色 */
+  --mc-dirt-dark: #573d26;
+  --mc-dirt-light: #866043;
+  --mc-stone: #3c3c3c;
+  --mc-bedrock: #212121;
+  --mc-gold: #fcf350;
+  --mc-border: #121212;
+  --mc-red: #a82b2b;
+  --mc-btn-gray: #7d7d7d;
 }
 
 * {
@@ -29,9 +27,7 @@ html, body {
   padding-bottom: 30px;
 }
 
-/* ==========================================
-   頂端欄 (Top Header)
-   ========================================== */
+/* Top header */
 .top-header {
   width: 100%;
   background-color: var(--mc-green);
@@ -51,9 +47,7 @@ html, body {
   display: inline-block;
 }
 
-/* ==========================================
-   隊伍網格佈局 (6 隊分數欄)
-   ========================================== */
+/* Team grid */
 .score-container {
   max-width: 900px;
   margin: 0 auto;
@@ -102,7 +96,7 @@ html, body {
   cursor: default;
 }
 
-/* 後台的分數卡：▲ / 分數 / ▼。箭頭按了就存；分數可以直接打，按 Enter 存 */
+/* Score cards: up arrow, score, down arrow. Arrows save at once; typed scores save on Enter. */
 .score-editor {
   width: 85%;
   display: flex;
@@ -136,7 +130,7 @@ html, body {
   cursor: pointer;
 }
 
-/* 箭頭用 CSS 畫，不用 emoji */
+/* Arrows are drawn with CSS. */
 .score-step::before {
   content: "";
   display: block;
@@ -155,9 +149,7 @@ html, body {
   transform: translateY(2px);
 }
 
-/* ==========================================
-   控制區域：發題、代碼、作答狀況、歌單
-   ========================================== */
+/* Control area */
 .control-container {
   max-width: 900px;
   margin: 10px auto 0 auto;
@@ -167,7 +159,7 @@ html, body {
   gap: 20px;
 }
 
-/* 獨立控制卡片 */
+/* Control cards */
 .control-card {
   background-color: var(--mc-dirt-light);
   border: 4px solid var(--mc-border);
@@ -192,7 +184,7 @@ html, body {
   color: #cccccc;
 }
 
-/* 表單列 */
+/* Form rows */
 .input-row {
   display: flex;
   flex-direction: column;
@@ -204,9 +196,7 @@ html, body {
   text-shadow: 1px 1px 0 var(--mc-border);
 }
 
-/* ==========================================
-   Minecraft 像素風格通用按鈕
-   ========================================== */
+/* Pixel buttons */
 .mc-button {
   width: 100%;
   height: 48px;
@@ -224,27 +214,22 @@ html, body {
   transform: translateY(2px);
 }
 
-/* 綠色按鈕 (加分) */
 .btn-green {
   background-color: var(--mc-green);
   box-shadow: inset -3px -3px 0 #3b591f, inset 3px 3px 0 var(--mc-green-light);
 }
 
-/* 黃/棕色按鈕 (設定) */
 .btn-gold {
   background-color: #c68c28;
   box-shadow: inset -3px -3px 0 #7e5510, inset 3px 3px 0 #e2a842;
 }
 
-/* 紅色按鈕 (登出) */
 .btn-red {
   background-color: var(--mc-red);
   box-shadow: inset -3px -3px 0 #611717, inset 3px 3px 0 #d14747;
 }
 
-/* ==========================================
-   作答管理（發題 / 密碼 / 作答狀況 / 歌單）
-   ========================================== */
+/* Round management */
 .input-row select,
 .password-grid input,
 .songs-json {
@@ -349,15 +334,12 @@ html, body {
   border-color: var(--mc-gold);
 }
 
-/* 登出卡片容器 */
 .logout-wrapper {
   margin-top: 10px;
 }
 
-/* ==========================================
-   響應式調整
-   ========================================== */
-/* 平板以上改成雙欄佈局控制框 */
+/* Responsive */
+/* Two columns from tablet width up */
 @media (min-width: 768px) {
   .score-container {
     grid-template-columns: repeat(4, 1fr);

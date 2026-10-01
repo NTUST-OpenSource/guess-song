@@ -2,74 +2,159 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#3c1580">
     <title>三『資』小豬 - 作答</title>
-    <!-- 引入像素風格字型 -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@700&display=swap" rel="stylesheet">
-    <script src="/js/play.js" defer></script>
-    <link rel="stylesheet" href="/css/login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/play.css">
+    <script src="/js/live.js" defer></script>
+    <script src="/js/play.js" defer></script>
 </head>
 <body>
-    <!-- 四組總分固定在最上方，自己那組框起來 -->
-    <div class="score-bar">
-        <div id="cell_1" class="score-cell"><span>1組</span><strong id="score_1">0</strong></div>
-        <div id="cell_2" class="score-cell"><span>2組</span><strong id="score_2">0</strong></div>
-        <div id="cell_3" class="score-cell"><span>3組</span><strong id="score_3">0</strong></div>
-        <div id="cell_4" class="score-cell"><span>4組</span><strong id="score_4">0</strong></div>
+    <!-- Group shapes and icons -->
+    <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <symbol id="sh1" viewBox="0 0 32 32"><path d="M16 3.5 30 28.5H2Z"/></symbol>
+        <symbol id="sh2" viewBox="0 0 32 32"><path d="M16 1.5 30.5 16 16 30.5 1.5 16Z"/></symbol>
+        <symbol id="sh3" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14"/></symbol>
+        <symbol id="sh4" viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="2.5"/></symbol>
+        <symbol id="ic-check" viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-cross" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></symbol>
+        <symbol id="ic-note" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></symbol>
+        <symbol id="ic-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+        <symbol id="ic-exit" viewBox="0 0 24 24"><path d="M14 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H14M10 12h10m-3.5-3.5L20 12l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </svg>
+
+    <div class="app" id="app" data-scene="join">
+        <div class="bg" aria-hidden="true">
+            <svg class="float f1"><use href="#sh1"/></svg>
+            <svg class="float f2"><use href="#sh2"/></svg>
+            <svg class="float f3"><use href="#sh3"/></svg>
+            <svg class="float f4"><use href="#sh4"/></svg>
+        </div>
+
+        <!-- Group totals stay pinned at the top; the player's group is outlined -->
+        <header class="topbar" aria-label="四組總分">
+            <div class="gcell" data-g="1" id="top_1"><svg class="shape" aria-hidden="true"><use href="#sh1"/></svg><span class="sr">第 1 組</span><b>0</b></div>
+            <div class="gcell" data-g="2" id="top_2"><svg class="shape" aria-hidden="true"><use href="#sh2"/></svg><span class="sr">第 2 組</span><b>0</b></div>
+            <div class="gcell" data-g="3" id="top_3"><svg class="shape" aria-hidden="true"><use href="#sh3"/></svg><span class="sr">第 3 組</span><b>0</b></div>
+            <div class="gcell" data-g="4" id="top_4"><svg class="shape" aria-hidden="true"><use href="#sh4"/></svg><span class="sr">第 4 組</span><b>0</b></div>
+        </header>
+
+        <main class="stage" id="stage">
+            <!-- Join: name and group code; the code decides the group -->
+            <section class="scene scene-join" aria-label="加入遊戲">
+                <div class="brand">
+                    <p class="brand-kicker">三『資』小豬</p>
+                    <h1 class="brand-title" aria-label="誰是猜歌王"><span style="--i:0">誰</span><span style="--i:1">是</span><span style="--i:2">猜</span><span style="--i:3">歌</span><span style="--i:4">王</span></h1>
+                    <div class="brand-shapes" aria-hidden="true">
+                        <svg class="shape" data-g="1"><use href="#sh1"/></svg><svg class="shape" data-g="2"><use href="#sh2"/></svg><svg class="shape" data-g="3"><use href="#sh3"/></svg><svg class="shape" data-g="4"><use href="#sh4"/></svg>
+                    </div>
+                </div>
+                <form class="card join-card" id="join_form">
+                    <label class="field-label" for="player_name">名字</label>
+                    <input class="input" id="player_name" maxlength="20" autocomplete="off" required>
+                    <label class="field-label" for="group_code">組別代碼</label>
+                    <input class="input" id="group_code" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+                    <button class="btn-main" type="submit"><span>加入</span></button>
+                </form>
+            </section>
+
+            <section class="scene scene-lobby" aria-label="等待發題">
+                <h2 class="lobby-team" id="lobby_team"></h2>
+                <p class="lobby-name" id="lobby_name"></p>
+                <div class="eq" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i></div>
+                <p class="lobby-wait">等待中</p>
+            </section>
+
+            <section class="scene scene-answer" id="answer" aria-label="作答">
+                <!-- Now playing -->
+                <div class="now-playing stagger" style="--i:0" aria-hidden="true">
+                    <span class="np-ring"></span>
+                    <span class="disc"></span>
+                    <svg class="np-note n1"><use href="#ic-note"/></svg>
+                    <svg class="np-note n2"><use href="#ic-note"/></svg>
+                    <svg class="np-note n3"><use href="#ic-note"/></svg>
+                </div>
+                <h2 class="q-no stagger" style="--i:1">第 <b class="round-no"></b> 題</h2>
+                <form class="answer-form" id="answer_form" autocomplete="off">
+                    <label class="card ans-card stagger" style="--i:2">
+                        <span class="ans-label">年份</span>
+                        <input class="ans-input" id="ans_year" type="number" inputmode="numeric" placeholder="西元年">
+                    </label>
+                    <label class="card ans-card stagger" style="--i:3">
+                        <span class="ans-label">歌手</span>
+                        <input class="ans-input" id="ans_artist" maxlength="50">
+                    </label>
+                    <label class="card ans-card stagger" style="--i:4">
+                        <span class="ans-label">歌名</span>
+                        <input class="ans-input" id="ans_title" maxlength="50">
+                    </label>
+                    <button class="btn-main stagger" id="answer_btn" type="submit" style="--i:5"><svg class="icon" aria-hidden="true"><use href="#ic-check"/></svg><span id="answer_label">送出答案</span></button>
+                </form>
+            </section>
+
+            <!-- After close: answer key, own answers, group totals, commentary -->
+            <section class="scene scene-result" id="result" aria-label="本題結果">
+                <h2 class="q-no rv">第 <b class="round-no"></b> 題</h2>
+                <article class="card key-card rv">
+                    <div class="cover" id="key_cover"></div>
+                    <div class="key-text">
+                        <p class="key-label">正確答案</p>
+                        <h3 class="key-title" id="key_title"></h3>
+                        <p class="key-meta" id="key_meta"></p>
+                    </div>
+                </article>
+                <ul class="mine-list" id="mine_list" aria-label="我的答案"></ul>
+                <section class="board rv" id="board" aria-label="各組總分">
+                    <ol class="board-list" id="board_list"></ol>
+                </section>
+                <ul class="notes rv" id="notes" aria-label="戰況"></ul>
+                <p class="wait-next rv"><span class="eq small" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></span>等待中</p>
+            </section>
+        </main>
+
+        <footer class="bottombar">
+            <span class="me-badge" aria-hidden="true"><svg class="shape"><use id="me_shape" href="#sh1"/></svg></span>
+            <span class="me-text"><b class="me-name" id="me_name"></b><span class="me-team" id="me_team"></span></span>
+            <span class="me-round" id="me_round" hidden></span>
+            <button class="icon-btn" id="history_btn" type="button" aria-label="作答紀錄"><svg class="icon" aria-hidden="true"><use href="#ic-list"/></svg></button>
+            <button class="icon-btn" id="leave_btn" type="button" aria-label="登出"><svg class="icon" aria-hidden="true"><use href="#ic-exit"/></svg></button>
+        </footer>
+
+        <!-- Round start: wipe, round number, countdown -->
+        <div class="fx intro" id="intro" hidden>
+            <div class="wipe" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i></div>
+            <div class="intro-col">
+                <p class="intro-no">第 <b class="round-no"></b> 題</p>
+                <div class="count" id="count" aria-live="assertive"></div>
+            </div>
+            <p class="intro-go">開始作答</p>
+            <p class="skip-hint">點一下跳過</p>
+        </div>
+        <!-- Round end: stamp, then a full-screen result -->
+        <div class="fx stamp" id="stamp" hidden><div class="stamp-mark"><span>TIME'S</span><span>UP!</span></div></div>
+        <div class="fx flood" id="flood" hidden>
+            <div class="flood-icon"><svg class="icon" aria-hidden="true"><use id="flood_use" href="#ic-check"/></svg></div>
+            <p class="flood-text" id="flood_text"></p>
+            <p class="flood-pts" id="flood_pts"></p>
+        </div>
+        <div class="conn" id="conn" role="status" hidden><span class="spin" aria-hidden="true"></span><span id="conn_text"></span></div>
+        <div class="sheet" id="sheet" data-view="mine" hidden>
+            <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet_title">
+                <header class="sheet-head">
+                    <h3 id="sheet_title">作答紀錄</h3>
+                    <div class="seg" role="group" aria-label="顯示誰的紀錄">
+                        <button type="button" data-view="mine" aria-pressed="true">個人</button>
+                        <button type="button" data-view="team" aria-pressed="false">小組</button>
+                    </div>
+                    <button class="sheet-close" id="sheet_close" type="button">關閉</button>
+                </header>
+                <div class="sheet-body" id="history_list"></div>
+            </div>
+        </div>
+        <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
     </div>
-
-    <header class="top-header">
-        <a class="header-title" href="/">誰是猜歌王</a>
-    </header>
-
-    <!-- 收卷後的跑馬燈：每組這首得分最高的人 -->
-    <div id="marquee" class="marquee" hidden><span id="marquee_text"></span></div>
-
-    <main class="play-container">
-        <!-- 加入：名字 + 組別代碼（代碼決定組別） -->
-        <div id="join_view" class="login-card" hidden>
-            <div class="input-group">
-                <input id="player_name" type="text" maxlength="20" autocomplete="off" placeholder="名字" aria-label="名字">
-            </div>
-            <div class="input-group">
-                <input id="group_code" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="組別代碼" aria-label="組別代碼">
-            </div>
-            <button id="join_btn" class="mc-button">加入</button>
-        </div>
-
-        <!-- 作答 -->
-        <div id="play_view" class="login-card" hidden>
-            <!-- 左上角題號、中間組別與名字、右上角登出 -->
-            <div class="play-head">
-                <span id="round_no" class="round-no" hidden></span>
-                <p id="player_label" class="player-label"></p>
-                <button id="leave_btn" class="icon-btn" aria-label="登出" title="登出">
-                    <!-- 門＋箭頭的像素圖示，不用 emoji -->
-                    <svg viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
-                        <path d="M1 1H10V5H8V3H3V13H8V11H10V15H1Z M5 7H11V9H5Z M11 4H12V5H13V6H14V7H15V9H14V10H13V11H12V12H11Z"/>
-                    </svg>
-                </button>
-            </div>
-            <h2 id="round_status" class="login-title">等待發題…</h2>
-
-            <div id="answer_form" class="answer-form" hidden>
-                <div class="input-group">
-                    <input id="ans_year" type="number" inputmode="numeric" placeholder="年份" aria-label="年份">
-                </div>
-                <div class="input-group">
-                    <input id="ans_artist" type="text" maxlength="50" autocomplete="off" placeholder="歌手" aria-label="歌手">
-                </div>
-                <div class="input-group">
-                    <input id="ans_title" type="text" maxlength="50" autocomplete="off" placeholder="歌名" aria-label="歌名">
-                </div>
-                <button id="answer_btn" class="mc-button">送出</button>
-                <p id="submitted" class="submitted"></p>
-            </div>
-        </div>
-
-        <!-- 收卷後的解答與自己的作答結果，新的在上 -->
-        <section id="history" class="history" hidden></section>
-    </main>
 </body>
 </html>

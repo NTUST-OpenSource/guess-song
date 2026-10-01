@@ -1,15 +1,13 @@
-/* ==========================================
-   全域設定與 Minecraft 變數
-   ========================================== */
+/* Globals and Minecraft palette */
 :root {
-  --mc-green: #5b8731;        /* 草方塊綠 */
+  --mc-green: #5b8731;
   --mc-green-light: #72a83e;
-  --mc-dirt-dark: #573d26;     /* 泥土深棕 */
-  --mc-dirt-light: #866043;    /* 泥土淺棕 */
-  --mc-stone: #3c3c3c;         /* 石頭灰 */
-  --mc-bedrock: #212121;       /* 基岩黑 */
-  --mc-gold: #fcf350;          /* 金黃色分數 */
-  --mc-border: #121212;        /* 像素黑邊 */
+  --mc-dirt-dark: #573d26;
+  --mc-dirt-light: #866043;
+  --mc-stone: #3c3c3c;
+  --mc-bedrock: #212121;
+  --mc-gold: #fcf350;
+  --mc-border: #121212;
 }
 
 * {
@@ -26,9 +24,7 @@ html, body {
   color: #ffffff;
 }
 
-/* ==========================================
-   頂端欄 (Top Header)
-   ========================================== */
+/* Top header */
 .top-header {
   width: 100%;
   background-color: var(--mc-green);
@@ -48,23 +44,19 @@ html, body {
   display: inline-block;
 }
 
-/* ==========================================
-   隊伍網格佈局 (針對手機與平板響應式)
-   ========================================== */
+/* Team grid */
 .score-container {
   max-width: 900px;
   margin: 0 auto;
   padding: 20px 15px;
   
-  /* 手機預設：雙排直列網格 (1 頁可看全 6 隊) */
+  /* Phones: two columns */
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 15px;
 }
 
-/* ==========================================
-   隊伍卡片 (Minecraft 泥土風格)
-   ========================================== */
+/* Team cards */
 .team-card {
   background-color: var(--mc-dirt-light);
   border: 4px solid var(--mc-border);
@@ -75,7 +67,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 2px; /* 保持像素方正感 */
+  border-radius: 2px;
 }
 
 .team-label {
@@ -86,9 +78,7 @@ html, body {
   font-weight: bold;
 }
 
-/* ==========================================
-   分數區塊 (Textarea 樣式化)
-   ========================================== */
+/* Score boxes */
 .score-box {
   width: 85%;
   height: 70px;
@@ -96,18 +86,16 @@ html, body {
   border: 4px solid var(--mc-stone);
   color: var(--mc-gold);
   
-  /* 文字巨大化與完美垂直置中 */
   font-size: 2.8rem;
   font-weight: bold;
   text-align: center;
   line-height: 60px;
   
-  /* 停用輸入框拉伸與滾動條 */
+  /* No resize handle or scrollbars */
   resize: none;
   overflow: hidden;
   outline: none;
   
-  /* 像素字體發光感 */
   text-shadow: 2px 2px 0 #554e00;
 }
 
@@ -115,10 +103,7 @@ html, body {
   border-color: #ffffff;
 }
 
-/* ==========================================
-   螢幕尺寸響應式微調
-   ========================================== */
-/* 小螢幕手機 (寬度小於 380px) */
+/* Responsive */
 @media (max-width: 380px) {
   .header-title {
     font-size: 1.2rem;
@@ -136,7 +121,6 @@ html, body {
   }
 }
 
-/* 平板/電腦 (寬度大於 768px，改為三欄呈現) */
 @media (min-width: 768px) {
   .score-container {
     grid-template-columns: repeat(4, 1fr);

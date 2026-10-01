@@ -4,20 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>三『資』小豬 - 後台控制台</title>
-    <!-- 引入像素風格字型 -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@700&display=swap" rel="stylesheet">
+    <script src="/js/live.js" defer></script>
     <script src="/js/scores.js" defer></script>
     <script src="/js/dashboard.js" defer></script>
     <script src="/js/quiz.js" defer></script>
     <link rel="stylesheet" href="/css/dashboard.css">
 </head>
 <body>
-    <!-- 一模一樣的頂端置頂欄 -->
     <header class="top-header">
         <a class="header-title" href="/">誰是猜歌王</a>
     </header>
 
-    <!-- 四隊分數：箭頭按了就存；分數可以直接打，按 Enter 存、Esc 取消 -->
+    <!-- Group scores: arrows save at once; typed scores save on Enter, Escape cancels -->
     <main class="score-container">
         <div class="team-card" id="t1">
             <span class="team-label">第一隊</span>
@@ -53,9 +52,8 @@
         </div>
     </main>
 
-    <!-- 控制面板容器 -->
     <section class="control-container">
-        <!-- 發題 / 收卷 -->
+        <!-- Rounds -->
         <div class="control-card">
             <h2 class="card-title">發題 / 收卷</h2>
             <p id="quiz_status" class="card-subtitle">尚未發題</p>
@@ -71,7 +69,7 @@
             <button id="close_btn" class="mc-button btn-gold">收卷並計分</button>
         </div>
 
-        <!-- 組別代碼 -->
+        <!-- Group codes -->
         <div class="control-card">
             <h2 class="card-title">組別代碼</h2>
             <p class="card-subtitle">玩家輸入代碼就會進到那一組；不分大小寫、各組不能重複，留空 = 該組不能加入</p>
@@ -79,7 +77,7 @@
             <button id="save_pw_btn" class="mc-button btn-gold">儲存代碼</button>
         </div>
 
-        <!-- 作答狀況 -->
+        <!-- Answers -->
         <div class="control-card wide-card">
             <h2 class="card-title">作答狀況</h2>
             <p id="answer_key" class="card-subtitle"></p>
@@ -95,7 +93,7 @@
             </div>
         </div>
 
-        <!-- 歌單 -->
+        <!-- Song list -->
         <div class="control-card wide-card">
             <h2 class="card-title">歌單與解答</h2>
             <p class="card-subtitle">
@@ -107,14 +105,14 @@
             <button id="save_songs_btn" class="mc-button btn-gold">儲存歌單</button>
         </div>
 
-        <!-- 重置 -->
+        <!-- Reset -->
         <div class="control-card wide-card">
             <h2 class="card-title">重置所有資料</h2>
             <p class="card-subtitle">清空四組分數、歌單與解答、組別代碼、所有作答紀錄。無法復原，比賽前或比賽後再用。</p>
             <button id="reset_btn" class="mc-button btn-red">重置資料庫與分數</button>
         </div>
 
-        <!-- 登出區塊 -->
+        <!-- Logout -->
         <div class="logout-wrapper">
             <button id="logout_btn" class="mc-button btn-red">登出系統</button>
         </div>

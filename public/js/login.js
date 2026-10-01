@@ -1,4 +1,3 @@
-// defer 載入，DOM 已就緒
 async function sendLogin() {
     const formData = new FormData();
     formData.append("username", document.getElementById("username").value);
@@ -9,7 +8,7 @@ async function sendLogin() {
         const data = await res.json();
         if (data.status === 1) {
             localStorage.setItem("ntust_camp_token", data.token);
-            // 從 /host 被踢回來的就回 /host；只收白名單，避免被拿去轉址到外站
+            // Only allow-listed paths in next, so the login page cannot redirect elsewhere.
             const next = new URLSearchParams(location.search).get("next");
             window.location.href = ["/host", "/dashboard"].includes(next) ? next : "/dashboard";
         } else {

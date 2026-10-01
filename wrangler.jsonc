@@ -6,16 +6,9 @@
     "routes": [{ "pattern": "song.ntust.org", "custom_domain": true }],
     "assets": {
         "directory": "./public",
-        // /api/* 一律交給 Worker，其餘走靜態檔（/login -> public/login.html）
+        // /api/* goes to the Worker; everything else is a static file (/login -> public/login.html).
         "run_worker_first": ["/api/*"]
     },
-    // ponytail: KV 只剩 DO 首次啟動時 seed 舊分數用，之後可拆
-    "kv_namespaces": [
-        {
-            "binding": "KV",
-            "id": "a4e72fd16a59467bbee8748c4ceffb0f"
-        }
-    ],
     "durable_objects": {
         "bindings": [{ "name": "SCORES", "class_name": "Scores" }]
     },

@@ -1,4 +1,4 @@
-/* /host 主持人頁：沿用 dashboard.css，這裡只放解答大字 */
+/* /host builds on dashboard.css and only adds the large answer key. */
 .host-card {
   gap: 16px;
 }
@@ -33,7 +33,7 @@
   text-shadow: 2px 2px 0 #554e00;
 }
 
-/* 其他可接受的寫法，小字接在主要答案下面 */
+/* Other accepted spellings, small, under the main answer */
 .answer-key .alt {
   display: block;
   margin-top: 4px;

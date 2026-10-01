@@ -1,18 +1,25 @@
-// 計分板（/scoreboard）、後台、/host 共用：抓分數、更新四隊 score box、每秒輪詢（defer 載入，DOM 已就緒）
-async function refreshScores() {
-    try {
-        const res = await fetch("/api/GetScore");
-        const data = await res.json();
-        for (let i = 1; i <= 4; i++) {
-            const box = document.querySelector(`#t${i} .score-box`);
-            // 後台正在打字、或箭頭還在送出的那格先不蓋掉；計分板和 /host 的唯讀框點到了也照常更新
-            if (!box.readOnly && (box === document.activeElement || Number(box.dataset.pending) > 0)) continue;
-            box.value = data[i];
-        }
-    } catch {
-        // ponytail: 輪詢失敗就等下一秒重試，不干擾畫面
+// Shared by /scoreboard, the dashboard and /host: renders the four totals pushed over WebSocket.
+function renderScores(data) {
+    for (let i = 1; i <= 4; i++) {
+        const box = document.querySelector(`#t${i} .score-box`);
+        // Skip a box the admin is editing or whose arrow update is in flight; read-only boxes always update.
+        if (!box.readOnly && (box === document.activeElement || Number(box.dataset.pending) > 0)) continue;
+        box.value = data[i];
     }
 }
 
-void refreshScores();
-setInterval(refreshScores, 1000);
+// Fetch once after an action or a cancelled edit to restore skipped boxes.
+async function refreshScores() {
+    try {
+        renderScores(await (await fetch("/api/GetScore")).json());
+    } catch {
+        // The next push updates the totals.
+    }
+}
+
+// Every server change arrives here; admin pages listen for "live" and refetch their state.
+live((msg) => {
+    if (msg.type !== "scores") return;
+    renderScores(msg.scores);
+    document.dispatchEvent(new CustomEvent("live"));
+});

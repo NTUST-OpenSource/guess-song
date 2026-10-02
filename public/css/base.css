@@ -45,6 +45,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card { background: var(--card); color: var(--card-ink); border-radius: 10px; box-shadow: var(--shadow-card); }
 .field-label { font-size: 13px; font-weight: 800; color: var(--card-dim); }
 
+.spin { width: 14px; height: 14px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
+/* Admin pages and the scoreboard: the reconnecting notice shows only while the socket is down (body.offline) */
+.reconnect {
+  display: none; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 99px;
+  background: var(--g3); color: var(--g3-ink); font-size: 13px; font-weight: 900; white-space: nowrap;
+}
+.reconnect .spin { width: 13px; height: 13px; flex: none; }
+.offline .reconnect { display: flex; animation: popIn .35s var(--ease-pop) both; }
+
 /* Title block: kicker, bouncing name, the four shapes */
 .brand { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
 .brand-kicker { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .2em; color: var(--ink-dim); }

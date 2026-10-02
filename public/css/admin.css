@@ -1,6 +1,6 @@
 /* Admin pages (/login, /dashboard, /host) in the player's party style; tokens and primitives come from base.css. */
 :root {
-  --bad-edge: #8f1222; --bad-text: #b3122a; --bad-soft: #fde4e7; --warn: #f0a800; --warn-ink: #2b1d00;
+  --bad-edge: #8f1222; --bad-text: #b3122a; --bad-soft: #fde4e7;
   --top-glass: rgba(52, 17, 112, .82);
 }
 body { min-height: 100vh; min-height: 100dvh; }
@@ -28,14 +28,6 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn.ok { --btn: var(--ok); --btn-ink: var(--ok-ink); --btn-edge: var(--ok-edge); }
 .btn.danger { --btn: var(--bad); --btn-ink: var(--bad-ink); --btn-edge: var(--bad-edge); }
 .btn.soft { --btn: var(--chip-soft); --btn-ink: var(--card-ink); --btn-edge: var(--input-line); }
-
-/* Reconnecting notice, shown only while the socket is down */
-.conn {
-  display: none; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 99px;
-  background: var(--warn); color: var(--warn-ink); font-size: 13px; font-weight: 900; white-space: nowrap;
-}
-.offline .conn { display: flex; animation: popIn .35s var(--ease-pop) both; }
-.spin { width: 13px; height: 13px; flex: none; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
 
 /* Top bar on the dashboard and /host: brand, page tabs, reconnecting notice, actions */
 .adm-top {

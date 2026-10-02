@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "wrangler": "^4.146.0"
+  },
+  "dependencies": {
+    "pinyin-pro": "^3.29.4"
   }
 }

@@ -1,4 +1,5 @@
 import { notes } from "./notes.js";
+import { norm, matcher } from "./match.js";
 
 // Token lifetime in seconds.
 const TOKEN_TTL = 12 * 60 * 60;
@@ -106,24 +107,17 @@ const codeKey = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
 const FIELD_POINTS = { year: [3, 1, 0], artist: [1, 0], title: [1, 0] };
 const FIELDS = Object.keys(FIELD_POINTS);
 
-// Ignore case, full-width forms, whitespace and punctuation.
-const norm = (s) =>
-    String(s)
-        .normalize("NFKC")
-        .toLowerCase()
-        .replace(/[\s\p{P}\p{S}]/gu, "");
-
-const textOk = (ans, accepted) => norm(ans) !== "" && accepted.some((a) => norm(a) === norm(ans));
-
 const yearPoints = (ans, year) => (ans === null ? 0 : ans === year ? 3 : Math.abs(ans - year) <= 3 ? 1 : 0);
 
 // auto is the automatic grade; points applies manual overrides on top of it.
 function grade(song, answers) {
+    const artistOk = matcher(song.artist);
+    const titleOk = matcher(song.title);
     return Object.entries(answers).map(([player, a]) => {
         const auto = {
             year: yearPoints(a.year, song.year),
-            artist: textOk(a.artist, song.artist) ? 1 : 0,
-            title: textOk(a.title, song.title) ? 1 : 0,
+            artist: artistOk(a.artist) ? 1 : 0,
+            title: titleOk(a.title) ? 1 : 0,
         };
         return { player, ...a, auto, points: { ...auto, ...a.override } };
     });

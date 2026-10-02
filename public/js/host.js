@@ -1,6 +1,6 @@
 // The host view: the answer key of the selected song, round controls and each group's result.
 // It draws from the state quiz.js loads ("state" events). $, el, icon, toast and adminApi come from /js/admin.js;
-// FIELDS and refreshQuiz from /js/quiz.js; refreshScores from /js/scores.js.
+// FIELDS and refreshQuiz from /js/quiz.js.
 
 // Latest admin state, used by the buttons.
 let hostState = null;
@@ -56,7 +56,7 @@ document.addEventListener("state", ({ detail: state }) => {
     if (song) $("host_results").replaceChildren(...GROUPS.map((g) => teamCard(g, answers, awarded)));
 
     $("host_open_btn").disabled = !song || open;
-    $("host_close_btn").disabled = !open;
+    $("host_close_btn").disabled = !open || Boolean(round.closeAt);
     // 下一首 unlocks once this song is closed, and locks again on the next song until it is closed too.
     $("host_next_btn").disabled = !song || open || round?.songId !== songId || songId >= songs.length - 1;
 });
@@ -84,8 +84,7 @@ $("host_open_btn").addEventListener("click", async () => {
 
 $("host_close_btn").addEventListener("click", async () => {
     if (await adminApi("close")) {
-        toast("已收卷並計分", "ok");
-        void refreshScores();
+        toast("開始收卷倒數", "ok");
         void refreshQuiz();
     }
 });

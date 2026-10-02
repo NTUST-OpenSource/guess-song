@@ -51,7 +51,9 @@ function showStatus({ round, songId, awarded }) {
     const [cls, label] =
         round?.songId === songId
             ? round.open
-                ? ["open", "作答中"]
+                ? round.closeAt
+                    ? ["closing", "收卷中"]
+                    : ["open", "作答中"]
                 : ["closed", "已收卷"]
             : round?.open
               ? ["warn", `第 ${round.songId + 1} 首作答中`]
@@ -174,7 +176,8 @@ function render(state, fresh = true) {
 
     $("next_btn").disabled = !song || songId >= songs.length - 1;
     $("open_btn").disabled = !song || Boolean(round?.open);
-    $("close_btn").disabled = !round?.open;
+    // During the closing countdown the round is still open, but 收卷 has already been pressed.
+    $("close_btn").disabled = !round?.open || Boolean(round.closeAt);
 
     $("ans_total").textContent = song ? `${answers.length} 人作答` : "";
     $("ans_counts").replaceChildren(...(song ? groupCounts(answers) : []));
@@ -241,10 +244,10 @@ $("open_btn").addEventListener("click", async () => {
     }
 });
 
+// The round closes and scores when the phones' countdown ends; that push refreshes this page.
 $("close_btn").addEventListener("click", async () => {
     if (await adminApi("close")) {
-        toast("已收卷並計分", "ok");
-        void refreshScores();
+        toast("開始收卷倒數", "ok");
         void refreshQuiz();
     }
 });

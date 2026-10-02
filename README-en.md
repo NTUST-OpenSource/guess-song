@@ -35,7 +35,7 @@ The app itself is in Traditional Chinese.
 ### **Highlights**
 - **Live everywhere** — every page gets updates over WebSocket, no refreshing
 - **Automatic grading** — the exact year +3, within 3 years +1; artist and title +1 each, homophones and small typos included; each group keeps its best answer per field
-- **Game-show animations** — a countdown when a round opens; when it closes, a reveal, rank changes and auto-written commentary
+- **Game-show animations** — a countdown when a round opens, and a 5-second countdown before it closes; then a reveal, rank changes and auto-written commentary
 - **Four or five groups** — switched by one setting; the fifth group is a cyan star
 - **Fits the free plan** — an event with about 40 players and 70 songs is estimated to use only about a third of the Workers Free daily request limit
 
@@ -110,7 +110,7 @@ Merging to `main` deploys to <https://song.ntust.org> through Workers Builds. Th
 
 1. Before the game, open the dashboard settings (the gear), set each group's code and upload the song list
 2. Pick a song (or press 下一首, "next song"); the host page shows its answer key
-3. Press 發題 ("open") and every phone counts down and starts answering; press 收卷並計分 ("close and score") to grade and add the points
+3. Press 發題 ("open") and every phone counts down and starts answering; press 收卷並計分 ("close and score") and the phones count down 5 seconds (answers sent meanwhile still count), then the round is graded and the points added
 4. After a round closes, click a grade under 作答狀況 ("answers") to change it; the totals adjust by the difference
 
 ### Song list

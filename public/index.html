@@ -151,6 +151,8 @@
             <p class="flood-pts" id="flood_pts"></p>
         </div>
         <div class="conn" id="conn" role="status" hidden><span class="spin" aria-hidden="true"></span><span id="conn_text"></span></div>
+        <!-- Closing countdown; it covers no input, since answers sent before it ends still count -->
+        <div class="closing" id="closing" role="status" hidden><span>收卷倒數</span><span class="closing-num" id="closing_num"></span></div>
         <div class="sheet" id="sheet" data-view="mine" hidden>
             <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet_title">
                 <header class="sheet-head">

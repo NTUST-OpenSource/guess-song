@@ -4,6 +4,8 @@ import { norm, matcher } from "./match.js";
 // Token lifetime in seconds.
 const TOKEN_TTL = 12 * 60 * 60;
 const MAX_SCORE = 999;
+// 收卷 counts down this many milliseconds on the phones before the round closes; answers sent meanwhile still count.
+const CLOSE_COUNTDOWN = 5000;
 
 const enc = new TextEncoder();
 
@@ -293,7 +295,7 @@ export class Scores extends DurableObject {
     }
 
     // ===== Rounds =====
-    // Storage keys: scores, songs (with answers), groupPw, round {songId, open}, selected (song shown on /host),
+    // Storage keys: scores, songs (with answers), groupPw, round {songId, open, closeAt during the closing countdown}, selected (song shown on /host),
     // ans:<songId> {"<group>:<player id>": answer}, awarded {songId: {group: points added}},
     // closed {songId: {at: last close time, title, youtube: identity of the song that was played}}
 
@@ -351,11 +353,13 @@ export class Scores extends DurableObject {
     playerView({ scores, round, answers, graded, result }, { g, id }) {
         const key = `${g}:${id}`;
         const a = round?.open ? answers[key] : null;
+        // Time left in the closing countdown, relative so the phone's clock does not matter.
+        const closeIn = round?.open && round.closeAt ? Math.max(0, round.closeAt - Date.now()) : undefined;
         return {
             type: "state",
             group: g,
             scores,
-            round: round && { no: round.songId + 1, open: round.open },
+            round: round && { no: round.songId + 1, open: round.open, closeIn },
             answer: a ? { year: a.year, artist: a.artist, title: a.title } : null,
             result: result && { ...result, mine: ownAnswer(graded.find((x) => x.player === key)) },
         };
@@ -438,6 +442,22 @@ export class Scores extends DurableObject {
         await this.ctx.storage.put("selected", songId);
         await this.push();
         return null;
+    }
+
+    // 收卷 starts the countdown and the alarm closes the round when it ends; pressing again does not restart it.
+    async startClose() {
+        const round = await this.load("round", null);
+        if (!round?.open) return false;
+        if (round.closeAt) return true;
+        const closeAt = Date.now() + CLOSE_COUNTDOWN;
+        await this.ctx.storage.put("round", { ...round, closeAt });
+        await this.ctx.storage.setAlarm(closeAt);
+        await this.push();
+        return true;
+    }
+
+    async alarm() {
+        await this.closeRound();
     }
 
     async closeRound() {
@@ -622,7 +642,7 @@ async function handleAdmin(env, action, body) {
     }
 
     if (action === "close") {
-        return (await stub.closeRound()) ? ok() : fail("目前沒有作答中的題目");
+        return (await stub.startClose()) ? ok() : fail("目前沒有作答中的題目");
     }
 
     if (action === "judge") {

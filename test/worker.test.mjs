@@ -19,6 +19,8 @@ const mockCtx = () => {
             get: async (k) => store.get(k),
             put: async (k, v) => store.set(k, v),
             deleteAll: async () => store.clear(),
+            // Tests fire the alarm themselves by calling alarm().
+            setAlarm: async () => {},
         },
         getWebSockets: () => sockets,
     };
@@ -136,6 +138,11 @@ const playerKey = async (name, songId) =>
     (await (await admin("state", { songId })).json()).answers.find((a) => a.name === name).player;
 const judge = async (name, field, value, songId = 0) =>
     admin("judge", { songId, player: await playerKey(name, songId), field, value });
+// 收卷 only starts the countdown; firing the alarm ends it.
+const close = async () => {
+    await admin("close");
+    await scoresDo.alarm();
+};
 
 // Admin endpoints require a token.
 assert.equal((await post("/api/admin/state", {})).status, 401);
@@ -240,6 +247,15 @@ assert.equal(watchWs.sent.length, watched + 4);
 
 let before = await scores();
 assert.equal((await admin("close")).status, 200);
+// 收卷 starts a countdown on the phones; the round stays open and answers still count until it ends.
+assert.ok(lastState().round.open && lastState().round.closeIn <= 5000);
+assert.equal((await answer(ming, { year: 2001, artist: "ＪＡＹ chou", title: "" })).status, 200);
+assert.deepEqual(await scores(), before);
+// Pressing again does not restart it, and opening another round waits for it.
+assert.equal((await admin("close")).status, 200);
+assert.equal((await admin("open", { songId: 1 })).status, 400);
+// The alarm closes the round.
+await scoresDo.alarm();
 // No answers after close.
 assert.equal((await answer(ming, { year: 2003 })).status, 400);
 let after = await scores();
@@ -330,7 +346,7 @@ assert.ok(answers.every((a) => !a.player.includes(a.name)));
     assert.equal((await playState(twinB)).answer.title, "晴天");
     const both = (await (await admin("state", { songId: 0 })).json()).answers.filter((a) => a.name === "阿明");
     assert.equal(both.length, 2);
-    await admin("close");
+    await close();
 }
 
 // Song 2: a member who scored nothing is never the top scorer.
@@ -341,7 +357,7 @@ await answer(ming, { year: 2013, artist: "", title: "倔強" });
 await answer(mei, { year: 2014, artist: "", title: "倔強" });
 await answer(hua, { year: null, artist: "", title: "" });
 before = await scores();
-await admin("close");
+await close();
 after = await scores();
 assert.equal(after[1] - before[1], 2);
 assert.equal(after[2] - before[2], 1);
@@ -355,7 +371,7 @@ await admin("open", { songId: 2 });
 await answer(hua, { year: 2007, artist: "", title: "日不落" });
 await answer(ming, { year: 2007, artist: "", title: "日不落" });
 await answer(mei, { year: 1990, artist: "", title: "" });
-await admin("close");
+await close();
 assert.deepEqual((await playState(mei)).result.best.slice(0, 2), [
     { group: 1, name: "小華", fields: ["year", "title"], points: 4 },
     { group: 2, name: null, fields: [], points: 0 },
@@ -409,7 +425,7 @@ for (const [link, id] of [
 
 // History follows close order, not song order: song 1 closed again moves to the top.
 await admin("open", { songId: 0 });
-await admin("close");
+await close();
 assert.deepEqual((await history(mei)).map((x) => x.no), [1, 3, 2]);
 // Editing the list or judging keeps that order.
 await admin("songs", { songs });
@@ -552,6 +568,7 @@ assert.equal(lastState().round, null);
     await admin5("open", { songId: 0 });
     await post5("/api/play/answer", { token: qing.token, year: 2003, artist: "周杰倫", title: "晴天" });
     await admin5("close");
+    await do5.alarm();
     const st = await (await post5("/api/play/state", { token: qing.token })).json();
     assert.deepEqual(st.scores, { 1: 0, 2: 0, 3: 0, 4: 0, 5: 12 });
     assert.deepEqual(st.result.groups, { 1: 0, 2: 0, 3: 0, 4: 0, 5: 5 });

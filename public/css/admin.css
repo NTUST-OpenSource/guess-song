@@ -182,6 +182,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .status.open { background: var(--hit-soft); color: var(--hit-ink); }
 .status.closed { background: var(--card-ink); color: var(--card); }
 .status.warn { background: var(--exact-soft); color: var(--exact-ink); }
+.status.closing { background: var(--bad); color: var(--bad-ink); }
 .status .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
 .status .eq i { width: 3px; height: 100%; border-radius: 1px; background: currentColor; transform-origin: bottom; animation: eq .9s var(--ease-io) infinite; animation-delay: calc(var(--i) * -.18s); }
 /* Song picker: a styled list where the browser supports customizable selects, the native one elsewhere */

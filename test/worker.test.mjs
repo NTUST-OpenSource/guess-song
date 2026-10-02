@@ -1,7 +1,7 @@
-// Smoke test in one file: run `node test.mjs`.
+// Smoke test of the Worker and the Durable Object, top to bottom: run `npm test`.
 import assert from "node:assert/strict";
-import worker, { Scores } from "./src/index.js";
-import { notes } from "./src/notes.js";
+import worker, { Scores } from "../src/index.js";
+import { notes } from "../src/notes.js";
 
 // Fake WebSocket that records pushed messages; who is the serialized attachment (null for totals-only sockets).
 const sockets = [];
@@ -544,5 +544,3 @@ assert.equal(lastState().round, null);
     assert.equal(await icon(env5, "/favicon.ico"), "/five/favicon.ico");
     assert.equal(await icon(env5, "/apple-touch-icon.png"), "/five/apple-touch-icon.png");
 }
-
-console.log("ok");

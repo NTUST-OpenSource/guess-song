@@ -6,7 +6,7 @@ const MAX_SCORE = 999;
 
 const enc = new TextEncoder();
 
-// Node (test.mjs) cannot import cloudflare:workers, so fall back to a base class with the same shape.
+// Node (the tests in test/) cannot import cloudflare:workers, so fall back to a base class with the same shape.
 let DurableObject = class {
     constructor(ctx, env) {
         this.ctx = ctx;

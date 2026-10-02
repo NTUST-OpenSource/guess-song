@@ -5,84 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#3c1580">
     <title>三『資』小豬 - 主持人</title>
-    <link rel="icon" href="/favicon.ico" sizes="32x32">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/base.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <!-- The floating shapes drift by the clock, so they stay in place when moving between admin pages -->
-    <script>document.documentElement.style.setProperty("--drift-at", (Date.now() / 1000) % 3600 + "s");</script>
-    <script src="/js/live.js" defer></script>
-    <script src="/js/admin.js" defer></script>
-    <script src="/js/host.js" defer></script>
-    <!-- Render-blocking, so the first frame (and the page transition) already shows the saved state -->
-    <script src="/js/scores.js" defer blocking="render"></script>
+    <style>html { background: #3c1580; }</style>
+    <!-- The host page is a view of the dashboard page, so switching between the two never reloads -->
+    <script>location.replace("/dashboard#host");</script>
 </head>
-<body>
-    <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
-        <symbol id="sh1" viewBox="0 0 32 32"><path d="M16 3.5 30 28.5H2Z"/></symbol>
-        <symbol id="sh2" viewBox="0 0 32 32"><path d="M16 1.5 30.5 16 16 30.5 1.5 16Z"/></symbol>
-        <symbol id="sh3" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14"/></symbol>
-        <symbol id="sh4" viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="2.5"/></symbol>
-        <symbol id="ic-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-        <symbol id="ic-exit" viewBox="0 0 24 24"><path d="M14 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H14M10 12h10m-3.5-3.5L20 12l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-        <symbol id="ic-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
-        <symbol id="ic-eye-off" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
-    </svg>
-    <div class="bg" aria-hidden="true">
-        <svg class="float f1"><use href="#sh1"/></svg>
-        <svg class="float f2"><use href="#sh2"/></svg>
-        <svg class="float f3"><use href="#sh3"/></svg>
-        <svg class="float f4"><use href="#sh4"/></svg>
-    </div>
-
-    <header class="adm-top">
-        <a class="brand-mini" href="/dashboard">
-            <span class="marks" aria-hidden="true"><svg class="shape" data-g="1"><use href="#sh1"/></svg><svg class="shape" data-g="2"><use href="#sh2"/></svg><svg class="shape" data-g="3"><use href="#sh3"/></svg><svg class="shape" data-g="4"><use href="#sh4"/></svg></span>
-            <b>誰是猜歌王</b><span class="tag">後台</span>
-        </a>
-        <nav class="adm-nav" aria-label="後台頁面">
-            <a href="/dashboard">控制台</a>
-            <a href="/host" aria-current="page">主持人</a>
-            <a href="/scoreboard" target="_blank" rel="noopener">計分板<svg class="icon" aria-hidden="true"><use href="#ic-ext"/></svg></a>
-        </nav>
-        <span class="reconnect" role="status"><span class="spin" aria-hidden="true"></span>重新連線中</span>
-        <button class="top-btn" id="logout_btn" type="button" aria-label="登出"><svg class="icon" aria-hidden="true"><use href="#ic-exit"/></svg><span>登出</span></button>
-    </header>
-
-    <main class="host-main">
-        <!-- Group totals -->
-        <section class="chips" aria-label="各組分數">
-            <div class="chip" data-g="1" data-pop="1"><svg class="shape" aria-hidden="true"><use href="#sh1"/></svg><span class="sr">第 1 組</span><b data-score="1">0</b></div>
-            <div class="chip" data-g="2" data-pop="2"><svg class="shape" aria-hidden="true"><use href="#sh2"/></svg><span class="sr">第 2 組</span><b data-score="2">0</b></div>
-            <div class="chip" data-g="3" data-pop="3"><svg class="shape" aria-hidden="true"><use href="#sh3"/></svg><span class="sr">第 3 組</span><b data-score="3">0</b></div>
-            <div class="chip" data-g="4" data-pop="4"><svg class="shape" aria-hidden="true"><use href="#sh4"/></svg><span class="sr">第 4 組</span><b data-score="4">0</b></div>
-        </section>
-
-        <!-- Answer key of the song selected in the dashboard -->
-        <section class="card host-card" aria-labelledby="host_title">
-            <header class="host-head">
-                <h1 class="host-no" id="host_title">尚未選歌</h1>
-                <button class="pill-btn" id="mask_btn" type="button"><svg class="icon" aria-hidden="true"><use href="#ic-eye"/></svg><span>顯示答案</span></button>
-            </header>
-            <!-- Hidden from the first frame, so the answers never flash on a projector -->
-            <dl class="hkey masked" id="host_key">
-                <div class="hk"><dt>年份</dt><dd id="key_year">—</dd></div>
-                <div class="hk"><dt>歌手</dt><dd id="key_artist">—</dd></div>
-                <div class="hk"><dt>歌名</dt><dd id="key_title">—</dd></div>
-            </dl>
-            <!-- Each group: how many answered; after the round closes, its points and top scorer -->
-            <section class="results" id="host_results" aria-label="各組作答人數、本題得分與最高分" hidden></section>
-            <div class="btn-row host-actions">
-                <button class="btn ok" id="open_btn" type="button" disabled>發題</button>
-                <button class="btn" id="close_btn" type="button" disabled>收卷並計分</button>
-            </div>
-        </section>
-    </main>
-
-    <div class="toast" id="toast" role="status" popover="manual"></div>
-</body>
+<body></body>
 </html>

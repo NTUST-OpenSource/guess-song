@@ -194,6 +194,9 @@ function render(state, fresh = true) {
     $("ans_empty").hidden = sorted.length > 0;
     $("ans_empty").textContent = songs.length ? "還沒有人作答" : "還沒有歌單";
 
+    // The host view draws from the same state.
+    document.dispatchEvent(new CustomEvent("state", { detail: state }));
+
     // Only server data fills the settings, so a stale cache never gets saved back.
     if (fresh && !loaded) {
         loaded = true;
@@ -203,8 +206,9 @@ function render(state, fresh = true) {
     }
 }
 
-async function refreshQuiz(quiet = false, songId = selectedSong()) {
-    const state = await adminApi("state", { songId }, quiet);
+// Always the song the server has selected, which both views show; picking a song selects it there first.
+async function refreshQuiz(quiet = false) {
+    const state = await adminApi("state", {}, quiet);
     if (!state) return;
     saveState(state);
     render(state);
@@ -364,7 +368,7 @@ document.addEventListener("live", () => {
     liveTimer = setTimeout(() => void refreshQuiz(true), 300);
 });
 
-// Draw the last known state at once, then load the song the server has selected, which /host shows too.
+// Draw the last known state at once, then refresh it.
 const cached = savedState();
 if (cached) render(cached, false);
-void refreshQuiz(false, null);
+void refreshQuiz();

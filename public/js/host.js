@@ -1,13 +1,12 @@
-// /host: the answer key of the song selected in the dashboard, round controls and each group's result.
-// $, el, icon, toast, adminApi and the saved state come from /js/admin.js; refreshScores from /js/scores.js.
-const FIELDS = ["year", "artist", "title"];
+// The host view: the answer key of the selected song, round controls and each group's result.
+// It draws from the state quiz.js loads ("state" events). $, el, icon, toast and adminApi come from /js/admin.js;
+// FIELDS and refreshQuiz from /js/quiz.js; refreshScores from /js/scores.js.
 
 // Latest admin state, used by the buttons.
-let current = null;
+let hostState = null;
 
 // The first accepted spelling is shown large, the others below it.
-function showKey(id, values) {
-    const [main, ...alts] = values;
+function hostKey(id, [main, ...alts]) {
     $(id).replaceChildren(main);
     if (alts.length) $(id).append(el("small", null, `也接受：${alts.join("、")}`));
 }
@@ -36,8 +35,8 @@ function teamCard(g, answers, awarded) {
     return card;
 }
 
-function render(state) {
-    current = state;
+document.addEventListener("state", ({ detail: state }) => {
+    hostState = state;
     const { songs, round, songId, answers, awarded } = state;
     const song = songs[songId];
     const open = Boolean(round?.open);
@@ -46,28 +45,21 @@ function render(state) {
     else $("host_title").textContent = songs.length ? "尚未選歌" : "還沒有歌單";
 
     if (song) {
-        showKey("key_year", [String(song.year)]);
-        showKey("key_artist", song.artist);
-        showKey("key_title", song.title);
+        hostKey("host_year", [String(song.year)]);
+        hostKey("host_artist", song.artist);
+        hostKey("host_song", song.title);
     } else {
-        for (const id of ["key_year", "key_artist", "key_title"]) $(id).textContent = "—";
+        for (const id of ["host_year", "host_artist", "host_song"]) $(id).textContent = "—";
     }
 
     $("host_results").hidden = !song;
     if (song) $("host_results").replaceChildren(...GROUPS.map((g) => teamCard(g, answers, awarded)));
 
-    $("open_btn").disabled = !song || open;
-    $("close_btn").disabled = !open;
-}
+    $("host_open_btn").disabled = !song || open;
+    $("host_close_btn").disabled = !open;
+});
 
-async function refresh(quiet = true) {
-    const state = await adminApi("state", {}, quiet);
-    if (!state) return;
-    saveState(state);
-    render(state);
-}
-
-// Hiding blurs the answer key, for when this screen is projected; every visit starts hidden.
+// Hiding blurs the answer key, for when this screen is projected; entering the view always hides it.
 function setHidden(hidden) {
     $("host_key").classList.toggle("masked", hidden);
     $("mask_btn").querySelector("use").setAttribute("href", hidden ? "#ic-eye" : "#ic-eye-off");
@@ -76,31 +68,22 @@ function setHidden(hidden) {
 
 $("mask_btn").addEventListener("click", () => setHidden(!$("host_key").classList.contains("masked")));
 
-$("open_btn").addEventListener("click", async () => {
-    if (current?.songId == null) return;
-    if (await adminApi("open", { songId: current.songId })) {
-        toast(`第 ${current.songId + 1} 首開始作答`, "ok");
-        void refresh(false);
+document.addEventListener("view", ({ detail: view }) => {
+    if (view === "host") setHidden(true);
+});
+
+$("host_open_btn").addEventListener("click", async () => {
+    if (hostState?.songId == null) return;
+    if (await adminApi("open", { songId: hostState.songId })) {
+        toast(`第 ${hostState.songId + 1} 首開始作答`, "ok");
+        void refreshQuiz();
     }
 });
 
-$("close_btn").addEventListener("click", async () => {
+$("host_close_btn").addEventListener("click", async () => {
     if (await adminApi("close")) {
         toast("已收卷並計分", "ok");
         void refreshScores();
-        void refresh(false);
+        void refreshQuiz();
     }
 });
-
-// Refetch when scores.js reports a push, batching bursts into one request.
-let liveTimer = 0;
-document.addEventListener("live", () => {
-    clearTimeout(liveTimer);
-    liveTimer = setTimeout(() => void refresh(), 200);
-});
-
-setHidden(true);
-// Draw the last known state at once, then refresh it.
-const cached = savedState();
-if (cached) render(cached);
-void refresh();

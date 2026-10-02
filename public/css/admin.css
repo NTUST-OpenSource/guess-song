@@ -46,12 +46,15 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--ink-dim); font-size: 14px; font-weight: 900; text-decoration: none; white-space: nowrap; transition: background-color .2s, color .2s;
 }
 .adm-nav a:hover { color: var(--ink); }
-.adm-nav a[aria-current="page"] { background: var(--card); color: var(--card-ink); }
+/* The current view's tab is white (set by data-view on <html> before the first frame) */
+:root[data-view="dashboard"] .nav-dash, :root[data-view="host"] .adm-nav a[data-to="host"] { background: var(--card); }
+:root[data-view="dashboard"] .nav-dash a, :root[data-view="host"] .adm-nav a[data-to="host"] { color: var(--card-ink); }
 .adm-nav .icon { width: 13px; height: 13px; opacity: .7; }
-/* The dashboard's own tab carries the settings gear */
-.nav-current { display: flex; align-items: center; border-radius: 99px; background: var(--card); }
-.nav-current a[aria-current="page"] { padding-right: 4px; }
-.nav-current :focus-visible { outline-color: var(--focus); }
+/* The dashboard's tab carries the settings gear while it is current */
+.nav-dash { display: flex; align-items: center; border-radius: 99px; transition: background-color .2s; }
+:root[data-view="dashboard"] .nav-dash a { padding-right: 4px; }
+:root:not([data-view="dashboard"]) .nav-gear { display: none; }
+:root[data-view="dashboard"] .nav-dash :focus-visible, :root[data-view="host"] .adm-nav a[data-to="host"]:focus-visible { outline-color: var(--focus); }
 .nav-gear { display: grid; place-items: center; width: 30px; height: 30px; margin-right: 3px; border: 0; border-radius: 50%; background: transparent; color: var(--card-dim); transition: background-color .2s, color .2s, rotate .4s var(--ease-out); }
 .nav-gear:hover { background: var(--chip-soft); color: var(--card-ink); rotate: 60deg; }
 .nav-gear .icon { width: 18px; height: 18px; opacity: 1; }
@@ -102,6 +105,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .form-error .icon { width: 18px; height: 18px; }
 .login-card .btn { width: 100%; min-height: 56px; margin-top: 10px; font-size: 18px; }
 .login-card.shake { animation: shake .45s; }
+
+/* Dashboard and host are views of one page; <html data-view> picks the one shown */
+:root[data-view="dashboard"] #host_view, :root[data-view="host"] #dash_view { display: none; }
 
 /* Host: totals, then the answer key large enough to read across a table */
 .host-main { width: min(100% - 48px, 1180px); margin: 16px auto 48px; display: flex; flex-direction: column; gap: 18px; }
@@ -279,7 +285,7 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* On a big enough screen the dashboard fits the window: both cards fill the height and only the answers scroll */
 @media (min-width: 960px) and (min-height: 640px) {
-  .dash-page { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+  :root[data-view="dashboard"] body { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
   .dash-main { flex: 1; min-height: 0; }
   .dash { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
   .round-card { min-height: 0; overflow-y: auto; }
@@ -293,9 +299,9 @@ input, select, textarea { font: inherit; color: inherit; }
 @media (max-width: 759px) {
   .adm-top { padding-inline: 16px; }
   .adm-nav { order: 5; width: 100%; }
-  .adm-nav > a, .nav-current { flex: 1; }
+  .adm-nav > a, .nav-dash { flex: 1; }
   .adm-nav a { padding: 8px 4px; }
-  .nav-current a { flex: 1; }
+  .nav-dash a { flex: 1; }
   .top-btn { padding: 7px; }
   .top-btn span { display: none; }
   .host-main { width: calc(100% - 32px); margin-top: 12px; gap: 14px; }
@@ -337,16 +343,16 @@ input, select, textarea { font: inherit; color: inherit; }
   .judge { padding: 6px 8px; }
 }
 
-/* Moving between admin pages: the top bar stays, the current tab slides over, the score tiles and the main card morph */
+/* Switching views (and loading an admin page): the top bar stays, the current tab slides over, the score tiles and the main card morph */
 @view-transition { navigation: auto; }
 .adm-top { view-transition-name: adm-top; }
-.adm-nav > a[aria-current="page"], .nav-current { view-transition-name: nav-current; }
+:root[data-view="dashboard"] .nav-dash, :root[data-view="host"] .adm-nav a[data-to="host"] { view-transition-name: nav-current; }
 .gtile[data-g="1"], .chip[data-g="1"] { view-transition-name: score-1; }
 .gtile[data-g="2"], .chip[data-g="2"] { view-transition-name: score-2; }
 .gtile[data-g="3"], .chip[data-g="3"] { view-transition-name: score-3; }
 .gtile[data-g="4"], .chip[data-g="4"] { view-transition-name: score-4; }
 .answers-card, .host-card { view-transition-name: main-card; }
-.nav-current, .adm-nav > a[aria-current="page"], .gtile, .chip, .answers-card, .host-card { view-transition-class: morph; }
+.nav-dash, .adm-nav > a, .gtile, .chip, .answers-card, .host-card { view-transition-class: morph; }
 ::view-transition-group(*) { animation-duration: .45s; animation-timing-function: var(--ease-out); }
 /* A morphing box cross-fades its content early; both images fade together, so the box itself never thins out */
 ::view-transition-old(*.morph), ::view-transition-new(*.morph) { animation-duration: .25s; }

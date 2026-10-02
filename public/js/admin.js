@@ -1,4 +1,5 @@
-// Shared by the dashboard and /host: login guard, API calls, messages, logout and +N pops.
+// The dashboard page shell, for both of its views (控制台 and 主持人): login guard, view switching, API calls,
+// messages, logout and +N pops.
 const TOKEN_KEY = "ntust_camp_token";
 const GROUPS = [1, 2, 3, 4];
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -100,15 +101,53 @@ function groupCounts(answers) {
 
 $("logout_btn").addEventListener("click", toLogin);
 
-// Pop +N over a group's total when it goes up.
+// ===== Views =====
+// <html data-view> picks the view (set before the first frame from the address); the tabs switch it in place.
+const VIEWS = {
+    dashboard: { path: "/dashboard", title: "三『資』小豬 - 後台控制台" },
+    host: { path: "/host", title: "三『資』小豬 - 主持人" },
+};
+
+function showView(view) {
+    document.documentElement.dataset.view = view;
+    document.title = VIEWS[view].title;
+    for (const tab of document.querySelectorAll(".adm-nav [data-to]")) {
+        if (tab.dataset.to === view) tab.setAttribute("aria-current", "page");
+        else tab.removeAttribute("aria-current");
+    }
+    document.dispatchEvent(new CustomEvent("view", { detail: view }));
+}
+
+for (const tab of document.querySelectorAll(".adm-nav [data-to]")) {
+    tab.addEventListener("click", (e) => {
+        // Let modified clicks open the view in a new tab.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        const view = tab.dataset.to;
+        if (document.documentElement.dataset.view === view) return;
+        history.pushState(null, "", VIEWS[view].path);
+        // The tab slides and the boxes morph where view transitions are supported.
+        if (document.startViewTransition) document.startViewTransition(() => showView(view));
+        else showView(view);
+    });
+}
+
+addEventListener("popstate", () => showView(location.pathname === "/host" ? "host" : "dashboard"));
+
+// /host reaches this page through a redirect that adds #host; show the address the person opened.
+if (location.hash === "#host") history.replaceState(null, "", "/host");
+showView(document.documentElement.dataset.view);
+
+// Pop +N over a group's total, in both views, when it goes up.
 document.addEventListener("scores", ({ detail: { scores, prev } }) => {
     if (!prev) return;
     for (const g of GROUPS) {
         const gain = scores[g] - prev[g];
-        const box = document.querySelector(`[data-pop="${g}"]`);
-        if (gain <= 0 || !box) continue;
-        const chip = el("span", "plus-float", `+${gain}`);
-        chip.addEventListener("animationend", () => chip.remove());
-        box.append(chip);
+        if (gain <= 0) continue;
+        for (const box of document.querySelectorAll(`[data-pop="${g}"]`)) {
+            const chip = el("span", "plus-float", `+${gain}`);
+            chip.addEventListener("animationend", () => chip.remove());
+            box.append(chip);
+        }
     }
 });

@@ -20,6 +20,12 @@ document.getElementById("layout_btn").addEventListener("click", () => {
     else setLayout(next);
 });
 
+// The digit count gives three-digit totals a smaller size, so 999 fits the tile.
+function showTotal(el, n) {
+    el.textContent = String(n);
+    el.dataset.len = String(n).length;
+}
+
 // Counts up or down to the new total; a newer total takes over a count in progress.
 function countTo(el, to) {
     const from = Number(el.textContent) || 0;
@@ -29,7 +35,7 @@ function countTo(el, to) {
     const tick = (now) => {
         if (Number(el.dataset.to) !== to) return;
         const p = Math.min(1, (now - start) / 900);
-        el.textContent = String(Math.round(from + (to - from) * (1 - (1 - p) ** 3)));
+        showTotal(el, Math.round(from + (to - from) * (1 - (1 - p) ** 3)));
         if (p < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -47,7 +53,7 @@ document.addEventListener("scores", ({ detail: { scores, prev } }) => {
         row.classList.toggle("lead", top > 0 && scores[g] === top);
         // The first totals appear as they are; later ones count.
         if (prev) countTo(row.querySelector(".sb-total"), scores[g]);
-        else row.querySelector(".sb-total").textContent = scores[g];
+        else showTotal(row.querySelector(".sb-total"), scores[g]);
         const gain = prev ? scores[g] - prev[g] : 0;
         if (gain > 0) {
             const chip = document.createElement("span");

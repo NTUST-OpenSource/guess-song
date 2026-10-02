@@ -1,6 +1,6 @@
 import { notes } from "./notes.js";
 
-const GROUPS = 4;
+const GROUPS = 5;
 // Token lifetime in seconds.
 const TOKEN_TTL = 12 * 60 * 60;
 const MAX_SCORE = 999;
@@ -228,7 +228,8 @@ function parseSongs(v) {
 // players get their own state, other sockets get the totals and refetch what they need.
 export class Scores extends DurableObject {
     async read() {
-        return (await this.ctx.storage.get("scores")) ?? emptyScores();
+        // Totals saved before the fifth group existed get a 0 for it.
+        return { ...emptyScores(), ...(await this.ctx.storage.get("scores")) };
     }
 
     async add(group, delta) {

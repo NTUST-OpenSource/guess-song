@@ -42,6 +42,7 @@ function setCover(no, song) {
     const img = document.createElement("img");
     img.src = `https://i.ytimg.com/vi/${video}/hqdefault.jpg`;
     img.alt = "";
+    img.addEventListener("load", () => img.classList.add("ready"));
     img.addEventListener("error", () => img.replaceWith(disc));
     box.replaceChildren(img);
 }

@@ -4,8 +4,9 @@
   --top-glass: rgba(52, 17, 112, .82);
 }
 body { min-height: 100vh; min-height: 100dvh; }
-/* The shapes stay put while the page scrolls */
+/* The shapes stay put while the page scrolls, and drift by the clock (--drift-at), so they line up across admin pages */
 .bg { position: fixed; }
+.float { animation-delay: calc(-1 * var(--drift-at, 0s)); }
 input, select, textarea { font: inherit; color: inherit; }
 .icon { width: 20px; height: 20px; }
 .card :focus-visible { outline-color: var(--focus); }
@@ -161,6 +162,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .round-top { position: relative; display: flex; flex-direction: column; }
 .round-cover { aspect-ratio: 16 / 9; }
 .round-cover .disc { height: 72%; }
+/* The thumbnail fades in once loaded instead of popping over the colors */
+.round-cover img { opacity: 0; transition: opacity .3s; }
+.round-cover img.ready { opacity: 1; }
 .round-top .status { position: absolute; top: 12px; left: 12px; box-shadow: var(--shadow-soft); }
 .round-body { display: grid; gap: 12px; padding: 16px 18px 18px; }
 .field { display: grid; gap: 6px; }
@@ -344,9 +348,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .answers-card, .host-card { view-transition-name: main-card; }
 .nav-current, .adm-nav > a[aria-current="page"], .gtile, .chip, .answers-card, .host-card { view-transition-class: morph; }
 ::view-transition-group(*) { animation-duration: .45s; animation-timing-function: var(--ease-out); }
-/* While a box morphs, its old content leaves quickly and the new content arrives late, so the two never stack up */
-::view-transition-old(*.morph) { animation-duration: .16s; }
-::view-transition-new(*.morph) { animation-duration: .3s; animation-delay: .15s; animation-fill-mode: both; }
+/* A morphing box cross-fades its content early; both images fade together, so the box itself never thins out */
+::view-transition-old(*.morph), ::view-transition-new(*.morph) { animation-duration: .25s; }
 
 @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 16px) scale(.94); } }
 @keyframes toastOut { to { opacity: 0; transform: translate(-50%, 12px); } }

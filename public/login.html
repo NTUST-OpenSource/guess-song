@@ -13,6 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <!-- The floating shapes drift by the clock, so they stay in place when moving between admin pages -->
+    <script>document.documentElement.style.setProperty("--drift-at", (Date.now() / 1000) % 3600 + "s");</script>
     <script src="/js/login.js" defer></script>
 </head>
 <body>

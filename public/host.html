@@ -13,6 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <!-- The floating shapes drift by the clock, so they stay in place when moving between admin pages -->
+    <script>document.documentElement.style.setProperty("--drift-at", (Date.now() / 1000) % 3600 + "s");</script>
     <script src="/js/live.js" defer></script>
     <script src="/js/admin.js" defer></script>
     <script src="/js/host.js" defer></script>
@@ -64,9 +66,10 @@
         <section class="card host-card" aria-labelledby="host_title">
             <header class="host-head">
                 <h1 class="host-no" id="host_title">尚未選歌</h1>
-                <button class="pill-btn" id="mask_btn" type="button"><svg class="icon" aria-hidden="true"><use href="#ic-eye-off"/></svg><span>隱藏答案</span></button>
+                <button class="pill-btn" id="mask_btn" type="button"><svg class="icon" aria-hidden="true"><use href="#ic-eye"/></svg><span>顯示答案</span></button>
             </header>
-            <dl class="hkey" id="host_key">
+            <!-- Hidden from the first frame, so the answers never flash on a projector -->
+            <dl class="hkey masked" id="host_key">
                 <div class="hk"><dt>年份</dt><dd id="key_year">—</dd></div>
                 <div class="hk"><dt>歌手</dt><dd id="key_artist">—</dd></div>
                 <div class="hk"><dt>歌名</dt><dd id="key_title">—</dd></div>

@@ -377,7 +377,9 @@ export class Scores extends DurableObject {
         const history = [];
         for (const songId of closedIds(songs, round, awarded, closed)) {
             const song = songs[songId];
-            const graded = grade(song, await this.load(`ans:${songId}`, {}));
+            // Only the player's group is shown, and grading every round of the night must fit the 10 ms CPU limit.
+            const answers = Object.entries(await this.load(`ans:${songId}`, {})).filter(([, a]) => a.group === group);
+            const graded = grade(song, Object.fromEntries(answers));
             history.push({
                 no: songId + 1,
                 year: song.year,

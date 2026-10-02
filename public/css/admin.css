@@ -1,0 +1,58 @@
+/* Admin pages (/login, /dashboard, /host) in the player's party style; tokens and primitives come from base.css. */
+:root {
+  --bad-edge: #8f1222; --bad-text: #b3122a; --bad-soft: #fde4e7; --warn: #f0a800; --warn-ink: #2b1d00;
+}
+body { min-height: 100vh; min-height: 100dvh; }
+/* The shapes stay put while the page scrolls */
+.bg { position: fixed; }
+input, select, textarea { font: inherit; color: inherit; }
+.icon { width: 20px; height: 20px; }
+.card :focus-visible { outline-color: var(--focus); }
+
+/* Form parts */
+.input {
+  width: 100%; height: 46px; padding: 0 12px; border: 2px solid var(--input-line); border-radius: 8px;
+  background: var(--input-bg); color: var(--card-ink); font: 700 16px var(--font-body);
+}
+.input:focus { outline: none; border-color: var(--focus); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px;
+  border: 0; border-radius: 10px; background: var(--btn); color: var(--btn-ink); box-shadow: 0 4px 0 var(--btn-edge);
+  font: 900 16px/1 var(--font-body); letter-spacing: .05em; text-decoration: none; white-space: nowrap;
+  transition: transform .08s, box-shadow .08s, opacity .2s;
+}
+.btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--btn-edge); }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+.btn .icon { width: 18px; height: 18px; }
+.btn.ok { --btn: var(--ok); --btn-ink: var(--ok-ink); --btn-edge: var(--ok-edge); }
+.btn.danger { --btn: var(--bad); --btn-ink: var(--bad-ink); --btn-edge: var(--bad-edge); }
+.btn.soft { --btn: var(--chip-soft); --btn-ink: var(--card-ink); --btn-edge: var(--input-line); }
+
+/* Reconnecting notice, shown only while the socket is down */
+.conn {
+  display: none; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 99px;
+  background: var(--warn); color: var(--warn-ink); font-size: 13px; font-weight: 900; white-space: nowrap;
+}
+.offline .conn { display: flex; animation: popIn .35s var(--ease-pop) both; }
+.spin { width: 13px; height: 13px; flex: none; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
+
+/* Login: the player's join screen with a login card; auto margins center it without cutting off the top */
+.login { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 32px 16px; }
+.login > :first-child { margin-top: auto; }
+.login > :last-child { margin-bottom: auto; }
+.login-card { display: grid; gap: 8px; width: min(100%, 380px); padding: 20px; }
+.login-card h2 { margin: 0 0 6px; font: 900 21px var(--font-display); }
+.login-card .field-label { margin-top: 4px; }
+.login-card .input { height: 52px; font-size: 18px; }
+.pw { position: relative; }
+.pw .input { padding-right: 52px; }
+.pw-eye { position: absolute; top: 7px; right: 6px; display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 6px; background: transparent; color: var(--card-dim); }
+.pw-eye:hover { color: var(--card-ink); }
+.form-error { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; padding: 10px 12px; border-radius: 8px; background: var(--bad-soft); color: var(--bad-text); font-size: 14px; font-weight: 800; }
+.form-error .icon { width: 18px; height: 18px; }
+.login-card .btn { width: 100%; min-height: 56px; margin-top: 10px; font-size: 18px; }
+.login-card.shake { animation: shake .45s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}

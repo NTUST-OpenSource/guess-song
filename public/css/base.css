@@ -42,6 +42,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .f3 { --s: 176px; --x: 58%; --y: 60%; --t: 31s; --dx: -30px; --dy: -26px; }
 .f4 { --s: 92px; --x: 5%; --y: 76%; --t: 19s; --dx: 22px; --dy: -30px; }
 
+.card { background: var(--card); color: var(--card-ink); border-radius: 10px; box-shadow: var(--shadow-card); }
+.field-label { font-size: 13px; font-weight: 800; color: var(--card-dim); }
+
+/* Title block: kicker, bouncing name, the four shapes */
+.brand { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.brand-kicker { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .2em; color: var(--ink-dim); }
+.brand-title { margin: 0; display: flex; gap: 2px; font: 900 46px/1.1 var(--font-display); }
+.brand-title span { display: inline-block; animation: bob 2.4s var(--ease-io) infinite; animation-delay: calc(var(--i) * .12s); }
+.brand-shapes { display: flex; gap: 10px; }
+.brand-shapes .shape { width: 22px; height: 22px; color: var(--gc); }
+
 /* Song covers: the YouTube thumbnail, or a spinning record on two group colors; the image never sets the box's height */
 .cover {
   position: relative; display: grid; place-items: center; overflow: hidden;

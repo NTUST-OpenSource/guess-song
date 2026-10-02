@@ -67,7 +67,6 @@ body { overscroll-behavior: none; }
 .icon-btn:active { transform: scale(.9); }
 
 /* Shared */
-.card { background: var(--card); color: var(--card-ink); border-radius: 10px; box-shadow: var(--shadow-card); }
 .btn-main {
   display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px;
   border: 0; border-radius: 10px; background: var(--btn); color: var(--btn-ink);
@@ -90,15 +89,8 @@ body { overscroll-behavior: none; }
 
 /* Join */
 .scene-join { justify-content: center; gap: 22px; }
-.brand { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
-.brand-kicker { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .2em; color: var(--ink-dim); }
-.brand-title { margin: 0; display: flex; gap: 2px; font: 900 46px/1.1 var(--font-display); }
-.brand-title span { display: inline-block; animation: bob 2.4s var(--ease-io) infinite; animation-delay: calc(var(--i) * .12s); }
-.brand-shapes { display: flex; gap: 10px; }
-.brand-shapes .shape { width: 22px; height: 22px; color: var(--gc); }
 .join-card { display: grid; gap: 8px; padding: 18px; }
 .join-card .btn-main { margin-top: 8px; }
-.field-label { font-size: 13px; font-weight: 800; color: var(--card-dim); }
 
 /* Lobby */
 .scene-lobby { justify-content: center; align-items: center; gap: 8px; text-align: center; }

@@ -73,10 +73,12 @@ function showStatus({ round, songId, awarded }) {
     }
 }
 
-// The first accepted spelling, then the others in small print.
+// One line per field: the first accepted spelling, the others after it in small print; the tooltip has them all.
+// Fixed-height lines keep the cover and the buttons in place from song to song.
 function showKey(id, [main, ...alts]) {
     $(id).replaceChildren(main);
-    if (alts.length) $(id).append(el("small", null, `也接受：${alts.join("、")}`));
+    if (alts.length) $(id).append(el("small", null, alts.join("、")));
+    $(id).title = [main, ...alts].join("、");
 }
 
 function judgeButton(songId, a, field) {
@@ -189,7 +191,8 @@ function render(state, fresh = true) {
         );
     }
 
-    const sorted = [...answers].sort((a, b) => a.group - b.group || a.name.localeCompare(b.name));
+    // Newest first; changing an answer renews its time, so it moves back to the top.
+    const sorted = [...answers].sort((a, b) => b.at - a.at);
     $("answer_rows").replaceChildren(...sorted.map((a) => answerRow(songId, a)));
     document.querySelector(".ans").hidden = !sorted.length;
     $("ans_empty").hidden = sorted.length > 0;

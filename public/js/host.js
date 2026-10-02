@@ -8,7 +8,7 @@ let hostState = null;
 // The first accepted spelling is shown large, the others below it.
 function hostKey(id, [main, ...alts]) {
     $(id).replaceChildren(main);
-    if (alts.length) $(id).append(el("small", null, `也接受：${alts.join("、")}`));
+    if (alts.length) $(id).append(el("small", null, alts.join("、")));
 }
 
 const total = (points) => FIELDS.reduce((t, f) => t + points[f], 0);

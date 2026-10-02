@@ -57,6 +57,8 @@ document.addEventListener("state", ({ detail: state }) => {
 
     $("host_open_btn").disabled = !song || open;
     $("host_close_btn").disabled = !open;
+    // 下一首 unlocks once this song is closed, and locks again on the next song until it is closed too.
+    $("host_next_btn").disabled = !song || open || round?.songId !== songId || songId >= songs.length - 1;
 });
 
 // Hiding blurs the answer key, for when this screen is projected; entering the view always hides it.
@@ -86,4 +88,11 @@ $("host_close_btn").addEventListener("click", async () => {
         void refreshScores();
         void refreshQuiz();
     }
+});
+
+$("host_next_btn").addEventListener("click", async () => {
+    if (hostState?.songId == null) return;
+    $("host_next_btn").disabled = true;
+    if (await adminApi("select", { songId: hostState.songId + 1 })) void refreshQuiz();
+    else $("host_next_btn").disabled = false;
 });

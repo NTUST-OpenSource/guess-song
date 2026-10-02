@@ -142,6 +142,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .result.quiet { background: color-mix(in srgb, var(--gc) 16%, var(--card)); color: var(--card-dim); box-shadow: none; }
 .result.quiet .shape { color: var(--gc); }
 .host-actions .btn { min-height: 66px; font-size: 21px; }
+/* 下一首 takes the right third of 收卷並計分's half */
+.host-actions { grid-template-columns: 3fr 2fr 1fr; }
 
 /* Dashboard: score tiles over the selected song and its answers */
 .dash-main { width: min(100% - 48px, 1760px); margin: 14px auto 24px; display: flex; flex-direction: column; gap: 16px; }
@@ -350,7 +352,10 @@ input, select, textarea { font: inherit; color: inherit; }
   .results { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   :root[data-groups="5"] .result:last-child { grid-column: 1 / -1; }
   .result-pts { font-size: 24px; }
-  .host-actions .btn { min-height: 56px; font-size: 18px; }
+  .host-actions .btn { min-height: 56px; padding: 0 12px; font-size: 18px; }
+  /* 下一首 shrinks to its icon, so the three buttons fit a 320px phone */
+  .host-actions { grid-template-columns: 1fr 1fr auto; }
+  #host_next_btn span { display: none; }
 }
 
 @media (max-width: 959px) {

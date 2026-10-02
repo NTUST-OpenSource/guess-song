@@ -119,6 +119,11 @@ body { overscroll-behavior: none; }
 /* Now playing: spinning record, expanding ring, floating notes */
 .now-playing { position: relative; display: grid; place-items: center; width: 76px; height: 76px; margin-inline: auto; }
 .now-playing .disc { height: 100%; animation-duration: 3s; }
+/* Below this height the record would push the form into scrolling, so it goes and the round number leads */
+@media (height < 740px) {
+  .now-playing { display: none; }
+  .scene-answer .q-no { margin-top: auto; }
+}
 .np-ring { position: absolute; inset: 0; border: 3px solid var(--ink); border-radius: 50%; opacity: 0; animation: npRing 1.6s var(--ease-out) infinite; }
 .np-note { position: absolute; top: 4px; left: 50%; width: 22px; height: 22px; fill: var(--c); opacity: 0; animation: noteFloat 2.4s var(--ease-out) infinite; animation-delay: var(--d); }
 .n1 { --c: var(--ink); --d: 0s; --nx: -46px; }

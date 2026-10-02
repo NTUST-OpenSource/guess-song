@@ -1,6 +1,5 @@
 // /host: the answer key of the song selected in the dashboard, round controls and each group's result.
-// $, el, icon, toast, adminApi and groupCounts come from /js/admin.js; refreshScores from /js/scores.js.
-const HIDE_KEY = "host_hide_answers";
+// $, el, icon, toast and adminApi come from /js/admin.js; refreshScores from /js/scores.js.
 const FIELDS = ["year", "artist", "title"];
 
 // Latest admin state, used by the buttons.
@@ -23,16 +22,18 @@ function topScorer(answers, g) {
     return best && total(best.points) > 0 ? best.name : null;
 }
 
-function result(g, points, name) {
-    const box = el("div", points ? "result" : "result zero");
-    box.dataset.g = g;
+// A group's card: its answer count in the corner; once the round closes, its points and top scorer.
+// Groups without points stay tinted, so the scoring groups stand out.
+function teamCard(g, answers, awarded) {
+    const points = awarded?.[g] ?? 0;
+    const card = el("div", points ? "result" : "result quiet");
+    card.dataset.g = g;
     const pts = el("p", "result-pts");
-    pts.append(icon(`sh${g}`, "shape"), el("span", "sr", `第 ${g} 組`), `+${points}`);
-    const who = el("p", "result-who");
-    if (name) who.append(icon("ic-crown"), el("span", null, name));
-    else who.append(el("span", null, "—"));
-    box.append(pts, who);
-    return box;
+    pts.append(icon(`sh${g}`, "shape"), el("span", "sr", `第 ${g} 組`), awarded ? `+${points}` : "—");
+    const who = el("p", "result-who", awarded ? (topScorer(answers, g) ?? "—") : "");
+    const count = el("span", "result-count", `${answers.filter((a) => a.group === g).length} 人`);
+    card.append(pts, who, count);
+    return card;
 }
 
 function render(state) {
@@ -43,7 +44,6 @@ function render(state) {
 
     if (song) $("host_title").replaceChildren("第 ", el("b", null, String(songId + 1)), " 首");
     else $("host_title").textContent = songs.length ? "尚未選歌" : "還沒有歌單";
-    $("host_counts").replaceChildren(...(song ? groupCounts(answers) : []));
 
     if (song) {
         showKey("key_year", [String(song.year)]);
@@ -53,10 +53,8 @@ function render(state) {
         for (const id of ["key_year", "key_artist", "key_title"]) $(id).textContent = "—";
     }
 
-    $("host_results").hidden = !(song && awarded);
-    if (song && awarded) {
-        $("host_results").replaceChildren(...GROUPS.map((g) => result(g, awarded[g] ?? 0, topScorer(answers, g))));
-    }
+    $("host_results").hidden = !song;
+    if (song) $("host_results").replaceChildren(...GROUPS.map((g) => teamCard(g, answers, awarded)));
 
     $("open_btn").disabled = !song || open;
     $("close_btn").disabled = !open;
@@ -67,12 +65,11 @@ async function refresh(quiet = true) {
     if (state) render(state);
 }
 
-// Hiding blurs the answer key, for when this screen is projected; the choice is remembered on this device.
+// Hiding blurs the answer key, for when this screen is projected; every visit starts hidden.
 function setHidden(hidden) {
     $("host_key").classList.toggle("masked", hidden);
     $("mask_btn").querySelector("use").setAttribute("href", hidden ? "#ic-eye" : "#ic-eye-off");
     $("mask_btn").querySelector("span").textContent = hidden ? "顯示答案" : "隱藏答案";
-    localStorage.setItem(HIDE_KEY, hidden ? "1" : "");
 }
 
 $("mask_btn").addEventListener("click", () => setHidden(!$("host_key").classList.contains("masked")));
@@ -100,5 +97,5 @@ document.addEventListener("live", () => {
     liveTimer = setTimeout(() => void refresh(), 200);
 });
 
-setHidden(localStorage.getItem(HIDE_KEY) === "1");
+setHidden(true);
 void refresh();

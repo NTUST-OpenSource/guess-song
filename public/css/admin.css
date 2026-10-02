@@ -122,16 +122,16 @@ input, select, textarea { font: inherit; color: inherit; }
 .hk dd small { display: block; margin-top: 6px; color: var(--card-dim); font: 800 15px/1.4 var(--font-body); }
 .hkey.masked dd { filter: blur(18px); user-select: none; }
 .results { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.result { display: grid; gap: 6px; min-width: 0; padding: 12px 14px; border-radius: 12px; background: var(--gc); color: var(--gc-ink); box-shadow: var(--chip-shadow); }
-.result p { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; }
-.result-pts { font: 900 28px/1 var(--font-num); }
+.result { position: relative; display: grid; gap: 6px; min-width: 0; padding: 12px 14px; border-radius: 12px; background: var(--gc); color: var(--gc-ink); box-shadow: var(--chip-shadow); }
+.result p { min-width: 0; margin: 0; }
+.result-pts { display: flex; align-items: center; gap: 8px; font: 900 28px/1 var(--font-num); }
 .result-pts .shape { width: 18px; height: 18px; }
-.result-who { font-size: 16px; font-weight: 900; }
-.result-who .icon { width: 16px; height: 16px; }
-.result-who span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* A group that scored nothing fades to a tint, so the scoring groups stand out */
-.result.zero { background: color-mix(in srgb, var(--gc) 16%, var(--card)); color: var(--card-dim); box-shadow: none; }
-.result.zero .shape { color: var(--gc); }
+.result-who { min-height: 1.4em; font-size: 16px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Answer count: a tab merged into the card's top-right corner */
+.result-count { position: absolute; top: 0; right: 0; padding: 4px 10px; border-radius: 0 12px 0 10px; background: color-mix(in srgb, currentColor 18%, transparent); font-size: 12px; font-weight: 900; }
+/* Before the round closes, and for groups without points: a tint, so the scoring groups stand out */
+.result.quiet { background: color-mix(in srgb, var(--gc) 16%, var(--card)); color: var(--card-dim); box-shadow: none; }
+.result.quiet .shape { color: var(--gc); }
 .host-actions .btn { min-height: 66px; font-size: 21px; }
 
 /* Dashboard: score tiles over the selected song and its answers */

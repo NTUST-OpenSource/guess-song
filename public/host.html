@@ -28,7 +28,6 @@
         <symbol id="ic-exit" viewBox="0 0 24 24"><path d="M14 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H14M10 12h10m-3.5-3.5L20 12l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="ic-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
         <symbol id="ic-eye-off" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
-        <symbol id="ic-crown" viewBox="0 0 24 24"><path d="M3 8.5 7.5 12 12 5l4.5 7L21 8.5 19 19H5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
     </svg>
     <div class="bg" aria-hidden="true">
         <svg class="float f1"><use href="#sh1"/></svg>
@@ -66,14 +65,13 @@
                 <h1 class="host-no" id="host_title">尚未選歌</h1>
                 <button class="pill-btn" id="mask_btn" type="button"><svg class="icon" aria-hidden="true"><use href="#ic-eye-off"/></svg><span>隱藏答案</span></button>
             </header>
-            <div class="counts" id="host_counts"></div>
             <dl class="hkey" id="host_key">
                 <div class="hk"><dt>年份</dt><dd id="key_year">—</dd></div>
                 <div class="hk"><dt>歌手</dt><dd id="key_artist">—</dd></div>
                 <div class="hk"><dt>歌名</dt><dd id="key_title">—</dd></div>
             </dl>
-            <!-- After the round closes: each group's points and its top scorer -->
-            <section class="results" id="host_results" aria-label="本題各組得分與最高分" hidden></section>
+            <!-- Each group: how many answered; after the round closes, its points and top scorer -->
+            <section class="results" id="host_results" aria-label="各組作答人數、本題得分與最高分" hidden></section>
             <div class="btn-row host-actions">
                 <button class="btn ok" id="open_btn" type="button" disabled>發題</button>
                 <button class="btn" id="close_btn" type="button" disabled>收卷並計分</button>

@@ -470,6 +470,10 @@ assert.deepEqual((await history(mei)).map((x) => x.no), [1, 3, 2]);
     // Everyone starts tied for 1st, so scoring in round 1 is not a climb.
     assert.ok(!notes([g4(5, 0, 0, 2)], g4(5, 0, 0, 2)).some((n) => n.includes("大躍進")));
     assert.deepEqual(notes([], g4(0, 0, 0, 0)), []);
+    // The all-groups lines name four or five groups.
+    assert.deepEqual(notes([g4(0, 0, 0, 0), g4(1, 1, 1, 1)], g4(1, 1, 1, 1)), ["四組都有拿分，這題大家都會！"]);
+    const g5 = (a, b, c, d, e) => ({ ...g4(a, b, c, d), 5: e });
+    assert.deepEqual(notes([g5(0, 0, 0, 0, 0), g5(1, 1, 1, 1, 1)], g5(1, 1, 1, 1, 1)), ["五組都有拿分，這題大家都會！"]);
 }
 
 // ===== Reset =====
@@ -490,5 +494,55 @@ assert.deepEqual(await history(ming), []);
 
 // Reset is pushed to phones.
 assert.equal(lastState().round, null);
+
+// ===== Five groups =====
+{
+    // Only 1, true and True turn on the fifth group.
+    const pageGroups = async (value) =>
+        (await (await worker.fetch(new Request("https://x/api/groups.js"), { ...env, FIVE_GROUPS: value })).text()).match(/"(\d)"/)[1];
+    for (const v of ["1", "true", "True", true]) assert.equal(await pageGroups(v), "5", `FIVE_GROUPS=${v}`);
+    for (const v of [undefined, "", "0", "false", "TRUE", "yes"]) assert.equal(await pageGroups(v), "4", `FIVE_GROUPS=${v}`);
+
+    const ctx5 = { ...mockCtx(), getWebSockets: () => [] };
+    const env5 = { ...env, FIVE_GROUPS: "true", SCORES: { getByName: () => do5 } };
+    const do5 = new Scores(ctx5, env5);
+    const post5 = (path, body) =>
+        worker.fetch(new Request("https://x" + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }), env5);
+    const admin5 = (action, body = {}) => post5(`/api/admin/${action}`, { token, ...body });
+
+    assert.deepEqual(await (await worker.fetch(new Request("https://x/api/GetScore"), env5)).json(), { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+    assert.equal((await post5("/api/SetScore", { token, group: 5, score: 7 })).status, 200);
+    assert.equal((await post5("/api/SetScore", { token, group: 6, score: 7 })).status, 400);
+    assert.equal((await post("/api/SetScore", { token, group: 5, score: 7 })).status, 400);
+
+    // A player of group 5 plays a round.
+    await admin5("passwords", { passwords: { 1: "red", 2: "blue", 3: "gold", 4: "leaf", 5: "aqua" } });
+    const qing = await (await post5("/api/join", { name: "小青", code: "AQUA" })).json();
+    assert.equal(qing.group, 5);
+    await admin5("songs", { songs: [{ year: 2003, artist: "周杰倫", title: "晴天" }] });
+    await admin5("open", { songId: 0 });
+    await post5("/api/play/answer", { token: qing.token, year: 2003, artist: "周杰倫", title: "晴天" });
+    await admin5("close");
+    const st = await (await post5("/api/play/state", { token: qing.token })).json();
+    assert.deepEqual(st.scores, { 1: 0, 2: 0, 3: 0, 4: 0, 5: 12 });
+    assert.deepEqual(st.result.groups, { 1: 0, 2: 0, 3: 0, 4: 0, 5: 5 });
+    assert.deepEqual(st.result.best.map((b) => b.name), [null, null, null, null, "小青"]);
+
+    // Turned off: group 5 leaves the totals, its code stops working and its players must join again.
+    assert.deepEqual(await new Scores(ctx5, env).read(), { 1: 0, 2: 0, 3: 0, 4: 0 });
+    assert.equal(await new Scores(ctx5, env).groupForCode("aqua"), null);
+    assert.equal((await post("/api/play/state", { token: qing.token })).status, 401);
+    // Turned on: totals saved with four groups get a 0 for group 5.
+    const ctx4 = mockCtx();
+    await ctx4.storage.put("scores", { 1: 3, 2: 0, 3: 1, 4: 2 });
+    assert.deepEqual(await new Scores(ctx4, env5).read(), { 1: 3, 2: 0, 3: 1, 4: 2, 5: 0 });
+
+    // The icons follow the group count.
+    const ASSETS = { fetch: async (req) => new Response(new URL(req.url).pathname) };
+    const icon = async (e, path) => (await worker.fetch(new Request("https://x" + path), { ...e, ASSETS })).text();
+    assert.equal(await icon(env, "/favicon.svg"), "/favicon.svg");
+    assert.equal(await icon(env5, "/favicon.ico"), "/five/favicon.ico");
+    assert.equal(await icon(env5, "/apple-touch-icon.png"), "/five/apple-touch-icon.png");
+}
 
 console.log("ok");

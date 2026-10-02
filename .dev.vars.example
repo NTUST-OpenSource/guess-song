@@ -3,3 +3,5 @@
 USERNAME = "admin"
 PASSWORD = "change-me"
 AUTH_SECRET = "run: openssl rand -base64 32"
+# 1, true or True adds a fifth group; anything else, or leaving it out, keeps four.
+FIVE_GROUPS = "false"

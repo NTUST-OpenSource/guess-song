@@ -1,6 +1,5 @@
 import { notes } from "./notes.js";
 
-const GROUPS = 4;
 // Token lifetime in seconds.
 const TOKEN_TTL = 12 * 60 * 60;
 const MAX_SCORE = 999;
@@ -27,8 +26,9 @@ const json = (obj, status = 200) =>
 const ok = (extra) => json({ status: 1, msg: "success", ...extra });
 const fail = (msg, status = 400) => json({ status: 0, msg }, status);
 
-const emptyScores = () =>
-    Object.fromEntries(Array.from({ length: GROUPS }, (_, i) => [String(i + 1), 0]));
+// Four groups, or five when FIVE_GROUPS is 1, true or True.
+const groupCount = (env) => (["1", "true", "True"].includes(String(env.FIVE_GROUPS).trim()) ? 5 : 4);
+const groupIds = (n) => Array.from({ length: n }, (_, i) => i + 1);
 
 const b64u = (buf) =>
     btoa(String.fromCharCode(...new Uint8Array(buf)))
@@ -97,7 +97,7 @@ async function verifyPlayerToken(secret, token) {
     }
 }
 
-const isGroup = (v) => Number.isInteger(v) && v >= 1 && v <= GROUPS;
+const isGroup = (v, n) => Number.isInteger(v) && v >= 1 && v <= n;
 
 // Group codes ignore case and surrounding spaces; phones often capitalize the first letter.
 const codeKey = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
@@ -148,19 +148,18 @@ const fieldAnswers = (graded, group) => {
     );
 };
 
-const groupPoints = (graded) =>
-    Object.fromEntries(Array.from({ length: GROUPS }, (_, i) => [String(i + 1), sumPoints(fieldBest(graded, i + 1))]));
+const groupPoints = (graded, n) => Object.fromEntries(groupIds(n).map((g) => [String(g), sumPoints(fieldBest(graded, g))]));
 
 // Each group's top scorer for a round; ties go to whoever submitted their final answer first.
-const groupBest = (graded) =>
-    Array.from({ length: GROUPS }, (_, i) => {
+const groupBest = (graded, n) =>
+    groupIds(n).map((g) => {
         const best = graded
-            .filter((a) => a.group === i + 1)
+            .filter((a) => a.group === g)
             .map((a) => ({ ...a, total: sumPoints(a.points) }))
             .sort((x, y) => y.total - x.total || x.at - y.at)[0];
         return best?.total > 0
-            ? { group: i + 1, name: best.name, fields: FIELDS.filter((f) => best.points[f] > 0), points: best.total }
-            : { group: i + 1, name: null, fields: [], points: 0 };
+            ? { group: g, name: best.name, fields: FIELDS.filter((f) => best.points[f] > 0), points: best.total }
+            : { group: g, name: null, fields: [], points: 0 };
     });
 
 const toList = (v) => (Array.isArray(v) ? v : [v]).filter((s) => typeof s === "string" && s.trim() !== "");
@@ -227,8 +226,14 @@ function parseSongs(v) {
 // One Durable Object serializes every write. Each change is pushed over WebSocket:
 // players get their own state, other sockets get the totals and refetch what they need.
 export class Scores extends DurableObject {
+    get groups() {
+        return groupCount(this.env);
+    }
+
+    // Exactly the configured groups, so turning FIVE_GROUPS on or off adds group 5 at 0 or leaves it out.
     async read() {
-        return (await this.ctx.storage.get("scores")) ?? emptyScores();
+        const saved = (await this.ctx.storage.get("scores")) ?? {};
+        return Object.fromEntries(groupIds(this.groups).map((g) => [String(g), saved[g] ?? 0]));
     }
 
     async add(group, delta) {
@@ -251,7 +256,7 @@ export class Scores extends DurableObject {
     async fetch(request) {
         const url = new URL(request.url);
         const g = Number(url.searchParams.get("g"));
-        const who = isGroup(g) ? { g, id: url.searchParams.get("id") } : null;
+        const who = isGroup(g, this.groups) ? { g, id: url.searchParams.get("id") } : null;
         const [client, server] = Object.values(new WebSocketPair());
         // Answer client pings without waking a hibernating object.
         this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
@@ -306,7 +311,7 @@ export class Scores extends DurableObject {
     async groupForCode(code) {
         const key = codeKey(code);
         if (!key) return null;
-        const hit = Object.entries(await this.load("groupPw", {})).find(([, c]) => codeKey(c) === key);
+        const hit = Object.entries(await this.load("groupPw", {})).find(([g, c]) => isGroup(Number(g), this.groups) && codeKey(c) === key);
         return hit ? Number(hit[0]) : null;
     }
 
@@ -328,7 +333,7 @@ export class Scores extends DurableObject {
         if (!ids.includes(round?.songId)) return { scores, round, answers, graded: [], result: null };
         const song = songs[round.songId];
         const graded = grade(song, answers);
-        const teams = Object.fromEntries(Array.from({ length: GROUPS }, (_, i) => [i + 1, fieldBest(graded, i + 1)]));
+        const teams = Object.fromEntries(groupIds(this.groups).map((g) => [g, fieldBest(graded, g)]));
         const rounds = ids.slice(ids.indexOf(round.songId)).reverse().map((s) => awarded[s]);
         return {
             scores,
@@ -342,7 +347,7 @@ export class Scores extends DurableObject {
                 title: song.title[0],
                 thumb: thumbOf(song),
                 groups: awarded[round.songId],
-                best: groupBest(graded),
+                best: groupBest(graded, this.groups),
                 notes: notes(rounds, scores, teams),
             },
         };
@@ -387,7 +392,7 @@ export class Scores extends DurableObject {
                 thumb: thumbOf(song),
                 groups: awarded[songId],
                 mine: ownAnswer(graded.find((a) => a.player === key)),
-                team: { ...fieldAnswers(graded, group), points: fieldBest(graded, group), best: groupBest(graded)[group - 1].name },
+                team: { ...fieldAnswers(graded, group), points: fieldBest(graded, group), best: groupBest(graded, this.groups)[group - 1].name },
             });
         }
         return history;
@@ -472,7 +477,7 @@ export class Scores extends DurableObject {
     async settle(songId) {
         const song = (await this.load("songs", []))[songId];
         if (!song) return;
-        const points = groupPoints(grade(song, await this.load(`ans:${songId}`, {})));
+        const points = groupPoints(grade(song, await this.load(`ans:${songId}`, {})), this.groups);
         const awarded = await this.load("awarded", {});
         const prev = awarded[songId] ?? {};
         const scores = await this.read();
@@ -506,6 +511,7 @@ export class Scores extends DurableObject {
 }
 
 const scoresStub = (env) => env.SCORES.getByName("main");
+const ICONS = ["/favicon.svg", "/favicon.ico", "/apple-touch-icon.png"];
 
 // Browsers cannot set headers on a WebSocket request, so the player token travels in the query string
 // and may appear in request logs. Admin pages connect without a token and refetch over POST.
@@ -515,7 +521,8 @@ async function handleSocket(env, request) {
     const target = new URL("https://scores/ws");
     if (token) {
         const player = await verifyPlayerToken(env.AUTH_SECRET, token);
-        if (player?.id) {
+        // A player of group 5 after FIVE_GROUPS is turned off joins again too.
+        if (player?.id && isGroup(player.g, groupCount(env))) {
             target.searchParams.set("g", String(player.g));
             target.searchParams.set("id", player.id);
         } else {
@@ -540,7 +547,7 @@ async function handleLogin(env, request) {
 
 async function handleAddScore(env, body) {
     if (!(await requireAuth(env, body))) return fail("please login", 401);
-    if (!isGroup(body.group)) return fail("unaccept group value");
+    if (!isGroup(body.group, groupCount(env))) return fail("unaccept group value");
 
     // The dashboard sends delta (may be negative); without it, each true field adds 1.
     const delta = body.delta ?? [body.year, body.name, body.sing, body.dance].filter((v) => v === true).length;
@@ -551,7 +558,7 @@ async function handleAddScore(env, body) {
 
 async function handleSetScore(env, body) {
     if (!(await requireAuth(env, body))) return fail("please login", 401);
-    if (!isGroup(body.group)) return fail("unaccept group value");
+    if (!isGroup(body.group, groupCount(env))) return fail("unaccept group value");
     if (!Number.isInteger(body.score) || body.score < 0 || body.score > MAX_SCORE) {
         return fail("unaccept score value");
     }
@@ -570,8 +577,8 @@ async function handleJoin(env, body) {
 
 async function handlePlay(env, action, body) {
     const player = await verifyPlayerToken(env.AUTH_SECRET, body.token);
-    // Tokens without a player id must join again.
-    if (!player?.id) return fail("please join", 401);
+    // Tokens without a player id, or of a group that no longer exists, must join again.
+    if (!player?.id || !isGroup(player.g, groupCount(env))) return fail("please join", 401);
     const stub = scoresStub(env);
 
     // Same payload as the WebSocket push; kept for debugging and tests.
@@ -633,7 +640,7 @@ async function handleAdmin(env, action, body) {
 
     if (action === "passwords") {
         const passwords = Object.fromEntries(
-            Array.from({ length: GROUPS }, (_, i) => [String(i + 1), body.passwords?.[i + 1]]),
+            groupIds(groupCount(env)).map((g) => [String(g), body.passwords?.[g]]),
         );
         if (!Object.values(passwords).every((v) => typeof v === "string")) return fail("代碼格式錯誤");
         const keys = Object.values(passwords).map(codeKey).filter(Boolean);
@@ -653,6 +660,18 @@ export default {
 
         if (pathname === "/api/GetScore" && request.method === "GET") {
             return json(await scoresStub(env).read());
+        }
+
+        // Pages load this before drawing, so they lay out four or five groups from the first frame.
+        if (pathname === "/api/groups.js" && request.method === "GET") {
+            return new Response(`document.documentElement.dataset.groups = "${groupCount(env)}";\n`, {
+                headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-cache" },
+            });
+        }
+
+        // The icons show five shapes with five groups (wrangler.jsonc sends these paths here first).
+        if (ICONS.includes(pathname)) {
+            return env.ASSETS.fetch(groupCount(env) === 5 ? new Request(new URL(`/five${pathname}`, request.url), request) : request);
         }
 
         if (request.method !== "POST") return fail("not found", 404);

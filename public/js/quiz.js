@@ -35,8 +35,8 @@ function setCover(no, song) {
     if (coverOf === `${no}:${video}`) return;
     coverOf = `${no}:${video}`;
     const box = $("round_cover");
-    box.style.setProperty("--c1", `var(--g${(no % 4) + 1})`);
-    box.style.setProperty("--c2", `var(--g${((no + 2) % 4) + 1})`);
+    box.style.setProperty("--c1", `var(--g${(no % GROUPS.length) + 1})`);
+    box.style.setProperty("--c2", `var(--g${((no + 2) % GROUPS.length) + 1})`);
     const disc = el("span", "disc");
     if (!video) return box.replaceChildren(disc);
     const img = document.createElement("img");

@@ -65,8 +65,9 @@ export function notes(rounds, scores, teams = {}) {
         say(6, `${team(first)}領先擴大到 ${gap} 分！`);
     }
     const spread = scores[first] - scores[now.at(-1)];
-    if (rounds.length >= 3 && spread > 0 && spread <= 3) say(7, `四組只差 ${spread} 分，戰況膠著！`);
-    if (groups.every((g) => pts(last, g) > 0)) say(8, "四組都有拿分，這題大家都會！");
+    const all = groups.length === 5 ? "五組" : "四組";
+    if (rounds.length >= 3 && spread > 0 && spread <= 3) say(7, `${all}只差 ${spread} 分，戰況膠著！`);
+    if (groups.every((g) => pts(last, g) > 0)) say(8, `${all}都有拿分，這題大家都會！`);
 
     return said
         .sort((a, b) => a.priority - b.priority)

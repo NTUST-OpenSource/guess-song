@@ -1,12 +1,13 @@
 // /scoreboard: animates the totals that scores.js pushes, in either layout; the layout is remembered on this device.
 const LAYOUT_KEY = "scoreboard_layout";
-const GROUPS = [1, 2, 3, 4];
+// Four groups, or five when the server turns on FIVE_GROUPS (/api/groups.js marks <html>).
+const GROUPS = document.documentElement.dataset.groups === "5" ? [1, 2, 3, 4, 5] : [1, 2, 3, 4];
 const board = document.getElementById("board");
 const rows = Object.fromEntries(GROUPS.map((g) => [g, board.querySelector(`.sb-group[data-g="${g}"]`)]));
 
 function setLayout(layout) {
     board.dataset.layout = layout;
-    const label = layout === "cols" ? "切換成排名長條" : "切換成固定四格";
+    const label = layout === "cols" ? "切換成排名長條" : `切換成固定${GROUPS.length === 5 ? "五" : "四"}格`;
     const btn = document.getElementById("layout_btn");
     btn.setAttribute("aria-label", label);
     btn.title = label;
@@ -20,6 +21,12 @@ document.getElementById("layout_btn").addEventListener("click", () => {
     else setLayout(next);
 });
 
+// The digit count gives three-digit totals a smaller size, so 999 fits the tile.
+function showTotal(el, n) {
+    el.textContent = String(n);
+    el.dataset.len = String(n).length;
+}
+
 // Counts up or down to the new total; a newer total takes over a count in progress.
 function countTo(el, to) {
     const from = Number(el.textContent) || 0;
@@ -29,7 +36,7 @@ function countTo(el, to) {
     const tick = (now) => {
         if (Number(el.dataset.to) !== to) return;
         const p = Math.min(1, (now - start) / 900);
-        el.textContent = String(Math.round(from + (to - from) * (1 - (1 - p) ** 3)));
+        showTotal(el, Math.round(from + (to - from) * (1 - (1 - p) ** 3)));
         if (p < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -47,7 +54,7 @@ document.addEventListener("scores", ({ detail: { scores, prev } }) => {
         row.classList.toggle("lead", top > 0 && scores[g] === top);
         // The first totals appear as they are; later ones count.
         if (prev) countTo(row.querySelector(".sb-total"), scores[g]);
-        else row.querySelector(".sb-total").textContent = scores[g];
+        else showTotal(row.querySelector(".sb-total"), scores[g]);
         const gain = prev ? scores[g] - prev[g] : 0;
         if (gain > 0) {
             const chip = document.createElement("span");

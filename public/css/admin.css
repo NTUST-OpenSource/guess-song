@@ -36,7 +36,9 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: max(12px, env(safe-area-inset-top)) 24px 12px; background: var(--top-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .brand-mini { display: flex; align-items: center; gap: 10px; margin-right: auto; color: var(--ink); text-decoration: none; }
-.marks { display: grid; grid-template-columns: repeat(2, 11px); gap: 3px; }
+/* Two by two, or three over two with five groups */
+.marks { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; width: 25px; }
+:root[data-groups="5"] .marks { width: 39px; }
 .marks .shape { width: 11px; height: 11px; color: var(--gc); }
 .brand-mini b { font: 900 19px/1 var(--font-display); white-space: nowrap; }
 .brand-mini .tag { padding: 3px 8px; border-radius: 99px; background: var(--note-bg); color: var(--ink-dim); font-size: 12px; font-weight: 900; }
@@ -111,7 +113,7 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* Host: totals, then the answer key large enough to read across a table */
 .host-main { width: min(100% - 48px, 1180px); margin: 16px auto 48px; display: flex; flex-direction: column; gap: 18px; }
-.chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.chips { display: grid; grid-template-columns: repeat(var(--groups), minmax(0, 1fr)); gap: 10px; }
 .chip {
   position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; height: 58px; border-radius: 12px;
   background: var(--gc); color: var(--gc-ink); box-shadow: var(--chip-shadow); font: 800 30px/1 var(--font-num); font-variant-numeric: tabular-nums;
@@ -128,7 +130,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .hk dd { margin: 0; min-width: 0; font: 900 54px/1.12 var(--font-display); overflow-wrap: anywhere; transition: filter .3s; }
 .hk dd small { display: block; margin-top: 6px; color: var(--card-dim); font: 800 15px/1.4 var(--font-body); }
 .hkey.masked dd { filter: blur(18px); user-select: none; }
-.results { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.results { display: grid; grid-template-columns: repeat(var(--groups), minmax(0, 1fr)); gap: 10px; }
 .result { position: relative; display: grid; gap: 6px; min-width: 0; padding: 12px 14px; border-radius: 12px; background: var(--gc); color: var(--gc-ink); box-shadow: var(--chip-shadow); }
 .result p { min-width: 0; margin: 0; }
 .result-pts { display: flex; align-items: center; gap: 8px; font: 900 28px/1 var(--font-num); }
@@ -143,7 +145,7 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* Dashboard: score tiles over the selected song and its answers */
 .dash-main { width: min(100% - 48px, 1760px); margin: 14px auto 24px; display: flex; flex-direction: column; gap: 16px; }
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.tiles { display: grid; grid-template-columns: repeat(var(--groups), minmax(0, 1fr)); gap: 14px; }
 .gtile {
   position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2px 6px;
   padding: 10px 12px 12px; border-radius: 14px; background: var(--gc); color: var(--gc-ink); box-shadow: var(--chip-shadow);
@@ -302,6 +304,16 @@ input, select, textarea { font: inherit; color: inherit; }
   .ans-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 }
 
+/* Mid widths: a full row of tiles would clip 999, so four go two by two and five three over two */
+@media (min-width: 760px) and (max-width: 1023px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 760px) and (max-width: 1279px) {
+  :root[data-groups="5"] .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  :root[data-groups="5"] .gtile { grid-column: span 2; }
+  :root[data-groups="5"] .gtile:nth-child(n + 4) { grid-column: span 3; }
+}
+
 /* Narrow screens */
 @media (max-width: 759px) {
   .adm-top { padding-inline: 16px; }
@@ -313,7 +325,10 @@ input, select, textarea { font: inherit; color: inherit; }
   .top-btn span { display: none; }
   .host-main { width: calc(100% - 32px); margin-top: 12px; gap: 14px; }
   .dash-main { width: calc(100% - 32px); margin-top: 12px; gap: 14px; }
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  /* One row per group, so 999 fits on a small phone */
+  .tiles { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .gtile { grid-template-columns: auto auto minmax(0, 1fr) auto; padding: 6px 8px 6px 14px; }
+  .gt-name { grid-column: auto; margin-right: 4px; }
   .score-in { font-size: 38px; }
   .step { width: 38px; height: 38px; }
   .answers-card { padding: 16px 16px 0; }
@@ -323,8 +338,9 @@ input, select, textarea { font: inherit; color: inherit; }
   .tabs { margin-inline: 16px; }
   .dialog-head { padding-inline: 16px; }
   .chips { gap: 6px; }
-  .chip { height: 46px; gap: 7px; font-size: 22px; }
-  .chip .shape { width: 15px; height: 15px; }
+  /* The shape sits over the score, so 999 fits five across */
+  .chip { flex-direction: column; height: 50px; gap: 3px; font-size: 22px; }
+  .chip .shape { width: 13px; height: 13px; }
   .host-card { gap: 14px; padding: 16px; }
   .host-no { font-size: 25px; }
   .hk { grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 10px 14px; }
@@ -332,6 +348,7 @@ input, select, textarea { font: inherit; color: inherit; }
   .hk dd { font-size: 30px; }
   .hk dd small { font-size: 13px; }
   .results { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  :root[data-groups="5"] .result:last-child { grid-column: 1 / -1; }
   .result-pts { font-size: 24px; }
   .host-actions .btn { min-height: 56px; font-size: 18px; }
 }
@@ -358,6 +375,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .gtile[data-g="2"], .chip[data-g="2"] { view-transition-name: score-2; }
 .gtile[data-g="3"], .chip[data-g="3"] { view-transition-name: score-3; }
 .gtile[data-g="4"], .chip[data-g="4"] { view-transition-name: score-4; }
+.gtile[data-g="5"], .chip[data-g="5"] { view-transition-name: score-5; }
 .answers-card, .host-card { view-transition-name: main-card; }
 .nav-dash, .adm-nav > a, .gtile, .chip, .answers-card, .host-card { view-transition-class: morph; }
 ::view-transition-group(*) { animation-duration: .45s; animation-timing-function: var(--ease-out); }

@@ -1,5 +1,5 @@
 // /host: the answer key of the song selected in the dashboard, round controls and each group's result.
-// $, el, icon, toast and adminApi come from /js/admin.js; refreshScores from /js/scores.js.
+// $, el, icon, toast, adminApi and the saved state come from /js/admin.js; refreshScores from /js/scores.js.
 const FIELDS = ["year", "artist", "title"];
 
 // Latest admin state, used by the buttons.
@@ -62,7 +62,9 @@ function render(state) {
 
 async function refresh(quiet = true) {
     const state = await adminApi("state", {}, quiet);
-    if (state) render(state);
+    if (!state) return;
+    saveState(state);
+    render(state);
 }
 
 // Hiding blurs the answer key, for when this screen is projected; every visit starts hidden.
@@ -98,4 +100,7 @@ document.addEventListener("live", () => {
 });
 
 setHidden(true);
+// Draw the last known state at once, then refresh it.
+const cached = savedState();
+if (cached) render(cached);
 void refresh();

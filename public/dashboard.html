@@ -14,10 +14,11 @@
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/admin.css">
     <script src="/js/live.js" defer></script>
-    <script src="/js/scores.js" defer></script>
     <script src="/js/admin.js" defer></script>
     <script src="/js/dashboard.js" defer></script>
     <script src="/js/quiz.js" defer></script>
+    <!-- Render-blocking, so the first frame (and the page transition) already shows the saved state -->
+    <script src="/js/scores.js" defer blocking="render"></script>
 </head>
 <body class="dash-page">
     <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">

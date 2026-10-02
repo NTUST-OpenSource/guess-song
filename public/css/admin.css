@@ -333,10 +333,26 @@ input, select, textarea { font: inherit; color: inherit; }
   .judge { padding: 6px 8px; }
 }
 
+/* Moving between admin pages: the top bar stays, the current tab slides over, the score tiles and the main card morph */
+@view-transition { navigation: auto; }
+.adm-top { view-transition-name: adm-top; }
+.adm-nav > a[aria-current="page"], .nav-current { view-transition-name: nav-current; }
+.gtile[data-g="1"], .chip[data-g="1"] { view-transition-name: score-1; }
+.gtile[data-g="2"], .chip[data-g="2"] { view-transition-name: score-2; }
+.gtile[data-g="3"], .chip[data-g="3"] { view-transition-name: score-3; }
+.gtile[data-g="4"], .chip[data-g="4"] { view-transition-name: score-4; }
+.answers-card, .host-card { view-transition-name: main-card; }
+.nav-current, .adm-nav > a[aria-current="page"], .gtile, .chip, .answers-card, .host-card { view-transition-class: morph; }
+::view-transition-group(*) { animation-duration: .45s; animation-timing-function: var(--ease-out); }
+/* While a box morphs, its old content leaves quickly and the new content arrives late, so the two never stack up */
+::view-transition-old(*.morph) { animation-duration: .16s; }
+::view-transition-new(*.morph) { animation-duration: .3s; animation-delay: .15s; animation-fill-mode: both; }
+
 @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 16px) scale(.94); } }
 @keyframes toastOut { to { opacity: 0; transform: translate(-50%, 12px); } }
 @keyframes dialogIn { from { opacity: 0; transform: translateY(18px) scale(.96); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

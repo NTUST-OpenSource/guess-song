@@ -66,6 +66,25 @@ async function send(url, payload = {}, quiet = false) {
 
 const adminApi = (action, payload, quiet) => send(`/api/admin/${action}`, payload, quiet);
 
+// The last admin state, kept for this tab's session so the next admin page can draw it at once.
+const STATE_KEY = "admin_state";
+
+function savedState() {
+    try {
+        return JSON.parse(sessionStorage.getItem(STATE_KEY));
+    } catch {
+        return null;
+    }
+}
+
+function saveState(state) {
+    try {
+        sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
+    } catch {
+        // Without storage the next page waits for the server instead.
+    }
+}
+
 // How many players of each group answered.
 function groupCounts(answers) {
     return GROUPS.map((g) => {

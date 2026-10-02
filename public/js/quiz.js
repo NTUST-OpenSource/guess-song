@@ -1,5 +1,5 @@
 // Dashboard: the selected song, its answers and grades, and the settings dialog.
-// $, el, icon, toast, adminApi and groupCounts come from /js/admin.js; refreshScores from /js/scores.js.
+// $, el, icon, toast, adminApi, groupCounts and the saved state come from /js/admin.js; refreshScores from /js/scores.js.
 const FIELDS = ["year", "artist", "title"];
 const FIELD_NAMES = { year: "年份", artist: "歌手", title: "歌名" };
 // Each click cycles the points (year 3 -> 1 -> 0, others 1 -> 0); returning to the automatic grade clears the override.
@@ -129,7 +129,8 @@ function answerRow(songId, a) {
     return tr;
 }
 
-function render(state) {
+// fresh: the state just came from the server, not from the session cache.
+function render(state, fresh = true) {
     const { songs, round, songId, answers, awarded } = state;
 
     // Rebuild the options only when the list changes, so an open menu is not interrupted.
@@ -148,6 +149,7 @@ function render(state) {
         // Nothing selected yet (a fresh list): sync the default first song to /host.
         if (songs.length && songId === null) void adminApi("select", { songId: selectedSong() }, true);
     }
+    if (songs[songId]) select.value = String(songId);
     select.disabled = !songs.length;
 
     const song = songs[songId];
@@ -191,7 +193,8 @@ function render(state) {
     $("ans_empty").hidden = sorted.length > 0;
     $("ans_empty").textContent = songs.length ? "還沒有人作答" : "還沒有歌單";
 
-    if (!loaded) {
+    // Only server data fills the settings, so a stale cache never gets saved back.
+    if (fresh && !loaded) {
         loaded = true;
         $("songs_json").value = JSON.stringify(songs, null, 2);
         checkSongs();
@@ -199,9 +202,11 @@ function render(state) {
     }
 }
 
-async function refreshQuiz(quiet = false) {
-    const state = await adminApi("state", { songId: selectedSong() }, quiet);
-    if (state) render(state);
+async function refreshQuiz(quiet = false, songId = selectedSong()) {
+    const state = await adminApi("state", { songId }, quiet);
+    if (!state) return;
+    saveState(state);
+    render(state);
 }
 
 // Selecting a song shows its answer key on /host.
@@ -358,4 +363,7 @@ document.addEventListener("live", () => {
     liveTimer = setTimeout(() => void refreshQuiz(true), 300);
 });
 
-void refreshQuiz();
+// Draw the last known state at once, then load the song the server has selected, which /host shows too.
+const cached = savedState();
+if (cached) render(cached, false);
+void refreshQuiz(false, null);

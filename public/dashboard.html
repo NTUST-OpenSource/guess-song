@@ -2,124 +2,185 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#3c1580">
     <title>三『資』小豬 - 後台控制台</title>
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/admin.css">
     <script src="/js/live.js" defer></script>
     <script src="/js/scores.js" defer></script>
+    <script src="/js/admin.js" defer></script>
     <script src="/js/dashboard.js" defer></script>
     <script src="/js/quiz.js" defer></script>
-    <link rel="stylesheet" href="/css/dashboard.css">
 </head>
-<body>
-    <header class="top-header">
-        <a class="header-title" href="/">誰是猜歌王</a>
+<body class="dash-page">
+    <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <symbol id="sh1" viewBox="0 0 32 32"><path d="M16 3.5 30 28.5H2Z"/></symbol>
+        <symbol id="sh2" viewBox="0 0 32 32"><path d="M16 1.5 30.5 16 16 30.5 1.5 16Z"/></symbol>
+        <symbol id="sh3" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14"/></symbol>
+        <symbol id="sh4" viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="2.5"/></symbol>
+        <symbol id="ic-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-exit" viewBox="0 0 24 24"><path d="M14 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H14M10 12h10m-3.5-3.5L20 12l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-gear" viewBox="0 0 24 24"><path d="M19.6 9.7 22.3 10.4 22.3 13.6 19.6 14.3 19 15.7 20.4 18.1 18.1 20.4 15.7 19 14.3 19.6 13.6 22.3 10.4 22.3 9.7 19.6 8.3 19 5.9 20.4 3.6 18.1 5 15.7 4.4 14.3 1.7 13.6 1.7 10.4 4.4 9.7 5 8.3 3.6 5.9 5.9 3.6 8.3 5 9.7 4.4 10.4 1.7 13.6 1.7 14.3 4.4 15.7 5 18.1 3.6 20.4 5.9 19 8.3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+        <symbol id="ic-close" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+        <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+        <symbol id="ic-minus" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+        <symbol id="ic-play" viewBox="0 0 24 24"><path d="M7 4.5v15L19.5 12Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-check" viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-alert" viewBox="0 0 24 24"><path d="M12 3.5 22 20.5H2Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.4v.1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    </svg>
+    <div class="bg" aria-hidden="true">
+        <svg class="float f1"><use href="#sh1"/></svg>
+        <svg class="float f2"><use href="#sh2"/></svg>
+        <svg class="float f3"><use href="#sh3"/></svg>
+        <svg class="float f4"><use href="#sh4"/></svg>
+    </div>
+
+    <header class="adm-top">
+        <a class="brand-mini" href="/dashboard">
+            <span class="marks" aria-hidden="true"><svg class="shape" data-g="1"><use href="#sh1"/></svg><svg class="shape" data-g="2"><use href="#sh2"/></svg><svg class="shape" data-g="3"><use href="#sh3"/></svg><svg class="shape" data-g="4"><use href="#sh4"/></svg></span>
+            <b>誰是猜歌王</b><span class="tag">後台</span>
+        </a>
+        <nav class="adm-nav" aria-label="後台頁面">
+            <span class="nav-current"><a href="/dashboard" aria-current="page">控制台</a><button class="nav-gear" id="settings_btn" type="button" aria-label="設定" aria-haspopup="dialog"><svg class="icon" aria-hidden="true"><use href="#ic-gear"/></svg></button></span>
+            <a href="/host">主持人</a>
+            <a href="/scoreboard" target="_blank" rel="noopener">計分板<svg class="icon" aria-hidden="true"><use href="#ic-ext"/></svg></a>
+        </nav>
+        <span class="conn" role="status"><span class="spin" aria-hidden="true"></span>重新連線中</span>
+        <button class="top-btn" id="logout_btn" type="button" aria-label="登出"><svg class="icon" aria-hidden="true"><use href="#ic-exit"/></svg><span>登出</span></button>
     </header>
 
-    <!-- Group scores: arrows save at once; typed scores save on Enter, Escape cancels -->
-    <main class="score-container">
-        <div class="team-card" id="t1">
-            <span class="team-label">第一隊</span>
-            <div class="score-editor">
-                <button class="score-step up btn-green" data-group="1" data-delta="1" aria-label="第一隊加一分"></button>
-                <input class="score-box" type="number" min="0" max="999" enterkeyhint="done" data-group="1" data-score="1" aria-label="第一隊分數">
-                <button class="score-step down btn-red" data-group="1" data-delta="-1" aria-label="第一隊減一分"></button>
+    <main class="dash-main">
+        <!-- Group scores: −/+ save at once; a typed score saves on Enter, Escape cancels -->
+        <section class="tiles" aria-label="各組分數">
+            <div class="gtile" data-g="1" data-pop="1">
+                <p class="gt-name"><svg class="shape" aria-hidden="true"><use href="#sh1"/></svg>第 1 組</p>
+                <button class="step" type="button" data-group="1" data-delta="-1" aria-label="第 1 組減一分"><svg class="icon" aria-hidden="true"><use href="#ic-minus"/></svg></button>
+                <input class="score-in" type="number" min="0" max="999" inputmode="numeric" enterkeyhint="done" data-score="1" aria-label="第 1 組分數">
+                <button class="step" type="button" data-group="1" data-delta="1" aria-label="第 1 組加一分"><svg class="icon" aria-hidden="true"><use href="#ic-plus"/></svg></button>
             </div>
-        </div>
-        <div class="team-card" id="t2">
-            <span class="team-label">第二隊</span>
-            <div class="score-editor">
-                <button class="score-step up btn-green" data-group="2" data-delta="1" aria-label="第二隊加一分"></button>
-                <input class="score-box" type="number" min="0" max="999" enterkeyhint="done" data-group="2" data-score="2" aria-label="第二隊分數">
-                <button class="score-step down btn-red" data-group="2" data-delta="-1" aria-label="第二隊減一分"></button>
+            <div class="gtile" data-g="2" data-pop="2">
+                <p class="gt-name"><svg class="shape" aria-hidden="true"><use href="#sh2"/></svg>第 2 組</p>
+                <button class="step" type="button" data-group="2" data-delta="-1" aria-label="第 2 組減一分"><svg class="icon" aria-hidden="true"><use href="#ic-minus"/></svg></button>
+                <input class="score-in" type="number" min="0" max="999" inputmode="numeric" enterkeyhint="done" data-score="2" aria-label="第 2 組分數">
+                <button class="step" type="button" data-group="2" data-delta="1" aria-label="第 2 組加一分"><svg class="icon" aria-hidden="true"><use href="#ic-plus"/></svg></button>
             </div>
-        </div>
-        <div class="team-card" id="t3">
-            <span class="team-label">第三隊</span>
-            <div class="score-editor">
-                <button class="score-step up btn-green" data-group="3" data-delta="1" aria-label="第三隊加一分"></button>
-                <input class="score-box" type="number" min="0" max="999" enterkeyhint="done" data-group="3" data-score="3" aria-label="第三隊分數">
-                <button class="score-step down btn-red" data-group="3" data-delta="-1" aria-label="第三隊減一分"></button>
+            <div class="gtile" data-g="3" data-pop="3">
+                <p class="gt-name"><svg class="shape" aria-hidden="true"><use href="#sh3"/></svg>第 3 組</p>
+                <button class="step" type="button" data-group="3" data-delta="-1" aria-label="第 3 組減一分"><svg class="icon" aria-hidden="true"><use href="#ic-minus"/></svg></button>
+                <input class="score-in" type="number" min="0" max="999" inputmode="numeric" enterkeyhint="done" data-score="3" aria-label="第 3 組分數">
+                <button class="step" type="button" data-group="3" data-delta="1" aria-label="第 3 組加一分"><svg class="icon" aria-hidden="true"><use href="#ic-plus"/></svg></button>
             </div>
-        </div>
-        <div class="team-card" id="t4">
-            <span class="team-label">第四隊</span>
-            <div class="score-editor">
-                <button class="score-step up btn-green" data-group="4" data-delta="1" aria-label="第四隊加一分"></button>
-                <input class="score-box" type="number" min="0" max="999" enterkeyhint="done" data-group="4" data-score="4" aria-label="第四隊分數">
-                <button class="score-step down btn-red" data-group="4" data-delta="-1" aria-label="第四隊減一分"></button>
+            <div class="gtile" data-g="4" data-pop="4">
+                <p class="gt-name"><svg class="shape" aria-hidden="true"><use href="#sh4"/></svg>第 4 組</p>
+                <button class="step" type="button" data-group="4" data-delta="-1" aria-label="第 4 組減一分"><svg class="icon" aria-hidden="true"><use href="#ic-minus"/></svg></button>
+                <input class="score-in" type="number" min="0" max="999" inputmode="numeric" enterkeyhint="done" data-score="4" aria-label="第 4 組分數">
+                <button class="step" type="button" data-group="4" data-delta="1" aria-label="第 4 組加一分"><svg class="icon" aria-hidden="true"><use href="#ic-plus"/></svg></button>
             </div>
+        </section>
+
+        <div class="dash">
+            <!-- The selected song: cover, picker, answer key and round buttons -->
+            <section class="card round-card" aria-labelledby="round_title">
+                <h2 class="sr" id="round_title">本題</h2>
+                <div class="round-top">
+                    <div class="cover round-cover" id="round_cover"></div>
+                    <span class="status" id="round_status" hidden></span>
+                </div>
+                <div class="round-body">
+                    <div class="field">
+                        <label class="field-label" for="quiz_song">題目</label>
+                        <select class="input select" id="quiz_song"></select>
+                    </div>
+                    <a class="yt" id="youtube_link" target="_blank" rel="noopener noreferrer" hidden>
+                        <span class="yt-mark"><svg class="icon" aria-hidden="true"><use href="#ic-play"/></svg></span><span id="youtube_text"></span><svg class="icon end" aria-hidden="true"><use href="#ic-ext"/></svg>
+                    </a>
+                    <dl class="key" id="answer_key" hidden>
+                        <dt>年份</dt><dd id="key_year"></dd>
+                        <dt>歌手</dt><dd id="key_artist"></dd>
+                        <dt>歌名</dt><dd id="key_title"></dd>
+                    </dl>
+                    <div class="btn-row">
+                        <button class="btn ok" id="open_btn" type="button" disabled>發題</button>
+                        <button class="btn" id="close_btn" type="button" disabled>收卷並計分</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Answers to the selected song; each grade can be clicked to change it -->
+            <section class="card answers-card" aria-labelledby="ans_title">
+                <header class="ans-head">
+                    <h2 id="ans_title">作答狀況</h2>
+                    <span class="sub" id="ans_total"></span>
+                    <div class="counts" id="ans_counts"></div>
+                </header>
+                <div class="awards" id="ans_awards" hidden></div>
+                <div class="ans-scroll">
+                    <table class="ans">
+                        <thead><tr><th>玩家</th><th>年份</th><th>歌手</th><th>歌名</th></tr></thead>
+                        <tbody id="answer_rows"></tbody>
+                    </table>
+                    <p class="empty" id="ans_empty" hidden></p>
+                </div>
+            </section>
         </div>
     </main>
 
-    <section class="control-container">
-        <!-- Rounds -->
-        <div class="control-card">
-            <h2 class="card-title">發題 / 收卷</h2>
-            <p id="quiz_status" class="card-subtitle">尚未發題</p>
-
-            <div class="input-row">
-                <label for="quiz_song">題目</label>
-                <select id="quiz_song"></select>
+    <!-- Settings: group codes, the song list and reset, one tab each -->
+    <dialog class="dialog settings" id="settings" aria-labelledby="settings_title">
+        <header class="dialog-head">
+            <h2 id="settings_title">設定</h2>
+            <button class="close-btn" type="button" data-close aria-label="關閉"><svg class="icon" aria-hidden="true"><use href="#ic-close"/></svg></button>
+        </header>
+        <div class="tabs" role="tablist" aria-label="設定項目">
+            <button type="button" role="tab" id="tab_codes" aria-controls="panel_codes" aria-selected="true">組別代碼</button>
+            <button type="button" role="tab" id="tab_songs" aria-controls="panel_songs" aria-selected="false" tabindex="-1">歌單與解答</button>
+            <button type="button" role="tab" id="tab_reset" aria-controls="panel_reset" aria-selected="false" tabindex="-1">重置</button>
+        </div>
+        <section class="tab-panel" role="tabpanel" id="panel_codes" aria-labelledby="tab_codes">
+            <div class="codes" id="group_passwords"></div>
+            <button class="btn" id="save_pw_btn" type="button">儲存代碼</button>
+        </section>
+        <section class="tab-panel" role="tabpanel" id="panel_songs" aria-labelledby="tab_songs" hidden>
+            <div class="file-row">
+                <input class="sr" id="songs_file" type="file" accept=".json,application/json">
+                <label class="btn soft" for="songs_file"><svg class="icon" aria-hidden="true"><use href="#ic-upload"/></svg>匯入 JSON 檔</label>
+                <span class="file-name" id="file_name"></span>
             </div>
-
-            <a id="youtube_link" class="youtube-link" target="_blank" rel="noopener noreferrer" hidden></a>
-
-            <button id="open_btn" class="mc-button btn-green">發題</button>
-            <button id="close_btn" class="mc-button btn-gold">收卷並計分</button>
-        </div>
-
-        <!-- Group codes -->
-        <div class="control-card">
-            <h2 class="card-title">組別代碼</h2>
-            <p class="card-subtitle">玩家輸入代碼就會進到那一組；不分大小寫、各組不能重複，留空 = 該組不能加入</p>
-            <div id="group_passwords" class="password-grid"></div>
-            <button id="save_pw_btn" class="mc-button btn-gold">儲存代碼</button>
-        </div>
-
-        <!-- Answers -->
-        <div class="control-card wide-card">
-            <h2 class="card-title">作答狀況</h2>
-            <p id="answer_key" class="card-subtitle"></p>
-            <p id="answer_summary" class="card-subtitle"></p>
-            <p class="card-subtitle">點分數可以人工改判（年份 +3 → +1 → +0 輪流切換），切回原本的分數就是還原；收卷後改判會自動加減分</p>
-            <div class="table-wrap">
-                <table class="answer-table">
-                    <thead>
-                        <tr><th>組</th><th>名字</th><th>年份</th><th>歌手</th><th>歌名</th></tr>
-                    </thead>
-                    <tbody id="answer_rows"></tbody>
-                </table>
+            <textarea class="input mono" id="songs_json" spellcheck="false" aria-label="歌單 JSON" aria-describedby="songs_check"></textarea>
+            <p class="check" id="songs_check"></p>
+            <button class="btn" id="save_songs_btn" type="button">儲存歌單</button>
+        </section>
+        <section class="tab-panel" role="tabpanel" id="panel_reset" aria-labelledby="tab_reset" hidden>
+            <div class="danger-zone">
+                <h3>重置所有資料</h3>
+                <button class="btn danger" id="reset_btn" type="button">重置資料庫與分數</button>
             </div>
-        </div>
+        </section>
+    </dialog>
 
-        <!-- Song list -->
-        <div class="control-card wide-card">
-            <h2 class="card-title">歌單與解答</h2>
-            <p class="card-subtitle">
-                JSON 陣列，格式見 songs.example.json；歌手、歌名可以填多種寫法。
-                解答只存在伺服器，比賽開始後請不要調換順序。
-            </p>
-            <input id="songs_file" type="file" accept=".json,application/json">
-            <textarea id="songs_json" class="songs-json" rows="10" spellcheck="false"></textarea>
-            <button id="save_songs_btn" class="mc-button btn-gold">儲存歌單</button>
+    <dialog class="dialog confirm" id="reset_dialog" aria-labelledby="reset_title">
+        <h2 id="reset_title">確定要重置嗎？</h2>
+        <p>這個動作無法復原，會清空：</p>
+        <ul>
+            <li>四組分數</li>
+            <li>歌單與解答</li>
+            <li>組別代碼</li>
+            <li>所有作答紀錄</li>
+        </ul>
+        <div class="btn-row">
+            <button class="btn soft" type="button" data-close>取消</button>
+            <button class="btn danger" id="reset_confirm" type="button">重置</button>
         </div>
+    </dialog>
 
-        <!-- Reset -->
-        <div class="control-card wide-card">
-            <h2 class="card-title">重置所有資料</h2>
-            <p class="card-subtitle">清空四組分數、歌單與解答、組別代碼、所有作答紀錄。無法復原，比賽前或比賽後再用。</p>
-            <button id="reset_btn" class="mc-button btn-red">重置資料庫與分數</button>
-        </div>
-
-        <!-- Logout -->
-        <div class="logout-wrapper">
-            <button id="logout_btn" class="mc-button btn-red">登出系統</button>
-        </div>
-
-    </section>
+    <div class="toast" id="toast" role="status" popover="manual"></div>
 </body>
 </html>

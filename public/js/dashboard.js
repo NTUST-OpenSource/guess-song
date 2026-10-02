@@ -16,18 +16,29 @@ for (const btn of document.querySelectorAll(".step")) {
     });
 }
 
-// Typed scores: Enter saves; Escape or leaving the box cancels and restores the server value.
+// Typed scores save on change, so Enter or leaving the box saves: phone number pads have no Enter key.
+// Escape leaves without saving. change fires before blur, so blur sees the cancel and a save in flight.
 for (const box of document.querySelectorAll(".score-in")) {
-    box.addEventListener("keydown", async (e) => {
-        if (e.key === "Escape") return box.blur();
-        if (e.key !== "Enter") return;
+    let cancelled = false;
+    box.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") cancelled = true;
+        if (e.key === "Escape" || e.key === "Enter") box.blur();
+    });
+    box.addEventListener("change", async () => {
+        if (cancelled) return;
         const group = Number(box.dataset.score);
         const score = box.valueAsNumber;
         if (!Number.isInteger(score) || score < 0 || score > MAX_SCORE) {
             return toast(`分數要是 0–${MAX_SCORE} 的整數`, "bad");
         }
+        box.dataset.pending = String(Number(box.dataset.pending ?? 0) + 1);
         if (await send("/api/SetScore", { group, score })) toast(`第 ${group} 組改成 ${score} 分`, "ok");
-        box.blur();
+        box.dataset.pending = String(Number(box.dataset.pending) - 1);
+        void refreshScores();
     });
-    box.addEventListener("blur", () => void refreshScores());
+    // Restores the server value and skipped pushes; a save in flight refetches when it finishes instead.
+    box.addEventListener("blur", () => {
+        cancelled = false;
+        if (!(Number(box.dataset.pending) > 0)) void refreshScores();
+    });
 }

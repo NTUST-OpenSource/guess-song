@@ -13,6 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/play.css">
+    <!-- Marks <html> with the group count before the first frame -->
+    <script src="/api/groups.js"></script>
     <script src="/js/live.js" defer></script>
     <script src="/js/play.js" defer></script>
 </head>
@@ -40,7 +42,7 @@
         </div>
 
         <!-- Group totals stay pinned at the top; the player's group is outlined -->
-        <header class="topbar" aria-label="五組總分">
+        <header class="topbar" aria-label="各組總分">
             <div class="gcell" data-g="1" id="top_1"><svg class="shape" aria-hidden="true"><use href="#sh1"/></svg><span class="sr">第 1 組</span><b>0</b></div>
             <div class="gcell" data-g="2" id="top_2"><svg class="shape" aria-hidden="true"><use href="#sh2"/></svg><span class="sr">第 2 組</span><b>0</b></div>
             <div class="gcell" data-g="3" id="top_3"><svg class="shape" aria-hidden="true"><use href="#sh3"/></svg><span class="sr">第 3 組</span><b>0</b></div>

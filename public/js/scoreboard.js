@@ -1,12 +1,13 @@
 // /scoreboard: animates the totals that scores.js pushes, in either layout; the layout is remembered on this device.
 const LAYOUT_KEY = "scoreboard_layout";
-const GROUPS = [1, 2, 3, 4, 5];
+// Four groups, or five when the server turns on FIVE_GROUPS (/api/groups.js marks <html>).
+const GROUPS = document.documentElement.dataset.groups === "5" ? [1, 2, 3, 4, 5] : [1, 2, 3, 4];
 const board = document.getElementById("board");
 const rows = Object.fromEntries(GROUPS.map((g) => [g, board.querySelector(`.sb-group[data-g="${g}"]`)]));
 
 function setLayout(layout) {
     board.dataset.layout = layout;
-    const label = layout === "cols" ? "切換成排名長條" : "切換成固定五格";
+    const label = layout === "cols" ? "切換成排名長條" : `切換成固定${GROUPS.length === 5 ? "五" : "四"}格`;
     const btn = document.getElementById("layout_btn");
     btn.setAttribute("aria-label", label);
     btn.title = label;

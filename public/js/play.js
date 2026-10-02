@@ -2,7 +2,8 @@
 // Each round opens and closes with an animation; tapping the screen skips to the end.
 const PLAYER_KEY = "ntust_camp_player";
 const VIEW_KEY = "ntust_camp_history_view";
-const GROUPS = [1, 2, 3, 4, 5];
+// Four groups, or five when the server turns on FIVE_GROUPS (/api/groups.js marks <html>).
+const GROUPS = document.documentElement.dataset.groups === "5" ? [1, 2, 3, 4, 5] : [1, 2, 3, 4];
 const FIELDS = ["year", "artist", "title"];
 const FIELD_NAMES = { year: "年份", artist: "歌手", title: "歌名" };
 const SVG_NS = "http://www.w3.org/2000/svg";

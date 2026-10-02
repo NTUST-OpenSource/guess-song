@@ -24,6 +24,10 @@
 [data-g="3"] { --gc: var(--g3); --gc-ink: var(--g3-ink); }
 [data-g="4"] { --gc: var(--g4); --gc-ink: var(--g4-ink); }
 [data-g="5"] { --gc: var(--g5); --gc-ink: var(--g5-ink); }
+/* Four groups unless /api/groups.js marks <html> with five (FIVE_GROUPS) */
+:root { --groups: 4; }
+:root[data-groups="5"] { --groups: 5; }
+:root:not([data-groups="5"]) [data-g="5"] { display: none !important; }
 
 [hidden] { display: none !important; }
 *, *::before, *::after { box-sizing: border-box; }

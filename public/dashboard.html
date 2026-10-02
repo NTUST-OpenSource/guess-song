@@ -13,6 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <!-- Marks <html> with the group count before the first frame -->
+    <script src="/api/groups.js"></script>
     <!-- Before the first frame: the floating shapes drift by the clock, and /host opens on the host view -->
     <script>
         document.documentElement.style.setProperty("--drift-at", (Date.now() / 1000) % 3600 + "s");
@@ -224,7 +226,7 @@
         <h2 id="reset_title">確定要重置嗎？</h2>
         <p>這個動作無法復原，會清空：</p>
         <ul>
-            <li>五組分數</li>
+            <li>各組分數</li>
             <li>歌單與解答</li>
             <li>組別代碼</li>
             <li>所有作答紀錄</li>

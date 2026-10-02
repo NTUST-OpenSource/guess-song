@@ -164,12 +164,13 @@ function render(state, fresh = true) {
     if (song) {
         const query = encodeURIComponent(`${song.title[0]} ${song.artist[0]}`);
         $("youtube_link").href = song.youtube ?? `https://www.youtube.com/results?search_query=${query}`;
-        $("youtube_text").textContent = song.youtube ? "在 YouTube 播放" : "在 YouTube 搜尋這首";
+        $("youtube_text").textContent = song.youtube ? "在 YouTube 播放" : "在 YouTube 搜尋";
         showKey("key_year", [String(song.year)]);
         showKey("key_artist", song.artist);
         showKey("key_title", song.title);
     }
 
+    $("next_btn").disabled = !song || songId >= songs.length - 1;
     $("open_btn").disabled = !song || Boolean(round?.open);
     $("close_btn").disabled = !round?.open;
 
@@ -217,6 +218,15 @@ async function refreshQuiz(quiet = false) {
 // Selecting a song shows its answer key on /host.
 $("quiz_song").addEventListener("change", async () => {
     await adminApi("select", { songId: selectedSong() });
+    void refreshQuiz();
+});
+
+// 下一首: select the next song, without opening or closing a round.
+$("next_btn").addEventListener("click", async () => {
+    const next = selectedSong() + 1;
+    if (next >= $("quiz_song").options.length) return;
+    $("quiz_song").value = String(next);
+    await adminApi("select", { songId: next });
     void refreshQuiz();
 });
 

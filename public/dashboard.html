@@ -40,6 +40,7 @@
         <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
         <symbol id="ic-minus" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
         <symbol id="ic-play" viewBox="0 0 24 24"><path d="M7 4.5v15L19.5 12Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+        <symbol id="ic-next" viewBox="0 0 24 24"><path d="M5.5 5.5v13L15 12Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M18.5 5.5v13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
         <symbol id="ic-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="ic-check" viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="ic-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
@@ -110,9 +111,12 @@
                         <label class="field-label" for="quiz_song">題目</label>
                         <select class="input select" id="quiz_song"></select>
                     </div>
-                    <a class="yt" id="youtube_link" target="_blank" rel="noopener noreferrer" hidden>
-                        <span class="yt-mark"><svg class="icon" aria-hidden="true"><use href="#ic-play"/></svg></span><span id="youtube_text"></span><svg class="icon end" aria-hidden="true"><use href="#ic-ext"/></svg>
-                    </a>
+                    <div class="yt-row">
+                        <a class="yt" id="youtube_link" target="_blank" rel="noopener noreferrer" hidden>
+                            <span class="yt-mark"><svg class="icon" aria-hidden="true"><use href="#ic-play"/></svg></span><span class="yt-text" id="youtube_text"></span><svg class="icon end" aria-hidden="true"><use href="#ic-ext"/></svg>
+                        </a>
+                        <button class="btn soft next-btn" id="next_btn" type="button" disabled>下一首<svg class="icon" aria-hidden="true"><use href="#ic-next"/></svg></button>
+                    </div>
                     <dl class="key" id="answer_key" hidden>
                         <dt>年份</dt><dd id="key_year"></dd>
                         <dt>歌手</dt><dd id="key_artist"></dd>

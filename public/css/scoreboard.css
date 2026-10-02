@@ -1,4 +1,4 @@
-/* /scoreboard: the four totals full screen for a projector, sized by the screen.
+/* /scoreboard: the five totals full screen for a projector, sized by the screen.
    Two layouts on the same elements: cols, one tall tile per group in group order; rank, rows that slide into place by score. */
 html, body { height: 100%; }
 body { overflow: hidden; }
@@ -6,7 +6,8 @@ body { overflow: hidden; }
 
 .sb { height: 100%; display: flex; flex-direction: column; gap: 4vh; padding: 4.5vh 4vw 5vh; }
 .sb-head { display: flex; align-items: center; gap: 2.2vh; }
-.sb-marks { display: grid; grid-template-columns: repeat(2, auto); gap: .7vh; }
+/* Five shapes, three over two */
+.sb-marks { display: flex; flex-wrap: wrap; justify-content: center; gap: .7vh; width: calc(3 * min(3.4vh, 4.6vw) + 1.4vh); }
 .sb-marks .shape { width: min(3.4vh, 4.6vw); height: min(3.4vh, 4.6vw); color: var(--gc); }
 .sb-kicker { margin: 0 0 .6vh; color: var(--ink-dim); font-size: min(2.2vh, 3.4vw); font-weight: 900; letter-spacing: .3em; }
 .sb-title { margin: 0; font: 900 min(7vh, 9vw)/1 var(--font-display); }
@@ -27,6 +28,7 @@ body { overflow: hidden; }
 .sb-group:nth-child(2) { view-transition-name: sb-group-2; }
 .sb-group:nth-child(3) { view-transition-name: sb-group-3; }
 .sb-group:nth-child(4) { view-transition-name: sb-group-4; }
+.sb-group:nth-child(5) { view-transition-name: sb-group-5; }
 .sb-total { font-family: var(--font-num); font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
 .sb-plus {
   position: absolute; z-index: 3; padding: .6vh 1.6vh; border-radius: 99px; background: var(--card); color: var(--card-ink); box-shadow: var(--shadow-card);
@@ -40,15 +42,15 @@ body { overflow: hidden; }
 .sb-lead .icon { width: 1.2em; height: 1.2em; color: var(--g3); }
 
 /* Fixed: each group keeps its place; the leader rises and wears a badge */
-.sb[data-layout="cols"] .sb-groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2.2vw; }
+.sb[data-layout="cols"] .sb-groups { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2.2vw; }
 .sb[data-layout="cols"] .sb-group {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.6vh; min-height: 0;
   border-radius: 2.6vh; background: var(--gc); color: var(--gc-ink); box-shadow: 0 1vh 0 rgba(0, 0, 0, .25); transition: translate .5s var(--ease-pop);
 }
 .sb[data-layout="cols"] .sb-pos, .sb[data-layout="cols"] .sb-bar { display: none; }
-.sb[data-layout="cols"] .sb-tile .shape { display: block; width: min(11vh, 9vw); height: min(11vh, 9vw); }
-.sb[data-layout="cols"] .sb-name { font-size: min(4.6vh, 4.4vw); font-weight: 900; }
-.sb[data-layout="cols"] .sb-total { font-size: min(27vh, 12vw); }
+.sb[data-layout="cols"] .sb-tile .shape { display: block; width: min(11vh, 7.2vw); height: min(11vh, 7.2vw); }
+.sb[data-layout="cols"] .sb-name { font-size: min(4.6vh, 3.5vw); font-weight: 900; }
+.sb[data-layout="cols"] .sb-total { font-size: min(27vh, 9.6vw); }
 .sb[data-layout="cols"] .sb-plus { top: 8%; right: 8%; }
 .sb[data-layout="cols"] .sb-group.lead { translate: 0 -1.2vh; }
 .sb[data-layout="cols"] .sb-group.lead .sb-lead { display: flex; animation: popIn .45s var(--ease-pop) both; }
@@ -56,7 +58,7 @@ body { overflow: hidden; }
 /* Ranked: rows slide to their place, with bars against the leader */
 .sb[data-layout="rank"] .sb-groups { --gap: 2.2vh; }
 .sb[data-layout="rank"] .sb-group {
-  position: absolute; top: 0; left: 0; right: 0; height: calc((100% - 3 * var(--gap)) / 4);
+  position: absolute; top: 0; left: 0; right: 0; height: calc((100% - 4 * var(--gap)) / 5);
   display: grid; grid-template-columns: min(7vh, 9vw) min(11vh, 12vw) auto minmax(0, 1fr) min(16vh, 20vw); align-items: center; gap: 2vw;
   padding: 0 3vw 0 2.4vw; border-radius: 2.4vh; background: var(--card); color: var(--card-ink); box-shadow: 0 .9vh 0 rgba(18, 6, 42, .32);
   transform: translateY(calc(var(--rank, 0) * (100% + var(--gap)))); transition: transform .8s var(--ease-pop);
@@ -76,9 +78,10 @@ body { overflow: hidden; }
 .sb[data-layout="rank"] .sb-total { justify-self: end; font-size: min(10vh, 12vw); }
 .sb[data-layout="rank"] .sb-plus { top: -1.6vh; right: 2.4vw; }
 
-/* Portrait screens: tiles two by two, rows without bars */
+/* Portrait screens: tiles two by two with the fifth across, rows without bars */
 @media (orientation: portrait) {
-  .sb[data-layout="cols"] .sb-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 6vw 4vw; }
+  .sb[data-layout="cols"] .sb-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 6vw 4vw; }
+  .sb[data-layout="cols"] .sb-group:last-child { grid-column: 1 / -1; }
   .sb[data-layout="cols"] .sb-total { font-size: 19vw; }
   .sb[data-layout="cols"] .sb-tile .shape { width: 10vw; height: 10vw; }
   .sb[data-layout="cols"] .sb-name { font-size: 4.6vw; }

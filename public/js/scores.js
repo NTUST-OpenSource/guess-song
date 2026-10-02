@@ -1,4 +1,4 @@
-// Shared by /scoreboard, the dashboard and /host: renders the four totals pushed over WebSocket.
+// Shared by /scoreboard, the dashboard and /host: renders the five totals pushed over WebSocket.
 // An element with data-score="<group>" shows that group's total. Loaded after the page scripts, so their
 // listeners hear the first totals.
 let shownScores = null;

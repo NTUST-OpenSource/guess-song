@@ -1,12 +1,12 @@
 // /scoreboard: animates the totals that scores.js pushes, in either layout; the layout is remembered on this device.
 const LAYOUT_KEY = "scoreboard_layout";
-const GROUPS = [1, 2, 3, 4];
+const GROUPS = [1, 2, 3, 4, 5];
 const board = document.getElementById("board");
 const rows = Object.fromEntries(GROUPS.map((g) => [g, board.querySelector(`.sb-group[data-g="${g}"]`)]));
 
 function setLayout(layout) {
     board.dataset.layout = layout;
-    const label = layout === "cols" ? "切換成排名長條" : "切換成固定四格";
+    const label = layout === "cols" ? "切換成排名長條" : "切換成固定五格";
     const btn = document.getElementById("layout_btn");
     btn.setAttribute("aria-label", label);
     btn.title = label;

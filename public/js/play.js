@@ -2,7 +2,7 @@
 // Each round opens and closes with an animation; tapping the screen skips to the end.
 const PLAYER_KEY = "ntust_camp_player";
 const VIEW_KEY = "ntust_camp_history_view";
-const GROUPS = [1, 2, 3, 4];
+const GROUPS = [1, 2, 3, 4, 5];
 const FIELDS = ["year", "artist", "title"];
 const FIELD_NAMES = { year: "年份", artist: "歌手", title: "歌名" };
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -186,8 +186,8 @@ function setRoundNo(no) {
 
 // YouTube thumbnail when available, otherwise or on error a record.
 function setCover(box, thumb, no) {
-    box.style.setProperty("--c1", `var(--g${(no % 4) + 1})`);
-    box.style.setProperty("--c2", `var(--g${((no + 2) % 4) + 1})`);
+    box.style.setProperty("--c1", `var(--g${(no % GROUPS.length) + 1})`);
+    box.style.setProperty("--c2", `var(--g${((no + 2) % GROUPS.length) + 1})`);
     const disc = el("span", "disc");
     if (!thumb) return box.replaceChildren(disc);
     const img = document.createElement("img");
@@ -308,7 +308,7 @@ function renderFlood(r) {
     $("flood_pts").textContent = `+${total}`;
 }
 
-// ===== Confetti in the four group shapes =====
+// ===== Confetti in the five group shapes =====
 const canvas = $("confetti");
 const ctx = canvas.getContext("2d");
 let confettiRaf = 0;
@@ -336,8 +336,14 @@ function drawBit(b, color) {
         ctx.lineTo(-s / 2, 0);
     } else if (b.k === 2) {
         ctx.arc(0, 0, s / 2, 0, Math.PI * 2);
-    } else {
+    } else if (b.k === 3) {
         ctx.rect(-s / 2, -s / 2, s, s);
+    } else {
+        for (let i = 0; i < 10; i++) {
+            const r = i % 2 ? s / 4 : s / 2;
+            const a = (i * Math.PI) / 5 - Math.PI / 2;
+            ctx.lineTo(r * Math.cos(a), r * Math.sin(a));
+        }
     }
     ctx.fill();
     ctx.restore();
@@ -360,7 +366,7 @@ function confetti() {
         a: Math.random() * Math.PI * 2,
         va: (Math.random() - 0.5) * 0.3,
         s: 7 + Math.random() * 7,
-        k: i % 4,
+        k: i % GROUPS.length,
     }));
     const t0 = performance.now();
     let last = t0;

@@ -23,6 +23,7 @@
         <symbol id="sh2" viewBox="0 0 32 32"><path d="M16 1.5 30.5 16 16 30.5 1.5 16Z"/></symbol>
         <symbol id="sh3" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14"/></symbol>
         <symbol id="sh4" viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="2.5"/></symbol>
+        <symbol id="sh5" viewBox="0 0 32 32"><path d="M16 1.5 20.5 10.9 30.7 12.2 23.2 19.3 25.1 29.5 16 24.6 6.9 29.5 8.8 19.3 1.3 12.2 11.5 10.9Z"/></symbol>
         <symbol id="ic-check" viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="ic-cross" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></symbol>
         <symbol id="ic-note" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></symbol>
@@ -39,11 +40,12 @@
         </div>
 
         <!-- Group totals stay pinned at the top; the player's group is outlined -->
-        <header class="topbar" aria-label="四組總分">
+        <header class="topbar" aria-label="五組總分">
             <div class="gcell" data-g="1" id="top_1"><svg class="shape" aria-hidden="true"><use href="#sh1"/></svg><span class="sr">第 1 組</span><b>0</b></div>
             <div class="gcell" data-g="2" id="top_2"><svg class="shape" aria-hidden="true"><use href="#sh2"/></svg><span class="sr">第 2 組</span><b>0</b></div>
             <div class="gcell" data-g="3" id="top_3"><svg class="shape" aria-hidden="true"><use href="#sh3"/></svg><span class="sr">第 3 組</span><b>0</b></div>
             <div class="gcell" data-g="4" id="top_4"><svg class="shape" aria-hidden="true"><use href="#sh4"/></svg><span class="sr">第 4 組</span><b>0</b></div>
+            <div class="gcell" data-g="5" id="top_5"><svg class="shape" aria-hidden="true"><use href="#sh5"/></svg><span class="sr">第 5 組</span><b>0</b></div>
         </header>
 
         <main class="stage" id="stage">
@@ -53,7 +55,7 @@
                     <p class="brand-kicker">三『資』小豬</p>
                     <h1 class="brand-title" aria-label="誰是猜歌王"><span style="--i:0">誰</span><span style="--i:1">是</span><span style="--i:2">猜</span><span style="--i:3">歌</span><span style="--i:4">王</span></h1>
                     <div class="brand-shapes" aria-hidden="true">
-                        <svg class="shape" data-g="1"><use href="#sh1"/></svg><svg class="shape" data-g="2"><use href="#sh2"/></svg><svg class="shape" data-g="3"><use href="#sh3"/></svg><svg class="shape" data-g="4"><use href="#sh4"/></svg>
+                        <svg class="shape" data-g="1"><use href="#sh1"/></svg><svg class="shape" data-g="2"><use href="#sh2"/></svg><svg class="shape" data-g="3"><use href="#sh3"/></svg><svg class="shape" data-g="4"><use href="#sh4"/></svg><svg class="shape" data-g="5"><use href="#sh5"/></svg>
                     </div>
                 </div>
                 <form class="card join-card" id="join_form">
@@ -108,7 +110,7 @@
                     </div>
                 </article>
                 <ul class="mine-list" id="mine_list" aria-label="我的答案"></ul>
-                <div class="divider rv" id="divider" aria-hidden="true"><i></i><svg class="shape" data-g="1" style="--i:0"><use href="#sh1"/></svg><svg class="shape" data-g="2" style="--i:1"><use href="#sh2"/></svg><svg class="shape" data-g="3" style="--i:2"><use href="#sh3"/></svg><svg class="shape" data-g="4" style="--i:3"><use href="#sh4"/></svg><i></i></div>
+                <div class="divider rv" id="divider" aria-hidden="true"><i></i><svg class="shape" data-g="1" style="--i:0"><use href="#sh1"/></svg><svg class="shape" data-g="2" style="--i:1"><use href="#sh2"/></svg><svg class="shape" data-g="3" style="--i:2"><use href="#sh3"/></svg><svg class="shape" data-g="4" style="--i:3"><use href="#sh4"/></svg><svg class="shape" data-g="5" style="--i:4"><use href="#sh5"/></svg><i></i></div>
                 <section class="board rv" id="board" aria-label="各組總分">
                     <ol class="board-list" id="board_list"></ol>
                 </section>

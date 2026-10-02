@@ -23,6 +23,7 @@
         <symbol id="sh2" viewBox="0 0 32 32"><path d="M16 1.5 30.5 16 16 30.5 1.5 16Z"/></symbol>
         <symbol id="sh3" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14"/></symbol>
         <symbol id="sh4" viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="2.5"/></symbol>
+        <symbol id="sh5" viewBox="0 0 32 32"><path d="M16 1.5 20.5 10.9 30.7 12.2 23.2 19.3 25.1 29.5 16 24.6 6.9 29.5 8.8 19.3 1.3 12.2 11.5 10.9Z"/></symbol>
         <symbol id="ic-swap" viewBox="0 0 24 24"><path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="ic-crown" viewBox="0 0 24 24"><path d="M3 8.5 7.5 12 12 5l4.5 7L21 8.5 19 19H5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
     </svg>
@@ -36,7 +37,7 @@
     <!-- data-layout: cols (one tile per group, fixed order) or rank (rows sorted by score) -->
     <main class="sb" id="board" data-layout="cols">
         <header class="sb-head">
-            <span class="sb-marks" aria-hidden="true"><svg class="shape" data-g="1"><use href="#sh1"/></svg><svg class="shape" data-g="2"><use href="#sh2"/></svg><svg class="shape" data-g="3"><use href="#sh3"/></svg><svg class="shape" data-g="4"><use href="#sh4"/></svg></span>
+            <span class="sb-marks" aria-hidden="true"><svg class="shape" data-g="1"><use href="#sh1"/></svg><svg class="shape" data-g="2"><use href="#sh2"/></svg><svg class="shape" data-g="3"><use href="#sh3"/></svg><svg class="shape" data-g="4"><use href="#sh4"/></svg><svg class="shape" data-g="5"><use href="#sh5"/></svg></span>
             <div>
                 <p class="sb-kicker">三『資』小豬</p>
                 <h1 class="sb-title">誰是猜歌王</h1>
@@ -76,6 +77,14 @@
                 <span class="sb-pos" aria-hidden="true">1</span>
                 <span class="sb-tile"><svg class="shape" aria-hidden="true"><use href="#sh4"/></svg></span>
                 <span class="sb-name">第 4 組</span>
+                <span class="sb-bar" aria-hidden="true"><i></i></span>
+                <b class="sb-total">0</b>
+                <span class="sb-lead"><svg class="icon" aria-hidden="true"><use href="#ic-crown"/></svg>領先</span>
+            </li>
+            <li class="sb-group" data-g="5">
+                <span class="sb-pos" aria-hidden="true">1</span>
+                <span class="sb-tile"><svg class="shape" aria-hidden="true"><use href="#sh5"/></svg></span>
+                <span class="sb-name">第 5 組</span>
                 <span class="sb-bar" aria-hidden="true"><i></i></span>
                 <b class="sb-total">0</b>
                 <span class="sb-lead"><svg class="icon" aria-hidden="true"><use href="#ic-crown"/></svg>領先</span>

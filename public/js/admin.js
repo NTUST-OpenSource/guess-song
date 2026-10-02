@@ -1,7 +1,7 @@
 // The dashboard page shell, for both of its views (控制台 and 主持人): login guard, view switching, API calls,
 // messages, logout and +N pops.
 const TOKEN_KEY = "ntust_camp_token";
-const GROUPS = [1, 2, 3, 4];
+const GROUPS = [1, 2, 3, 4, 5];
 const SVG_NS = "http://www.w3.org/2000/svg";
 const $ = (id) => document.getElementById(id);
 

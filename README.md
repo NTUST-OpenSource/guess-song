@@ -32,7 +32,7 @@
 
 ### **特色**
 - **即時同步** — 每一頁都用 WebSocket 接收更新，不用重新整理
-- **自動批改** — 年份精準 +3、差 3 年以內 +1；歌手、歌名各 +1，每組每項取組內最高分
+- **自動批改** — 年份精準 +3、差 3 年以內 +1；歌手、歌名各 +1，同音字和小錯字也算對；每組每項取組內最高分
 - **比賽動畫** — 發題時倒數，收卷時揭曉對錯、名次換位，並自動產生戰況短評
 - **四組或五組** — 一個設定就能切換，第五組是青色星形
 - **免費方案就夠** — 一場約 40 人、70 首歌的活動，估算只用到 Workers 免費方案每日請求額度的三成多
@@ -66,7 +66,7 @@
 git clone https://github.com/NTUST-OpenSource/guess-song.git
 cd guess-song
 
-npm ci                           # 安裝 wrangler
+npm ci                           # 安裝 wrangler 和 pinyin-pro
 cp .dev.vars.example .dev.vars   # 填入後台帳密和 AUTH_SECRET
 npm test                         # 測試
 npm run dev                      # 本機伺服器
@@ -75,7 +75,7 @@ npm run dev                      # 本機伺服器
 開啟 <http://localhost:8787>，後台從 `/login` 登入。
 
 > [!NOTE]
-> 專案沒有 build 步驟，`public/` 裡的靜態檔直接上線；npm 只用來安裝 wrangler
+> 專案沒有 build 步驟，`public/` 裡的靜態檔直接上線；npm 只用來安裝 wrangler，以及比對同音字用的 pinyin-pro（部署時由 wrangler 打包進 Worker）
 
 ### 環境變數
 
@@ -136,7 +136,10 @@ npx wrangler secret put FIVE_GROUPS   # 要五組時才設
 
 ### 計分
 
-- 年份精準 +3、差 3 年以內 +1；歌手、歌名答對各 +1。比對時忽略大小寫、全形半形、空白和標點
+- 年份精準 +3、差 3 年以內 +1；歌手、歌名答對各 +1。比對時忽略大小寫、全形半形、空白、標點和重音符號
+  - 中文同音字算對，簡體字、「妳」和「你」也算；zh/z、ch/c、sh/s、-ng/-n 視為同音。多一個字、少一個字或換成別的字都不算，常見的簡稱要自己加進歌單
+  - 英文和數字容許拼錯：不算空白和標點，4 個字元以內要完全一樣，5 到 8 個可以錯 1 個，9 個以上可以錯 2 個，相鄰兩個字母對調算錯 1 個；數字一定要對
+  - 只跟該題的解答比，比對規則在 `src/match.js`
 - 每組每一項取組內最高分，所以一組一題最多 +5
 - 收卷後改判或修正歌單，總分會自動加減差額
 - 戰況短評的判斷條件和用詞在 `src/notes.js`
@@ -159,6 +162,7 @@ npx wrangler secret put FIVE_GROUPS   # 要五組時才設
 
 ```
 src/index.js              Worker 與 Durable Object：API、WebSocket、批改與計分
+src/match.js              比對歌手和歌名：正規化、同音字和拼錯
 src/notes.js              收卷後的戰況短評
 public/index.html         玩家手機
 public/scoreboard.html    投影計分板

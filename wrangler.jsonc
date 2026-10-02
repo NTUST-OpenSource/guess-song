@@ -6,8 +6,10 @@
     "routes": [{ "pattern": "song.ntust.org", "custom_domain": true }],
     "assets": {
         "directory": "./public",
+        "binding": "ASSETS",
         // /api/* goes to the Worker; everything else is a static file (/login -> public/login.html).
-        "run_worker_first": ["/api/*"]
+        // The icons go through the Worker too, which serves the five-shape ones from /five/ when FIVE_GROUPS is on.
+        "run_worker_first": ["/api/*", "/favicon.svg", "/favicon.ico", "/apple-touch-icon.png"]
     },
     "durable_objects": {
         "bindings": [{ "name": "SCORES", "class_name": "Scores" }]

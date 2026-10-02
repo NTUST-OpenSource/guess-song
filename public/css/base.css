@@ -1,0 +1,86 @@
+/* Shared by every page: the party palette, fonts and motion curves, group colors and shapes,
+   the floating-shape background and song covers. Animations only touch transform, opacity and clip-path. */
+:root {
+  --bg: #3c1580; --bg-2: #5b25b8; --ink: #ffffff; --ink-dim: rgba(255, 255, 255, .74); --float: rgba(255, 255, 255, .075);
+  --card: #ffffff; --card-ink: #22113f; --card-dim: #6d5f88;
+  --shadow-card: 0 6px 0 rgba(18, 6, 42, .32); --shadow-soft: 0 3px 0 rgba(18, 6, 42, .18);
+  --input-bg: #f3effa; --input-line: #ddd3ee; --focus: #5b25b8;
+  --g1: #e5243b; --g2: #1764d6; --g3: #f0a800; --g4: #26890c;
+  --g1-ink: #ffffff; --g2-ink: #ffffff; --g3-ink: #2b1d00; --g4-ink: #ffffff;
+  --ok: #26890c; --ok-ink: #ffffff; --ok-edge: #165206; --bad: #e5243b; --bad-ink: #ffffff;
+  --hit-soft: #e2f3dc; --hit-ink: #1d6b09; --miss-soft: #f1edf7; --miss-ink: #7a6d92; --exact-soft: #ffefbf; --exact-ink: #7a5200;
+  --btn: #24123f; --btn-ink: #ffffff; --btn-edge: #0d0518;
+  --chip-shadow: 0 4px 0 rgba(0, 0, 0, .25); --chip-soft: #efeaf7; --note-bg: rgba(255, 255, 255, .14);
+  --veil: rgba(28, 8, 60, .6); --sheet: #f6f3fb; --tray: #e4ddef;
+  --disc: #19122a; --disc-groove: #2d2444; --disc-label: #f0a800;
+  --font-display: "Montserrat", "Noto Sans TC", sans-serif;
+  --font-body: "Noto Sans TC", "Montserrat", sans-serif;
+  --font-num: "Montserrat", "Noto Sans TC", sans-serif;
+  --ease-pop: cubic-bezier(.34, 1.56, .64, 1); --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-in: cubic-bezier(.6, 0, .8, .2); --ease-io: cubic-bezier(.45, 0, .55, 1);
+}
+[data-g="1"] { --gc: var(--g1); --gc-ink: var(--g1-ink); }
+[data-g="2"] { --gc: var(--g2); --gc-ink: var(--g2-ink); }
+[data-g="3"] { --gc: var(--g3); --gc-ink: var(--g3-ink); }
+[data-g="4"] { --gc: var(--g4); --gc-ink: var(--g4-ink); }
+
+[hidden] { display: none !important; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.defs { position: absolute; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.shape { width: 1em; height: 1em; flex: none; fill: currentColor; }
+.icon { width: 22px; height: 22px; flex: none; }
+
+/* Floating group shapes behind the page */
+.bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: radial-gradient(130% 70% at 50% -10%, var(--bg-2), var(--bg) 70%); }
+.float { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); color: var(--float); fill: currentColor; animation: drift var(--t) linear infinite; }
+.f1 { --s: 150px; --x: -46px; --y: 9%; --t: 26s; --dx: 30px; --dy: 40px; }
+.f2 { --s: 108px; --x: 74%; --y: 3%; --t: 22s; --dx: -24px; --dy: 30px; }
+.f3 { --s: 176px; --x: 58%; --y: 60%; --t: 31s; --dx: -30px; --dy: -26px; }
+.f4 { --s: 92px; --x: 5%; --y: 76%; --t: 19s; --dx: 22px; --dy: -30px; }
+
+.card { background: var(--card); color: var(--card-ink); border-radius: 10px; box-shadow: var(--shadow-card); }
+.field-label { font-size: 13px; font-weight: 800; color: var(--card-dim); }
+
+.spin { width: 14px; height: 14px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
+/* Admin pages and the scoreboard: the reconnecting notice shows only while the socket is down (body.offline) */
+.reconnect {
+  display: none; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 99px;
+  background: var(--g3); color: var(--g3-ink); font-size: 13px; font-weight: 900; white-space: nowrap;
+}
+.reconnect .spin { width: 13px; height: 13px; flex: none; }
+.offline .reconnect { display: flex; animation: popIn .35s var(--ease-pop) both; }
+
+/* Title block: kicker, bouncing name, the four shapes */
+.brand { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.brand-kicker { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .2em; color: var(--ink-dim); }
+.brand-title { margin: 0; display: flex; gap: 2px; font: 900 46px/1.1 var(--font-display); }
+.brand-title span { display: inline-block; animation: bob 2.4s var(--ease-io) infinite; animation-delay: calc(var(--i) * .12s); }
+.brand-shapes { display: flex; gap: 10px; }
+.brand-shapes .shape { width: 22px; height: 22px; color: var(--gc); }
+
+/* Song covers: the YouTube thumbnail, or a spinning record on two group colors; the image never sets the box's height */
+.cover {
+  position: relative; display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(135deg, var(--c1, var(--g2)), var(--c2, var(--g1)));
+}
+/* YouTube's 4:3 thumbnails letterbox 16:9 videos; zoom past the bars */
+.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.34); }
+.disc {
+  height: 84%; aspect-ratio: 1; border-radius: 50%; animation: spin 5s linear infinite;
+  background: radial-gradient(circle, var(--disc-label) 0 20%, var(--disc) 21% 24%, transparent 25%),
+              repeating-radial-gradient(circle, var(--disc) 0 2px, var(--disc-groove) 2px 3px);
+}
+
+@keyframes popIn { 0% { opacity: 0; transform: scale(.4); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes fadeIn { from { opacity: 0; } }
+@keyframes fadeOut { to { opacity: 0; } }
+@keyframes shake { 0%, 100% { transform: none; } 20% { transform: translate(-7px, 2px); } 40% { transform: translate(6px, -3px); } 60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, 0); } }
+@keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.6); } 25% { opacity: 1; transform: translate(-50%, -6px) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -28px); } }
+@keyframes drift { 0% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(var(--dx), var(--dy)) rotate(180deg); } 100% { transform: translate(0, 0) rotate(360deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes eq { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }

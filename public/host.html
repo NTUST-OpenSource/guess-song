@@ -2,65 +2,12 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#3c1580">
     <title>三『資』小豬 - 主持人</title>
-    <link rel="icon" href="/favicon.ico" sizes="32x32">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@700&display=swap" rel="stylesheet">
-    <script src="/js/live.js" defer></script>
-    <script src="/js/scores.js" defer></script>
-    <script src="/js/host.js" defer></script>
-    <link rel="stylesheet" href="/css/dashboard.css">
-    <link rel="stylesheet" href="/css/host.css">
+    <style>html { background: #3c1580; }</style>
+    <!-- The host page is a view of the dashboard page, so switching between the two never reloads -->
+    <script>location.replace("/dashboard#host");</script>
 </head>
-<body>
-    <header class="top-header">
-        <a class="header-title" href="/">誰是猜歌王</a>
-    </header>
-
-    <!-- Group scores -->
-    <main class="score-container">
-        <div class="team-card" id="t1">
-            <span class="team-label">第一隊</span>
-            <textarea class="score-box" maxlength="2" rows="1" placeholder="0" readonly></textarea>
-        </div>
-        <div class="team-card" id="t2">
-            <span class="team-label">第二隊</span>
-            <textarea class="score-box" maxlength="2" rows="1" placeholder="0" readonly></textarea>
-        </div>
-        <div class="team-card" id="t3">
-            <span class="team-label">第三隊</span>
-            <textarea class="score-box" maxlength="2" rows="1" placeholder="0" readonly></textarea>
-        </div>
-        <div class="team-card" id="t4">
-            <span class="team-label">第四隊</span>
-            <textarea class="score-box" maxlength="2" rows="1" placeholder="0" readonly></textarea>
-        </div>
-    </main>
-
-    <!-- Answer key of the song selected in the dashboard -->
-    <section class="control-container">
-        <div class="control-card host-card">
-            <h2 id="host_title" class="card-title">尚未選歌</h2>
-            <p id="host_status" class="card-subtitle"></p>
-
-            <dl class="answer-key">
-                <dt>年份</dt>
-                <dd id="key_year">—</dd>
-                <dt>歌手</dt>
-                <dd id="key_artist">—</dd>
-                <dt>歌名</dt>
-                <dd id="key_title">—</dd>
-            </dl>
-
-            <p id="host_awarded" class="card-subtitle"></p>
-
-            <div class="host-buttons">
-                <button id="open_btn" class="mc-button btn-green" disabled>發題</button>
-                <button id="close_btn" class="mc-button btn-gold" disabled>收卷並計分</button>
-            </div>
-        </div>
-    </section>
-</body>
+<body></body>
 </html>

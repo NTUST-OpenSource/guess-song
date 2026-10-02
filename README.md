@@ -4,6 +4,7 @@
 </a>
 <br>
 
+[![License](https://img.shields.io/github/license/NTUST-OpenSource/guess-song?style=for-the-badge)](LICENSE)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![JavaScript](https://img.shields.io/badge/Vanilla-JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/docs/Web/JavaScript)
 
@@ -56,7 +57,7 @@
 
 ### 需求
 
-- Node 20 以上（執行 `wrangler` 和測試）
+- Node 22 以上（執行 wrangler 和測試）
 - Cloudflare 帳號（部署時需要）
 
 ### 本機開發
@@ -65,15 +66,16 @@
 git clone https://github.com/NTUST-OpenSource/guess-song.git
 cd guess-song
 
+npm ci                           # 安裝 wrangler
 cp .dev.vars.example .dev.vars   # 填入後台帳密和 AUTH_SECRET
-node test.mjs                    # 測試
-npx wrangler dev                 # 本機伺服器
+npm test                         # 測試
+npm run dev                      # 本機伺服器
 ```
 
 開啟 <http://localhost:8787>，後台從 `/login` 登入。
 
 > [!NOTE]
-> 專案沒有 build 步驟，也沒有 npm 依賴，`public/` 裡的靜態檔直接上線
+> 專案沒有 build 步驟，`public/` 裡的靜態檔直接上線；npm 只用來安裝 wrangler
 
 ### 環境變數
 
@@ -98,7 +100,7 @@ npx wrangler secret put FIVE_GROUPS   # 要五組時才設
 
 ### 部署
 
-`main` 合併後，Workers Builds 會自動部署到 <https://song.ntust.org>。網域和帳號設定在 `wrangler.jsonc`，要手動部署就執行 `npx wrangler deploy`
+`main` 合併後，Workers Builds 會自動部署到 <https://song.ntust.org>。網域和帳號設定在 `wrangler.jsonc`，要手動部署就執行 `npm run deploy`
 
 <br/>
 
@@ -150,7 +152,8 @@ npx wrangler secret put FIVE_GROUPS   # 要五組時才設
 | 前端 | 純 HTML、CSS、JavaScript，沒有框架也沒有 build |
 | 靜態檔 | Workers Static Assets |
 | 部署 | Workers Builds，`main` 自動部署 |
-| 測試 | `node test.mjs`（Node 內建 assert） |
+| 測試 | `npm test`（Node 內建的 test runner 和 assert） |
+| CI | GitHub Actions 跑測試並試打包 Worker；Dependabot 每週更新 wrangler 和 Actions |
 
 ### 專案結構
 
@@ -164,7 +167,9 @@ public/login.html         後台登入
 public/css/               base（共用）、play、admin、scoreboard
 public/js/                各頁的腳本；live.js 負責 WebSocket，scores.js 負責更新分數
 public/five/              五組時的網站圖示
-test.mjs                  API 與計分的測試
+test/                     API 與計分的測試
+.github/                  CI、Dependabot 與 README 圖片
+package.json              wrangler 版本與 npm 指令
 wrangler.jsonc            Worker、網域、Durable Object 與靜態檔設定
 ```
 
@@ -208,8 +213,16 @@ PR 送出前請確認
 1. UI 文案和文件一律用繁體中文；程式碼註解一律用英文
 2. commit 遵循 [Conventional Commits](https://www.conventionalcommits.org/zh-hant/v1.0.0/)
 3. 分支命名為 `feat/your-feature` 或 `fix/your-fix`
-4. `node test.mjs` 通過
+4. `npm test` 通過
 5. 不使用 Emoji
+
+<br/>
+
+## 授權
+
+Copyright (C) 2026 xinshoutw
+
+本專案採用 **GNU Affero General Public License v3.0** 授權，完整條款見 [LICENSE](LICENSE)
 
 <br/>
 

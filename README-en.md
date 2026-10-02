@@ -4,6 +4,7 @@
 </a>
 <br>
 
+[![License](https://img.shields.io/github/license/NTUST-OpenSource/guess-song?style=for-the-badge)](LICENSE)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![JavaScript](https://img.shields.io/badge/Vanilla-JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/docs/Web/JavaScript)
 
@@ -58,7 +59,7 @@ Click the image for the [full video](.github/assets/demo.mp4) (1:43).
 
 ### Requirements
 
-- Node 20 or newer (for `wrangler` and the tests)
+- Node 22 or newer (for wrangler and the tests)
 - A Cloudflare account (to deploy)
 
 ### Running locally
@@ -67,15 +68,16 @@ Click the image for the [full video](.github/assets/demo.mp4) (1:43).
 git clone https://github.com/NTUST-OpenSource/guess-song.git
 cd guess-song
 
+npm ci                           # installs wrangler
 cp .dev.vars.example .dev.vars   # fill in the admin login and AUTH_SECRET
-node test.mjs                    # tests
-npx wrangler dev                 # local server
+npm test                         # tests
+npm run dev                      # local server
 ```
 
 Open <http://localhost:8787>. The admin pages start at `/login`.
 
 > [!NOTE]
-> There is no build step and no npm dependency. The static files in `public/` are served as they are.
+> There is no build step: the static files in `public/` are served as they are, and npm only installs wrangler.
 
 ### Environment variables
 
@@ -100,7 +102,7 @@ npx wrangler secret put FIVE_GROUPS   # only for five groups
 
 ### Deployment
 
-Merging to `main` deploys to <https://song.ntust.org> through Workers Builds. The domain and the account are configured in `wrangler.jsonc`. To deploy by hand, run `npx wrangler deploy`.
+Merging to `main` deploys to <https://song.ntust.org> through Workers Builds. The domain and the account are configured in `wrangler.jsonc`. To deploy by hand, run `npm run deploy`.
 
 <br/>
 
@@ -152,7 +154,8 @@ The song list contains the answers, so keep it out of git. Write `songs.json` in
 | Frontend | Plain HTML, CSS and JavaScript, no framework and no build |
 | Static files | Workers Static Assets |
 | Deployment | Workers Builds, deploying `main` |
-| Tests | `node test.mjs` (Node's built-in assert) |
+| Tests | `npm test` (Node's built-in test runner and assert) |
+| CI | GitHub Actions runs the tests and a trial bundle of the Worker; Dependabot updates wrangler and the Actions weekly |
 
 ### Project layout
 
@@ -166,7 +169,9 @@ public/login.html         admin login
 public/css/               base (shared), play, admin, scoreboard
 public/js/                page scripts; live.js runs the WebSocket, scores.js updates the scores
 public/five/              site icons for five groups
-test.mjs                  API and scoring tests
+test/                     API and scoring tests
+.github/                  CI, Dependabot and README images
+package.json              wrangler version and npm scripts
 wrangler.jsonc            Worker, domain, Durable Object and static file settings
 ```
 
@@ -210,8 +215,16 @@ Before submitting a PR
 1. UI copy and docs are Traditional Chinese; code comments are English
 2. Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
 3. Name branches `feat/your-feature` or `fix/your-fix`
-4. `node test.mjs` passes
+4. `npm test` passes
 5. No Emoji
+
+<br/>
+
+## License
+
+Copyright (C) 2026 xinshoutw
+
+Licensed under the **GNU Affero General Public License v3.0**. See [LICENSE](LICENSE) for the full text
 
 <br/>
 

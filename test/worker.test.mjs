@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import worker, { Scores } from "../src/index.js";
 import { notes } from "../src/notes.js";
+import { matcher } from "../src/match.js";
 
 // Fake WebSocket that records pushed messages; who is the serialized attachment (null for totals-only sockets).
 const sockets = [];
@@ -440,6 +441,34 @@ assert.deepEqual((await history(mei)).map((x) => x.no), [1, 3, 2]);
             [2, 2010, "倔強"],
         ],
     );
+}
+
+// ===== Answer matching =====
+{
+    const passes = (accepted, answer) => matcher(accepted)(answer);
+    // Accents and zero-width spaces are ignored.
+    assert.ok(passes(["Beyoncé"], "beyonce"));
+    assert.ok(passes(["Muse"], "Mu\u200Bse"));
+    // Typos by length: none up to 4 letters, one up to 8, two beyond; a swap counts as one.
+    assert.ok(!passes(["ABBA"], "ABA"));
+    assert.ok(passes(["Coldplay"], "Coldpaly"));
+    assert.ok(!passes(["Coldplay"], "Cldpaly"));
+    assert.ok(passes(["Linkin Park"], "Linkn Prak"));
+    // Digits must match.
+    assert.ok(passes(["Blink-182"], "Blnik 182"));
+    assert.ok(!passes(["Blink-182"], "Blink 183"));
+    // Chinese passes by sound: homophones, simplified forms, 妳 for 你, and zh/z, ch/c, sh/s, -ng/-n.
+    assert.ok(passes(["童話"], "同話"));
+    assert.ok(passes(["後來"], "后来"));
+    assert.ok(passes(["說愛你"], "說愛妳"));
+    assert.ok(passes(["陳奕迅"], "岑奕迅"));
+    assert.ok(passes(["光良"], "關良"));
+    // But never with a character more, less or different.
+    assert.ok(!passes(["我們的愛"], "我們的歌"));
+    assert.ok(!passes(["我們的愛"], "我們的"));
+    // Kana and empty answers must match exactly.
+    assert.ok(!passes(["さくら"], "さくろ"));
+    assert.ok(!passes(["！"], "！"));
 }
 
 // ===== Commentary =====

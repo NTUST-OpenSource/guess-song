@@ -34,7 +34,7 @@ The app itself is in Traditional Chinese.
 
 ### **Highlights**
 - **Live everywhere** — every page gets updates over WebSocket, no refreshing
-- **Automatic grading** — the exact year +3, within 3 years +1; artist and title +1 each; each group keeps its best answer per field
+- **Automatic grading** — the exact year +3, within 3 years +1; artist and title +1 each, homophones and small typos included; each group keeps its best answer per field
 - **Game-show animations** — a countdown when a round opens; when it closes, a reveal, rank changes and auto-written commentary
 - **Four or five groups** — switched by one setting; the fifth group is a cyan star
 - **Fits the free plan** — an event with about 40 players and 70 songs is estimated to use only about a third of the Workers Free daily request limit
@@ -68,7 +68,7 @@ Click the image for the [full video](.github/assets/demo.mp4) (1:43).
 git clone https://github.com/NTUST-OpenSource/guess-song.git
 cd guess-song
 
-npm ci                           # installs wrangler
+npm ci                           # installs wrangler and pinyin-pro
 cp .dev.vars.example .dev.vars   # fill in the admin login and AUTH_SECRET
 npm test                         # tests
 npm run dev                      # local server
@@ -77,7 +77,7 @@ npm run dev                      # local server
 Open <http://localhost:8787>. The admin pages start at `/login`.
 
 > [!NOTE]
-> There is no build step: the static files in `public/` are served as they are, and npm only installs wrangler.
+> There is no build step: the static files in `public/` are served as they are, and npm only installs wrangler and pinyin-pro, which wrangler bundles into the Worker to match homophones.
 
 ### Environment variables
 
@@ -138,7 +138,10 @@ The song list contains the answers, so keep it out of git. Write `songs.json` in
 
 ### Scoring
 
-- The exact year +3, within 3 years +1; the right artist +1 and the right title +1. Case, full-width characters, spaces and punctuation are ignored
+- The exact year +3, within 3 years +1; the right artist +1 and the right title +1. Case, full-width characters, spaces, punctuation and accents are ignored
+  - Chinese homophones count, including simplified characters and 妳 for 你; zh/z, ch/c, sh/s and -ng/-n sound the same. A character more, less or different never counts, so add common short forms to the song list yourself
+  - Letters and digits allow typos, not counting spaces and punctuation: up to 4 characters must match exactly, 5 to 8 may have one wrong, 9 or more may have two, and swapping two neighbors counts as one; digits must be exact
+  - Answers are only compared with that song's answers; the rules live in `src/match.js`
 - Each group keeps its best points per field, so a group can earn up to 5 per song
 - Changing a grade or correcting the song list after a round adjusts the totals by the difference
 - The commentary's conditions and wording live in `src/notes.js`
@@ -161,6 +164,7 @@ The song list contains the answers, so keep it out of git. Write `songs.json` in
 
 ```
 src/index.js              Worker and Durable Object: API, WebSocket, grading and scoring
+src/match.js              matching artists and titles: normalizing, homophones and typos
 src/notes.js              commentary after each round
 public/index.html         player phone
 public/scoreboard.html    projector scoreboard

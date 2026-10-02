@@ -297,6 +297,10 @@ body { overscroll-behavior: none; }
 .conn { position: absolute; top: calc(max(14px, env(safe-area-inset-top)) + 56px); left: 50%; z-index: 26; display: flex; align-items: center; gap: 9px; padding: 9px 15px; border-radius: 99px; background: var(--card); color: var(--card-ink); box-shadow: var(--shadow-soft); font-size: 13px; font-weight: 800; white-space: nowrap; transform: translateX(-50%); animation: connIn .35s var(--ease-pop) both; }
 .conn.ok { background: var(--ok); color: var(--ok-ink); }
 .conn.ok .spin { display: none; }
+/* Closing countdown in the stamp's red, where the connection notice shows; a new number pops in each second */
+.closing { position: absolute; top: calc(max(14px, env(safe-area-inset-top)) + 56px); left: 50%; z-index: 25; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 16px; border-radius: 99px; background: var(--stamp-bg); color: var(--ink); box-shadow: var(--shadow-soft); font-size: 15px; font-weight: 900; white-space: nowrap; transform: translateX(-50%); animation: connIn .35s var(--ease-pop) both; }
+.closing-num { display: grid; width: 38px; height: 38px; }
+.closing-num b { display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--stamp-bg); font: 900 22px/1 var(--font-num); animation: countPop .5s var(--ease-pop) both; }
 .confetti { position: absolute; inset: 0; z-index: 27; width: 100%; height: 100%; pointer-events: none; }
 
 @keyframes popOut { to { opacity: 0; transform: scale(.6); } }

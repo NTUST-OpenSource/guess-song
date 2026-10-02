@@ -14,6 +14,7 @@ const intro = $("intro");
 const stamp = $("stamp");
 const flood = $("flood");
 const conn = $("conn");
+const closing = $("closing");
 const sheet = $("sheet");
 const sheetPanel = sheet.querySelector(".sheet-panel");
 const answerScene = $("answer");
@@ -134,6 +135,32 @@ function resetFx() {
     resultScene.classList.remove("revealing");
     answerScene.classList.remove("entering");
     stopConfetti();
+    hideClosing();
+}
+
+// ===== Closing countdown: 收卷 leaves a few seconds, and answers sent meanwhile still count =====
+let closingTimer = 0;
+
+// ms is the time left when the push arrived, counted on this page's clock so the phone's time does not matter.
+function showClosing(ms) {
+    const end = performance.now() + ms;
+    const tick = () => {
+        const n = String(Math.max(0, Math.ceil((end - performance.now()) / 1000)));
+        // A new element each second replays the pop.
+        if ($("closing_num").textContent !== n) $("closing_num").replaceChildren(el("b", null, n));
+        if (n === "0") clearInterval(closingTimer);
+    };
+    // The answer form must be in view, so the history sheet closes when the countdown starts.
+    if (closing.hidden) closeSheet();
+    closing.hidden = false;
+    clearInterval(closingTimer);
+    closingTimer = setInterval(tick, 100);
+    tick();
+}
+
+function hideClosing() {
+    clearInterval(closingTimer);
+    closing.hidden = true;
 }
 
 function shake() {
@@ -669,6 +696,9 @@ function onMessage(msg) {
         return;
     }
     latest = msg;
+    // The countdown runs even during an animation; the close push hides it as the reveal starts.
+    if (msg.round?.closeIn === undefined) hideClosing();
+    else showClosing(msg.round.closeIn);
     if (!playing) sync(msg);
 }
 
@@ -727,8 +757,8 @@ async function submitAnswer(e) {
     try {
         const { status, data } = await api("/api/play/answer", { token: token(), ...answer });
         if (status === 401) return leave();
-        // No alert once the round has closed: the reveal is on its way and an alert would block it.
-        if (data.status !== 1) return latest?.round?.open ? alert(data.msg) : undefined;
+        // No alert once 收卷 has started: the reveal is on its way and an alert would block it.
+        if (data.status !== 1) return latest?.round?.open && latest.round.closeIn === undefined ? alert(data.msg) : undefined;
         sent = JSON.stringify(answer);
         markSent();
     } catch {

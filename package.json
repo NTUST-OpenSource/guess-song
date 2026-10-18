@@ -8,9 +8,9 @@
     "test": "node --test"
   },
   "devDependencies": {
-    "wrangler": "^4.146.0"
+    "wrangler": "^4.151.0"
   },
   "dependencies": {
-    "pinyin-pro": "^3.29.4"
+    "pinyin-pro": "^3.29.5"
   }
 }
